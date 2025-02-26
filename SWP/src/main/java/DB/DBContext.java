@@ -1,36 +1,34 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package DB;
 
+/**
+ *
+ * @author LxP
+ */
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-//NGUYEN THANH PHAT CE180119
 public class DBContext {
+    private static final String URL = "jdbc:sqlserver://localhost:1433;databaseName=db1;encrypt=true;trustServerCertificate=true";
+    private static final String USER = "sa";
+    private static final String PASSWORD = "123456";
 
-    public Connection connection;
-
-    public DBContext() {
-        try {
-            String url = "jdbc:sqlserver://localhost:1433;databaseName=db1;encrypt=true;trustServerCertificate=true";
-            String username = "sa";
-            String password = "123456";
-            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-            connection = DriverManager.getConnection(url, username, password);
-
-        } catch (ClassNotFoundException | SQLException ex) {
-            System.out.println(ex);
-        }
+    public static Connection getConnection() throws SQLException, ClassNotFoundException {
+        Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+        return DriverManager.getConnection(URL, USER, PASSWORD);
     }
-    
-      public static void main(String[] args) {
-        DBContext dbContext = new DBContext();
-        if (dbContext.connection != null) {
-            System.out.println("Success connection");
-        } else {
-            System.out.println("Fail connection!");
+
+    public static void main(String[] args) {
+        try (Connection conn = DBContext.getConnection()) {
+            if (conn != null) {
+                System.out.println("Kết nối database thành công!");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        
-        
     }
 }
-
