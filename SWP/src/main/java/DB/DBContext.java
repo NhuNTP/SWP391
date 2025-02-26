@@ -18,7 +18,13 @@ public class DBContext {
     private static final String PASSWORD = "123456";
 
     public static Connection getConnection() throws SQLException, ClassNotFoundException {
-        Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+        try {
+    Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+} catch (ClassNotFoundException e) {
+    System.err.println("Lỗi: Không tìm thấy driver SQL Server!");
+    e.printStackTrace();
+}
+
         return DriverManager.getConnection(URL, USER, PASSWORD);
     }
 
