@@ -20,7 +20,7 @@ public class CouponDAO extends DB.DBContext {
 
     public List<Coupon> getAllCoupon() {
 
-        String sql = "SELECT * FROM Coupon ORDER BY CouponId ASC";
+        String sql = "SELECT * FROM Coupon";
         List<Coupon> coupons = new ArrayList<>();
         try (PreparedStatement st = getConnection().prepareStatement(sql)) {
             try (ResultSet rs = st.executeQuery()) {
