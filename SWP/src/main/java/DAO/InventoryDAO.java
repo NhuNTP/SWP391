@@ -4,7 +4,6 @@
  */
 package DAO;
 
-
 import Model.Coupon;
 import Model.Inventory;
 import java.sql.PreparedStatement;
@@ -52,8 +51,24 @@ public class InventoryDAO extends DB.DBContext {
         }
         return null;
     }
-    
- 
- 
-}
 
+    public void addNewInventoryItem(Inventory inventory) { // Changed parameter type to Model.InventoryItem
+        String sql = "INSERT INTO [dbo].[Inventory] (ItemName, ItemType, ItemPrice, ItemQuantity, ItemUnit, ItemDescription) " // Updated column names to InventoryItem properties
+                + "VALUES ( ?, ?, ?, ?, ?, ?)"; // Updated number of placeholders to match the number of columns
+        try {
+            PreparedStatement st = getConnection().prepareStatement(sql);
+
+            st.setString(1, inventory.getItemName());         // Set ItemName
+            st.setString(2, inventory.getItemType());         // Set ItemType
+            st.setDouble(3, inventory.getItemPrice());         // Set ItemPrice (assuming ItemPrice is double)
+            st.setInt(4, inventory.getItemQuantity());          // Set ItemQuantity (assuming ItemQuantity is int)
+            st.setString(5, inventory.getItemUnit());          // Set ItemUnit
+            st.setString(6, inventory.getItemDescription());    // Set ItemDescription
+
+            st.executeUpdate();
+        } catch (Exception e) {
+            System.out.println("Error adding new inventory item: " + e); // More descriptive error message
+            e.printStackTrace(); // Print the full stack trace for debugging
+        }
+    }
+}
