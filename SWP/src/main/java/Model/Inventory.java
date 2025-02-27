@@ -17,6 +17,18 @@ public class Inventory {
     private String ItemUnit;
     private String ItemDescription;
 
+    public Inventory(int ItemId, String ItemName, String ItemType, double ItemPrice, int ItemQuantity, String ItemUnit, String ItemDescription) {
+        this.ItemId = ItemId;
+        this.ItemName = ItemName;
+        this.ItemType = ItemType;
+        this.ItemPrice = ItemPrice;
+        this.ItemQuantity = ItemQuantity;
+        this.ItemUnit = ItemUnit;
+        this.ItemDescription = ItemDescription;
+    }
+
+    
+    
     public Inventory() {
     }
 

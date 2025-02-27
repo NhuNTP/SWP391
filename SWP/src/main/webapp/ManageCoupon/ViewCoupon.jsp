@@ -69,7 +69,7 @@
                         <Td valign="middle">
                             <form action="ManageCoupon/UpdateCoupon.jsp?couponID=<% out.print(coupon.getCouponId()); %>" method="post" style="display:inline;">
                                 <input type="hidden" name="couponId" value="<% out.print(coupon.getCouponId()); %>">
-                                <%-- ... (các input hidden khác) ... --%>
+                      
                                 <button type="submit" class="btn btn-warning">Update</button>
                             </form>
 
@@ -82,13 +82,13 @@
                     } else {
                 %>
                     <tr>
-                        <td colspan="6">No coupons available.</td> <%-- Cập nhật colspan --%>
+                        <td colspan="6">No coupons available.</td> 
                     </tr>
                 <%
                     } // end if couponList not null and not empty
                 %>
             </table>
         </div>
-        <%-- ... (phần cuối trang JSP giữ nguyên) ... --%>
+
     </body>
 </html>
