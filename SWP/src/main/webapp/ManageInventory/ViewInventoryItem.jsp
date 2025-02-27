@@ -28,7 +28,7 @@
         <div class="container body-content">
             <h2>MANAGE INVENTORY</h2>
             <p>
-                <a href="ManageCoupon/AddCoupon.jsp" class="btn btn-info" id="btnCreate">Add New</a>
+                <a href="ManageInventory/AddInventoryItem.jsp" class="btn btn-info" id="btnCreate">Add New</a>
             </p>
             <table class="table table-bordered"  method="post">
                 <tr>
