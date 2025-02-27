@@ -2,8 +2,10 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
  */
-package Controller.CouponController;
+package Controller.InventoryController;
 
+import DAO.InventoryDAO;
+import Model.Inventory;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -12,15 +14,13 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
-import Model.Coupon;
-import DAO.CouponDAO;
 
 /**
  *
  * @author DELL-Laptop
  */
-@WebServlet(name = "ViewCouponController", urlPatterns = {"/ViewCouponController"})
-public class ViewCouponController extends HttpServlet {
+@WebServlet(name = "ViewInventoryController", urlPatterns = {"/ViewInventoryController"})
+public class ViewInventoryController extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -39,10 +39,10 @@ public class ViewCouponController extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet ViewCouponController</title>");
+            out.println("<title>Servlet ViewInventoryController</title>");
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet ViewCouponController at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Servlet ViewInventoryController at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -60,11 +60,11 @@ public class ViewCouponController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        CouponDAO dao = new CouponDAO();
-        List<Coupon> couponList = dao.getAllCoupon();
-        System.out.println("List coupon check: " + couponList);
-        request.setAttribute("couponList", couponList);
-        request.getRequestDispatcher("/ManageCoupon/ViewCoupon.jsp").forward(request, response);
+          InventoryDAO dao = new InventoryDAO();
+        List<Inventory> ItemList = dao.getAllInventoryItem();
+        System.out.println("List Item Inventory check: " + ItemList);
+        request.setAttribute("InventoryItemList", ItemList);
+        request.getRequestDispatcher("/ManageInventory/ViewInventoryItem.jsp").forward(request, response);
     }
 
     /**
@@ -78,7 +78,7 @@ public class ViewCouponController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-       
+        processRequest(request, response);
     }
 
     /**
