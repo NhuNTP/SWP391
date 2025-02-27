@@ -2,11 +2,11 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
  */
-package Controller.CustomerController;
+package Controller.ManageCustomer;
 
 import DAO.CustomerDAO;
+import Model.Customer;
 import java.io.IOException;
-import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -20,8 +20,9 @@ import java.util.logging.Logger;
  *
  * @author HuynhPhuBinh
  */
-@WebServlet("/DeleteCustomer")
-public class DeleteCustomerController extends HttpServlet {
+@WebServlet("/AddCustomer")
+public class AddCustomerController extends HttpServlet {
+
     private static final long serialVersionUID = 1L;
     private CustomerDAO customerDAO;
 
@@ -32,24 +33,24 @@ public class DeleteCustomerController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        int customerId = Integer.parseInt(request.getParameter("customerId"));
-        System.out.println("Deleting customer with ID: " + customerId);
+        request.getRequestDispatcher("/ManageCustomer/AddCustomer.jsp").forward(request, response);
+    }
 
-        boolean success = false;
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String name = request.getParameter("customerName");
+        String phone = request.getParameter("customerPhone");
+        int numberOfPayment = Integer.parseInt(request.getParameter("numberOfPayment"));
+
+        Customer customer = new Customer( name, phone, numberOfPayment); 
         try {
-            success = customerDAO.deleteCustomer(customerId);
+            customerDAO.addCustomer(customer);
         } catch (SQLException ex) {
-            Logger.getLogger(DeleteCustomerController.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AddCustomerController.class.getName()).log(Level.SEVERE, null, ex);
         } catch (ClassNotFoundException ex) {
-            Logger.getLogger(DeleteCustomerController.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AddCustomerController.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-        if (success) {
-            request.getSession().setAttribute("message", "Xóa khách hàng thành công!");
-        } else {
-            request.getSession().setAttribute("error", "Không thể xóa khách hàng!");
-        }
-        
+
         response.sendRedirect("ViewCustomerList");
     }
 }
