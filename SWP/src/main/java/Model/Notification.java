@@ -1,3 +1,4 @@
+
 package Model;
 
 import java.util.Date;
@@ -11,6 +12,13 @@ public class Notification {
     private String UserName;  // New field
 
     public Notification() {
+    }
+  
+        public Notification(int NotificationId, int UserId, String NotificationContent, Date NotificationCreateAt) {
+        this.NotificationId = NotificationId;
+        this.UserId = UserId;
+        this.NotificationContent = NotificationContent;
+        this.NotificationCreateAt = NotificationCreateAt;
     }
 
     // Getters and setters for all fields, including UserRole and UserName
