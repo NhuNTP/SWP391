@@ -19,7 +19,7 @@
                     $.ajax({
                         url: "DeleteCouponController", // Đường dẫn đến Servlet DeleteCouponController
                         type: "POST", // Sử dụng phương thức POST để xóa
-                        data: { couponId: couponId }, // Truyền couponId làm tham số
+                        data: {couponId: couponId}, // Truyền couponId làm tham số
                         success: function (data) {
                             // Xử lý khi xóa thành công
                             alert("Delete coupon successfull!");
@@ -38,7 +38,7 @@
 
     </head>
 
-  
+
     <body>
         <div class="container body-content">
             <h2>MANAGE COUPON</h2>
@@ -51,39 +51,41 @@
                     <th>Coupon ID</th>
                     <th>Discount Amount</th>
                     <th>Expiration Date</th>
-                    <th>Coupon Status</th>
+                    <th>Quantity </th>
                 </tr>
                 <%
                     java.util.List<Model.Coupon> couponList = (java.util.List<Model.Coupon>) request.getAttribute("couponList");
                     if (couponList != null && !couponList.isEmpty()) {
-                        int displayIndex = 1; 
+                        int displayIndex = 1;
                         for (Model.Coupon coupon : couponList) {
                 %>
-                    <tr>
-                        <Td valign="middle"><% out.print(displayIndex++); %></td>
-                        <Td valign="middle"><% out.print(coupon.getCouponId()); %></td> 
-                        <Td valign="middle"><% out.print(coupon.getDiscountAmount()); %></td>
-                        <Td valign="middle"><% out.print(coupon.getExpirationDate()); %></td>
-                        <Td valign="middle"><% out.print(coupon.isIsUsed() ? "Used" : "Not Used"); %></td>
+                <tr>
+                    <Td valign="middle"><% out.print(displayIndex++); %></td>
+                    <Td valign="middle"><% out.print(coupon.getCouponId()); %></td> 
+                    <Td valign="middle"><% out.print(coupon.getDiscountAmount()); %></td>
+                    <Td valign="middle"><% out.print(coupon.getExpirationDate()); %></td>
+                    <Td valign="middle"><% out.print(coupon.getTimesUsed()); %></td>
 
-                        <Td valign="middle">
-                            <form action="ManageCoupon/UpdateCoupon.jsp?couponID=<% out.print(coupon.getCouponId()); %>" method="post" style="display:inline;">
-                                <input type="hidden" name="couponId" value="<% out.print(coupon.getCouponId()); %>">
-                      
-                                <button type="submit" class="btn btn-warning">Update</button>
-                            </form>
+                    <Td valign="middle">
+                        <form action="ManageCoupon/UpdateCoupon.jsp?couponID=<% out.print(coupon.getCouponId()); %>" method="post" style="display:inline;">
+                            <input type="hidden" name="couponId" value="<% out.print(coupon.getCouponId()); %>">
+                            <input type="hidden" name="discountAmount" value="<% out.print(coupon.getDiscountAmount()); %>">
+                            <input type="hidden" name="expirationDate" value="<% out.print(coupon.getExpirationDate()); %>">
+                            <input type="hidden" name="timesUsed" value="<% out.print(coupon.getTimesUsed());%>">
 
-                            <button type="button" class="btn btn-danger" onclick="confirmDelete('<%= coupon.getCouponId() %>')">Delete</button> <%-- Vẫn dùng coupon.getCouponId() cho delete --%>
-                        </td>
-                    </tr>
+                            <button type="submit" class="btn btn-warning">Update</button>
+                        </form>
+                        <button type="button" class="btn btn-danger" onclick="confirmDelete('<%= coupon.getCouponId()%>')">Delete</button> 
+                    </td>
+                </tr>
 
                 <%
-                        } // end for loop
-                    } else {
+                    } // end for loop
+                } else {
                 %>
-                    <tr>
-                        <td colspan="6">No coupons available.</td> 
-                    </tr>
+                <tr>
+                    <td colspan="6">No coupons available.</td> 
+                </tr>
                 <%
                     } // end if couponList not null and not empty
                 %>

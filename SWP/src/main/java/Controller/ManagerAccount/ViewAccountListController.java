@@ -1,26 +1,31 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
-package Controller.CouponController;
+package Controller.ManagerAccount;
 
+import DAO.AccountDAO;
+import Model.Account;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
-import Model.Coupon;
-import DAO.CouponDAO;
 
 /**
  *
- * @author DELL-Laptop
+ * @author ADMIN
  */
-@WebServlet(name = "ViewCouponController", urlPatterns = {"/ViewCouponController"})
-public class ViewCouponController extends HttpServlet {
+@WebServlet("/ViewAccountList")
+@MultipartConfig(
+        fileSizeThreshold = 1024 * 1024, // 1MB
+        maxFileSize = 1024 * 1024 * 50, // 50MB (tăng từ 10MB)
+        maxRequestSize = 1024 * 1024 * 100 // 100MB (tăng từ 50MB)
+)
+public class ViewAccountListController extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -39,10 +44,10 @@ public class ViewCouponController extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet ViewCouponController</title>");
+            out.println("<title>Servlet ViewAccountListController</title>");
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet ViewCouponController at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Servlet ViewAccountListController at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -60,11 +65,29 @@ public class ViewCouponController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        CouponDAO dao = new CouponDAO();
-        List<Coupon> couponList = dao.getAllCoupon();
-        System.out.println("List coupon check: " + couponList);
-        request.setAttribute("couponList", couponList);
-        request.getRequestDispatcher("/ManageCoupon/ViewCoupon.jsp").forward(request, response);
+        AccountDAO dao = new AccountDAO();
+        ResultSet rs = dao.getAllAccount();
+        List<Account> accountList = new ArrayList<>();
+
+        try {
+            while (rs.next()) {
+                Account account = new Account();
+                account.setUserId(rs.getInt("UserId"));
+                account.setUserEmail(rs.getString("UserEmail"));
+                account.setUserPassword(rs.getString("UserPassword"));
+                account.setUserName(rs.getString("UserName"));
+                account.setUserRole(rs.getString("UserRole"));
+                account.setIdentityCard(rs.getString("IdentityCard"));
+                account.setUserAddress(rs.getString("UserAddress"));
+                account.setUserImage(rs.getString("UserImage")); // **Quan trọng: Đảm bảo lấy cột UserImage**
+                accountList.add(account);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace(); // In thực tế nên log lỗi thay vì in ra console
+        }
+
+        request.setAttribute("accountList", accountList); // Lưu danh sách account vào request attribute
+        request.getRequestDispatcher("ManageAccount/ViewAccountList.jsp").forward(request, response);
     }
 
     /**
@@ -78,7 +101,7 @@ public class ViewCouponController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-       
+        processRequest(request, response);
     }
 
     /**

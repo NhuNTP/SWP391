@@ -2,10 +2,10 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
  */
-package Controller.CouponController;
+package Controller.ManageTable;
 
-import DAO.CouponDAO;
-import Model.Coupon;
+import DAO.TableDAO;
+import Model.Table;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -13,19 +13,18 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.math.BigDecimal;
-import java.sql.Date;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
- * @author DELL-Laptop
+ * @author ADMIN
  */
-@WebServlet("/AddCouponController")
-public class AddCouponController extends HttpServlet {
+@WebServlet("/ViewTableList")
+
+public class ViewTableListController extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -44,10 +43,10 @@ public class AddCouponController extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet AddCouponController</title>");
+            out.println("<title>Servlet ViewTableListController</title>");
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet AddCouponController at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Servlet ViewTableListController at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -65,7 +64,24 @@ public class AddCouponController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        TableDAO tableDAO = new TableDAO(); // Use TableDAO
+        ResultSet rs = tableDAO.getAllTable(); // Get all tables using TableDAO
+        List<Table> tableList = new ArrayList<>(); // Create List of Table objects
+
+        try {
+            while (rs.next()) {
+                Table table = new Table(); // Create Table object
+                table.setTableId(rs.getInt("TableId"));
+                table.setTableStatus(rs.getString("TableStatus"));
+                table.setNumberOfSeats(rs.getInt("NumberOfSeats"));
+                tableList.add(table); // Add Table object to tableList
+            }
+        } catch (SQLException e) {
+            e.printStackTrace(); // Log exception, in real app use a logger
+        }
+
+        request.setAttribute("tableList", tableList); // Set tableList to request attribute
+        request.getRequestDispatcher("ManageTable/ViewTableList.jsp").forward(request, response); // Forward to ViewTableList.jsp    }
     }
 
     /**
@@ -79,28 +95,7 @@ public class AddCouponController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        try {
-            String discountAmount = request.getParameter("discountAmount");
-            String expirationDate_raw = request.getParameter("expirationDate");
-
-            CouponDAO emd = new CouponDAO();
-
-            BigDecimal discountAmount_raw = new BigDecimal(discountAmount);
-            
-          
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd"); 
-            java.util.Date utilDate = sdf.parse(expirationDate_raw);
-            java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
-
-            Coupon newCoupon = new Coupon( discountAmount_raw, sqlDate, true);
-            emd.addNewCoupon(newCoupon);
-            response.sendRedirect("ViewCouponController");
-
-//            request.getRequestDispatcher("ViewCouponController").forward(request, response);
-        } catch (ParseException ex) {
-            Logger.getLogger(AddCouponController.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
+        processRequest(request, response);
     }
 
     /**

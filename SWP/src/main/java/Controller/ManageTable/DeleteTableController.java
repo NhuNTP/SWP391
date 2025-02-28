@@ -2,10 +2,9 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
  */
-package Controller.CouponController;
+package Controller.ManageTable;
 
-import DAO.CouponDAO;
-import Model.Coupon;
+import DAO.TableDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -13,15 +12,14 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
 
 /**
  *
- * @author DELL-Laptop
+ * @author ADMIN
  */
-@WebServlet(name = "UpdateCouponController", urlPatterns = {"/UpdateCouponController"})
-public class UpdateCouponController extends HttpServlet {
+@WebServlet("/DeleteTable")
+
+public class DeleteTableController extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -40,10 +38,10 @@ public class UpdateCouponController extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet UpdateCouponController</title>");
+            out.println("<title>Servlet DeleteTableController</title>");
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet UpdateCouponController at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Servlet DeleteTableController at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -61,7 +59,31 @@ public class UpdateCouponController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        String idParam = request.getParameter("id"); // Get id parameter from request
+        if (idParam == null || idParam.isEmpty()) {
+            response.sendRedirect("ViewTableList"); // Redirect if no id is provided
+            return;
+        }
+
+        try {
+            int id = Integer.parseInt(idParam); // Parse id to integer
+            TableDAO tableDAO = new TableDAO(); // Create TableDAO instance
+            int count = tableDAO.deleteTable(id); // Call Delete method in TableDAO
+
+            if (count > 0) {
+                System.out.println("Table with ID " + id + " deleted successfully."); // Log success
+            } else {
+                System.out.println("Failed to delete table with ID " + id + " or table not found."); // Log failure
+            }
+
+        } catch (NumberFormatException e) {
+            System.err.println("Invalid ID format: " + idParam); // Log invalid ID format error
+        } catch (Exception e) {
+            System.err.println("Error deleting table: " + e.getMessage()); // Log general error
+            e.printStackTrace(); // Print stack trace for debugging
+        }
+
+        response.sendRedirect("ViewTableList"); // Redirect to ViewTableList after deletion attempt
     }
 
     /**
@@ -75,36 +97,7 @@ public class UpdateCouponController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
-        String couponId_raw = request.getParameter("couponId");
-        String discountAmount_raw = request.getParameter("discountAmount");
-        String expirationDate_raw = request.getParameter("expirationDate");
-        String isUsed_raw = request.getParameter("isUsed");
-
-       
-        
-       
-        try {
-        int couponId = Integer.parseInt(couponId_raw);
-        BigDecimal discountAmount = new BigDecimal(discountAmount_raw);
-
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd"); // Điều chỉnh định dạng nếu cần
-        java.util.Date utilDate = sdf.parse(expirationDate_raw);
-        java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
-        
-        boolean isUsed=Boolean.parseBoolean(isUsed_raw);
-        Coupon updateCoupon=new Coupon(couponId,discountAmount,sqlDate,isUsed);
-          
-         CouponDAO upCoupon = new CouponDAO();
-            upCoupon.updateCoupon(updateCoupon);
-            response.sendRedirect("ViewCouponController");
-
-        } catch (Exception e) {
-            System.out.println(e);
-            request.setAttribute("error", "Invalid input data.");
-            request.getRequestDispatcher("error.jsp").forward(request, response);
-        }
-
+        response.sendRedirect("ViewTableList"); // Redirect doPost to ViewTableList as well
     }
 
     /**

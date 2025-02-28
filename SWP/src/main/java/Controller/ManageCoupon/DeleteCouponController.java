@@ -2,10 +2,9 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
  */
-package Controller;
+package Controller.ManageCoupon;
 
-import DAO.AccountDAO;
-import Model.Account;
+import DAO.CouponDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -13,14 +12,13 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 
 /**
  *
- * @author LxP
+ * @author DELL-Laptop
  */
-@WebServlet(name = "Login", urlPatterns = {"/login"})
-public class LoginController extends HttpServlet {
+@WebServlet(name = "DeleteCouponController", urlPatterns = {"/DeleteCouponController"})
+public class DeleteCouponController extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -39,10 +37,10 @@ public class LoginController extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet LoginController</title>");
+            out.println("<title>Servlet DeleteCouponController</title>");
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet LoginController at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Servlet DeleteCouponController at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -72,43 +70,31 @@ public class LoginController extends HttpServlet {
      * @throws IOException if an I/O error occurs
      */
     @Override
-     protected void doPost(HttpServletRequest request, HttpServletResponse response)
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String username = request.getParameter("username");
-        String password = request.getParameter("password");
+        String couponId_raw = request.getParameter("couponId");
 
-        AccountDAO accountDAO = new AccountDAO();
-        Account account = accountDAO.login(username, password);
+        if (couponId_raw == null || couponId_raw.isEmpty()) {
+            System.out.println("CouponID is missing from the request.");
+            response.sendRedirect("error.jsp");
+            return;
+        }
+        System.out.println("Giá trị couponId nhận được từ request parameter: " + couponId_raw);
 
-        if (account != null) {
-              HttpSession session = request.getSession();
-            session.setAttribute("account", account);
-            
-            switch (account.getUserRole()) {
-                case "Admin":
-                    response.sendRedirect("home.jsp");
-                    break;
-                case "Manager":
-                    response.sendRedirect("manager/dashboard.jsp");
-                    break;
-                case "Cashier":
-                    response.sendRedirect("cashier/dashboard.jsp");
-                    break;
-                case "Waiter":
-                    response.sendRedirect("waiter/dashboard.jsp");
-                    break;
-                case "kitchen staff":
-                    response.sendRedirect("kitchen/dashboard.jsp");
-                    break;
-                default:
-                    response.sendRedirect("LoginPpage.jsp");
-                    break;
-            }
-        } else {
-            request.setAttribute("error", "Tên hoặc mật khẩu không đúng!");
-            request.getRequestDispatcher("LoginPage.jsp").forward(request, response);
+        try {
+            int couponId = Integer.parseInt(couponId_raw);
+            CouponDAO delCoupon = new CouponDAO();
+            delCoupon.deleteCouponById(couponId);
+            response.sendRedirect("ViewCouponController");
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid empID: " + couponId_raw );
+            response.sendRedirect("error.jsp"); 
+        } catch (Exception e) {
+            e.printStackTrace(); // In ra lỗi
+            response.sendRedirect("error.jsp");
         }
     }
+
     /**
      * Returns a short description of the servlet.
      *

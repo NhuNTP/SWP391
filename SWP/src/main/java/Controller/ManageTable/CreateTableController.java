@@ -2,9 +2,10 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
  */
-package Controller.CouponController;
+package Controller.ManageTable;
 
-import DAO.CouponDAO;
+import DAO.TableDAO;
+import Model.Table;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -15,10 +16,11 @@ import jakarta.servlet.http.HttpServletResponse;
 
 /**
  *
- * @author DELL-Laptop
+ * @author ADMIN
  */
-@WebServlet(name = "DeleteCouponController", urlPatterns = {"/DeleteCouponController"})
-public class DeleteCouponController extends HttpServlet {
+@WebServlet("/CreateTable")
+
+public class CreateTableController extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -37,10 +39,10 @@ public class DeleteCouponController extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet DeleteCouponController</title>");
+            out.println("<title>Servlet CreateTableController</title>");
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet DeleteCouponController at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Servlet CreateTableController at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -58,7 +60,7 @@ public class DeleteCouponController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        request.getRequestDispatcher("ManageTable/CreateTable.jsp").forward(request, response); // Forward to CreateTable.jsp
     }
 
     /**
@@ -72,26 +74,20 @@ public class DeleteCouponController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String couponId_raw = request.getParameter("couponId");
+        
+        String TableStatus = request.getParameter("TableStatus");
+        int NumberOfSeats = Integer.parseInt(request.getParameter("NumberOfSeats")); // Get NumberOfSeats as String
 
-        if (couponId_raw == null || couponId_raw.isEmpty()) {
-            System.out.println("CouponID is missing from the request.");
-            response.sendRedirect("error.jsp");
-            return;
-        }
-        System.out.println("Giá trị couponId nhận được từ request parameter: " + couponId_raw);
+        // Step 2: Create Table object
+        Table table = new Table(TableStatus, NumberOfSeats);
+        TableDAO tableDAO = new TableDAO();
+        int count = tableDAO.createTable(table);
 
-        try {
-            int couponId = Integer.parseInt(couponId_raw);
-            CouponDAO delCoupon = new CouponDAO();
-            delCoupon.deleteCouponById(couponId);
-            response.sendRedirect("ViewCouponController");
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid empID: " + couponId_raw );
-            response.sendRedirect("error.jsp"); 
-        } catch (Exception e) {
-            e.printStackTrace(); // In ra lỗi
-            response.sendRedirect("error.jsp");
+        // Step 4: Redirect based on result
+        if (count > 0) {
+            response.sendRedirect("ViewTableList"); // Redirect to view table list on success
+        } else {
+            response.sendRedirect("CreateTable"); // Redirect back to create table page on failure
         }
     }
 
