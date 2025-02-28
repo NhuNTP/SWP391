@@ -114,5 +114,19 @@ public class OrderDAO {
             return false;
         }
     }
+     public boolean updateOrderStatus(int orderId, String orderStatus) throws SQLException, ClassNotFoundException {
+    String query = "UPDATE Orders SET OrderStatus = ? WHERE OrderId = ?";
+    try (Connection con = DBContext.getConnection();
+         PreparedStatement ps = con.prepareStatement(query)) {
+        ps.setString(1, orderStatus);
+        ps.setInt(2, orderId);
+
+        int rowsUpdated = ps.executeUpdate();
+        System.out.println("Rows updated: " + rowsUpdated); // Debug log
+
+        return rowsUpdated > 0;
+    }
+}
+
 }
 

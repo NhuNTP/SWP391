@@ -11,14 +11,19 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import DAO.AccountDAO;
+import java.sql.SQLException;
 import java.util.List;
 
 @WebServlet("/createnotification")
 public class CreateNotificationController extends HttpServlet {
 
     private final NotificationDAO notificationDAO = new NotificationDAO();
-    private final AccountDAO accountDAO = new AccountDAO();
+    private final AccountDAO accountDAO;
     private static final Logger LOGGER = Logger.getLogger(CreateNotificationController.class.getName());
+
+    public CreateNotificationController() throws ClassNotFoundException, SQLException {
+        this.accountDAO = new AccountDAO();
+    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)

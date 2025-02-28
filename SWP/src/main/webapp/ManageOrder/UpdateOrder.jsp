@@ -19,7 +19,7 @@
 </head>
 <body>
     <h2>Update Order</h2>
-    <form action="UpdateOrderController" method="POST">
+    <form action="UpdateOrder" method="POST">
         <input type="hidden" name="orderId" value="<%= order.getOrderId() %>">
         
         <label>User ID:</label>
@@ -49,7 +49,7 @@
         <button type="submit">Update Order</button>
     </form>
 
-    <a href="ViewOrderListController">Back to Order List</a>
+    <a href="ViewOrderList">Back to Order List</a>
 
     <% if (request.getAttribute("errorMessage") != null) { %>
         <p style="color:red;"><%= request.getAttribute("errorMessage") %></p>

@@ -93,7 +93,7 @@ public class UpdateOrderController extends HttpServlet {
             response.sendRedirect("ViewOrderListController");
         } else {
             request.setAttribute("errorMessage", "Update failed!");
-            request.getRequestDispatcher("/Manage/UpdateOrder.jsp").forward(request, response);
+            request.getRequestDispatcher("Manage/UpdateOrder.jsp").forward(request, response);
         }
     }
 }
