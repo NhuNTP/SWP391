@@ -7,7 +7,6 @@ package Controller.ManageOrder;
 import DAO.OrderDAO;
 import Model.Order;
 import java.io.IOException;
-import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -39,6 +38,6 @@ public class ViewOrderListController extends HttpServlet {
         }
         
         request.setAttribute("orderList", orderList);
-        request.getRequestDispatcher("/ManageOrder/ViewOrderList.jsp").forward(request, response);
+        request.getRequestDispatcher("ManageOrder/ViewOrderList.jsp").forward(request, response);
     }
 }
