@@ -14,22 +14,24 @@ import java.sql.Date;
 public class Coupon {
 
     private int couponId;
-
     private BigDecimal discountAmount;
     private Date expirationDate;
-    private boolean isUsed;
+    private int timesUsed;
+    private int isDeleted;
 
-    public Coupon(int couponId, BigDecimal discountAmount, Date expirationDate, boolean isUsed) {
+    public Coupon(int couponId, BigDecimal discountAmount, Date expirationDate, int timeUsed) {
         this.couponId = couponId;
         this.discountAmount = discountAmount;
         this.expirationDate = expirationDate;
-        this.isUsed = isUsed;
+        this.timesUsed = timeUsed;
     }
 
-    public Coupon(BigDecimal discountAmount, Date expirationDate, boolean isUsed) {
+    
+    
+    public Coupon(BigDecimal discountAmount, Date expirationDate, int timeUsed) {
         this.discountAmount = discountAmount;
         this.expirationDate = expirationDate;
-        this.isUsed = isUsed;
+        this.timesUsed = timeUsed;
     }
 
     public int getCouponId() {
@@ -56,14 +58,25 @@ public class Coupon {
         this.expirationDate = expirationDate;
     }
 
-    public boolean isIsUsed() {
-        return isUsed;
+    public int getTimesUsed() {
+        return timesUsed;
     }
 
-    public void setIsUsed(boolean isUsed) {
-        this.isUsed = isUsed;
+    public void setTimesUsed(int timesUsed) {
+        this.timesUsed = timesUsed;
     }
 
+    public int getIsDeleted() {
+        return isDeleted;
+    }
+
+    public void setIsDeleted(int isDeleted) {
+        this.isDeleted = isDeleted;
+    }
+
+  
+
+   
  
 
 }

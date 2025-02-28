@@ -2,10 +2,8 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
  */
-package Controller.CouponController;
+package Controller.ManageCoupon;
 
-import DAO.CouponDAO;
-import Model.Coupon;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -13,15 +11,16 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
+import java.util.List;
+import Model.Coupon;
+import DAO.CouponDAO;
 
 /**
  *
  * @author DELL-Laptop
  */
-@WebServlet(name = "UpdateCouponController", urlPatterns = {"/UpdateCouponController"})
-public class UpdateCouponController extends HttpServlet {
+@WebServlet(name = "ViewCouponController", urlPatterns = {"/ViewCouponController"})
+public class ViewCouponController extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -40,10 +39,10 @@ public class UpdateCouponController extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet UpdateCouponController</title>");
+            out.println("<title>Servlet ViewCouponController</title>");
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet UpdateCouponController at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Servlet ViewCouponController at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -61,7 +60,11 @@ public class UpdateCouponController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        CouponDAO dao = new CouponDAO();
+        List<Coupon> couponList = dao.getAllCoupon();
+        System.out.println("List coupon check: " + couponList);
+        request.setAttribute("couponList", couponList);
+        request.getRequestDispatcher("/ManageCoupon/ViewCoupon.jsp").forward(request, response);
     }
 
     /**
@@ -75,36 +78,7 @@ public class UpdateCouponController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
-        String couponId_raw = request.getParameter("couponId");
-        String discountAmount_raw = request.getParameter("discountAmount");
-        String expirationDate_raw = request.getParameter("expirationDate");
-        String isUsed_raw = request.getParameter("isUsed");
-
        
-        
-       
-        try {
-        int couponId = Integer.parseInt(couponId_raw);
-        BigDecimal discountAmount = new BigDecimal(discountAmount_raw);
-
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd"); // Điều chỉnh định dạng nếu cần
-        java.util.Date utilDate = sdf.parse(expirationDate_raw);
-        java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
-        
-        boolean isUsed=Boolean.parseBoolean(isUsed_raw);
-        Coupon updateCoupon=new Coupon(couponId,discountAmount,sqlDate,isUsed);
-          
-         CouponDAO upCoupon = new CouponDAO();
-            upCoupon.updateCoupon(updateCoupon);
-            response.sendRedirect("ViewCouponController");
-
-        } catch (Exception e) {
-            System.out.println(e);
-            request.setAttribute("error", "Invalid input data.");
-            request.getRequestDispatcher("error.jsp").forward(request, response);
-        }
-
     }
 
     /**
