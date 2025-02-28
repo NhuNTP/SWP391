@@ -3,13 +3,6 @@
     Created on : Feb 23, 2025, 8:52:09 PM
     Author     : HuynhPhuBinh
 --%>
-
-<%-- 
-    Document   : UpdateCustomerProfile
-    Created on : Feb 23, 2025, 8:52:09 PM
-    Author     : HuynhPhuBinh
---%>
-
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="Model.Customer" %>
 <!DOCTYPE html>
