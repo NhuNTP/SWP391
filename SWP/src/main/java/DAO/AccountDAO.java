@@ -181,6 +181,49 @@ public class AccountDAO {
         }
         return count;
     }
+  
+  
+    private static final Logger LOGGER = Logger.getLogger(AccountDAO.class.getName());
 
+    public List<String> getAllRoles() {
+        List<String> roles = new ArrayList<>();
+        String sql = "SELECT DISTINCT UserRole FROM Account"; // Adjust table and column names as needed
+
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql);
+             ResultSet resultSet = preparedStatement.executeQuery()) {
+
+            while (resultSet.next()) {
+                roles.add(resultSet.getString("UserRole")); // Adjust column name as needed
+            }
+
+        } catch (SQLException | ClassNotFoundException e) {
+            LOGGER.log(Level.SEVERE, "Error getting all roles", e);
+            return null;
+        }
+        return roles;
+    }
+
+    public List<Integer> getUserIdsByRole(String role) {
+        List<Integer> userIds = new ArrayList<>();
+        String sql = "SELECT UserId FROM Account WHERE UserRole = ?"; // Adjust table and column names as needed
+
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+
+            preparedStatement.setString(1, role);
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    userIds.add(resultSet.getInt("UserId")); // Adjust column name as needed
+                }
+            }
+
+        } catch (SQLException | ClassNotFoundException e) {
+            LOGGER.log(Level.SEVERE, "Error getting user IDs by role", e);
+            return null;
+        }
+        return userIds;
+    }
     
 }
