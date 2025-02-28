@@ -13,9 +13,10 @@
         <title>Order List</title>
     </head>
     <body>
+
         <h2>Order List</h2>
 
-        <button onclick="window.location.href='CreateOrder'">Add Order</button>
+        <button onclick="window.location.href = 'CreateOrder'">Add Order</button>
 
         <table border="1">
             <tr>
@@ -36,17 +37,26 @@
                     for (Order order : orders) {
             %>
             <tr>
-                <td><%= order.getOrderId() %></td>
-                <td><%= order.getUserId() %></td>
-                <td><%= order.getCustomerId() %></td>
-                <td><%= order.getOrderDate() %></td>
-                <td><%= order.getOrderStatus() %></td>
-                <td><%= order.getOrderType() %></td>
-                <td><%= order.getOrderDescription() %></td>
-                <td><%= order.getCouponId() %></td>
-                <td><%= order.getTableId() %></td>
+                <td><%= order.getOrderId()%></td>
+                <td><%= order.getUserId()%></td>
+                <td><%= order.getCustomerId()%></td>
+                <td><%= order.getOrderDate()%></td>
                 <td>
-                    <a href="UpdateOrder?orderId=<%= order.getOrderId() %>" class="btn btn-profile">Update</a>
+                    <select onchange="updateStatus(<%= order.getOrderId()%>, this.value)">
+                        <option value="Pending" <%= order.getOrderStatus().equals("Pending") ? "selected" : ""%>>Pending</option>
+                        <option value="Processing" <%= order.getOrderStatus().equals("Processing") ? "selected" : ""%>>Processing</option>
+                        <option value="Completed" <%= order.getOrderStatus().equals("Completed") ? "selected" : ""%>>Completed</option>
+                        <option value="Cancelled" <%= order.getOrderStatus().equals("Cancelled") ? "selected" : ""%>>Cancelled</option>
+                    </select>
+                </td>
+
+
+                <td><%= order.getOrderType()%></td>
+                <td><%= order.getOrderDescription()%></td>
+                <td><%= order.getCouponId()%></td>
+                <td><%= order.getTableId()%></td>
+                <td>
+                    <a href="UpdateOrder?orderId=<%= order.getOrderId()%>" class="btn btn-profile">Update</a>
                 </td>
             </tr>
             <%
@@ -56,9 +66,39 @@
             <tr>
                 <td colspan="10">No orders found.</td>
             </tr>
-            <% } %>
+            <% }%>
         </table>
-    </body>
+        <script>
+    function updateStatus(orderId, newStatus) {
+        console.log("Updating order:", orderId, "Status:", newStatus); // Debug log
+
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "UpdateStatus", true);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                console.log("Response:", xhr.responseText); // Log response
+                if (xhr.status === 200) {
+                    if (xhr.responseText.trim() === "Success") {
+                        alert("Order status updated successfully!");
+                    } else {
+                        alert("Failed to update order status.");
+                    }
+                } else {
+                    alert("Error connecting to server.");
+                }
+            }
+        };
+
+        xhr.send("orderId=" + orderId + "&orderStatus=" + newStatus);
+    }
+</script>
+
+    </body>     
 </html>
+
+
+
 
 
