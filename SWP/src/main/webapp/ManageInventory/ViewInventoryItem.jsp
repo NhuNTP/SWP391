@@ -32,6 +32,7 @@
             </p>
             <table class="table table-bordered"  method="post">
                 <tr>
+                    <th>STT</th>
                     <th> ID</th>
                     <th> Name</th>
                     <th> Type</th>
@@ -45,52 +46,54 @@
                 <%
                     java.util.List<Model.Inventory> inventoryItemList = (java.util.List<Model.Inventory>) request.getAttribute("InventoryItemList");
                     if (inventoryItemList != null && !inventoryItemList.isEmpty()) {
+                        int displayIndex = 1;
                         for (Model.Inventory listItem : inventoryItemList) {
                 %>
-                    <tr>
-                        <Td valign="middle"><% out.print(listItem.getItemId()); %></td>
-                        <Td valign="middle"><% out.print(listItem.getItemName()); %></td>
-                        <Td valign="middle"><% out.print(listItem.getItemType()); %></td>
-                        <Td valign="middle"><% out.print(listItem.getItemPrice()); %></td>
-                        <Td valign="middle"><% out.print(listItem.getItemQuantity()); %></td>
-                        <Td valign="middle"><% out.print(listItem.getItemUnit()); %></td>
-                        <Td valign="middle"><% out.print(listItem.getItemDescription()); %></td>
+                <tr>
+                    <Td valign="middle"><% out.print(displayIndex++); %></td>
+                    <Td valign="middle"><% out.print(listItem.getItemId()); %></td>
+                    <Td valign="middle"><% out.print(listItem.getItemName()); %></td>
+                    <Td valign="middle"><% out.print(listItem.getItemType()); %></td>
+                    <Td valign="middle"><% out.print(listItem.getItemPrice()); %></td>
+                    <Td valign="middle"><% out.print(listItem.getItemQuantity()); %></td>
+                    <Td valign="middle"><% out.print(listItem.getItemUnit()); %></td>
+                    <Td valign="middle"><% out.print(listItem.getItemDescription()); %></td>
 
 
-                        <Td valign="middle">
+                    <Td valign="middle">
 
 
-                            <form action="ManageCoupon/UpdateCoupon.jsp?couponID=<% out.print(listItem.getItemId()); %>" method="post" style="display:inline;">
-                                <input type="hidden" name="couponId" value="<% out.print(listItem.getItemId()); %>">
-                                <%-- The following inputs are related to coupon from the original JSTL page, adjust them to InventoryItem properties if needed --%>
-                                <input type="hidden" name="discountAmount" value="<% out.print(listItem.getItemPrice()); %>"> <%-- Example: Using ItemPrice as a placeholder --%>
-                                <input type="hidden" name="expirationDate" value="<% out.print("N/A"); %>"> <%-- Example: No expiration date for inventory item --%>
-                                <input type="hidden" name="isUsed" value="<% out.print("false"); %>"> <%-- Example:  Not applicable for inventory item --%>
+                        <form action="ManageCoupon/UpdateCoupon.jsp?couponID=<% out.print(listItem.getItemId()); %>" method="post" style="display:inline;">
+                            <input type="hidden" name="couponId" value="<% out.print(listItem.getItemId()); %>">
+                            <%-- The following inputs are related to coupon from the original JSTL page, adjust them to InventoryItem properties if needed --%>
+                            <input type="hidden" name="discountAmount" value="<% out.print(listItem.getItemPrice()); %>"> <%-- Example: Using ItemPrice as a placeholder --%>
+                            <input type="hidden" name="expirationDate" value="<% out.print("N/A"); %>"> <%-- Example: No expiration date for inventory item --%>
+                            <input type="hidden" name="isUsed" value="<% out.print("false"); %>"> <%-- Example:  Not applicable for inventory item --%>
 
-                                <button type="submit" class="btn btn-warning">Update</button>
-                            </form>
+                            <button type="submit" class="btn btn-warning">Update</button>
+                        </form>
 
-                             <form action="ManageCoupon/DeleteCoupon.jsp" method="post" style="display:inline;">
-                                <input type="hidden" name="couponId" value="<% out.print(listItem.getItemId()); %>">
-                                 <%-- The following inputs are related to coupon from the original JSTL page, adjust them to InventoryItem properties if needed --%>
-                                <input type="hidden" name="discountAmount" value="<% out.print(listItem.getItemPrice()); %>"> <%-- Example: Using ItemPrice as a placeholder --%>
-                                <input type="hidden" name="expirationDate" value="<% out.print("N/A"); %>"> <%-- Example: No expiration date for inventory item --%>
-                                <input type="hidden" name="isUsed" value="<% out.print("false"); %>"> <%-- Example:  Not applicable for inventory item --%>
-                                <button type="submit" class="btn btn-danger">Delete</button>
-                            </form>
-                        </td>
-                    </tr>
+                        <form action="ManageCoupon/DeleteCoupon.jsp" method="post" style="display:inline;">
+                            <input type="hidden" name="couponId" value="<% out.print(listItem.getItemId()); %>">
+                            <%-- The following inputs are related to coupon from the original JSTL page, adjust them to InventoryItem properties if needed --%>
+                            <input type="hidden" name="discountAmount" value="<% out.print(listItem.getItemPrice()); %>"> <%-- Example: Using ItemPrice as a placeholder --%>
+                            <input type="hidden" name="expirationDate" value="<% out.print("N/A"); %>"> <%-- Example: No expiration date for inventory item --%>
+                            <input type="hidden" name="isUsed" value="<% out.print("false"); %>"> <%-- Example:  Not applicable for inventory item --%>
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
 
                 <%
-                        } // end for loop
-                    } else {
+                    } // end for loop
+                } else {
                 %>
-                    <tr>
-                        <td colspan="8">No inventory items available.</td>
-                    </tr>
+                <tr>
+                    <td colspan="8">No inventory items available.</td>
+                </tr>
                 <%
                     } // end if inventoryItemList not null and not empty
-                %>
+%>
 
 
             </table>
