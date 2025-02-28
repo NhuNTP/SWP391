@@ -17,6 +17,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -64,24 +66,31 @@ public class ViewTableListController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        TableDAO tableDAO = new TableDAO(); // Use TableDAO
-        ResultSet rs = tableDAO.getAllTable(); // Get all tables using TableDAO
-        List<Table> tableList = new ArrayList<>(); // Create List of Table objects
 
         try {
-            while (rs.next()) {
-                Table table = new Table(); // Create Table object
-                table.setTableId(rs.getInt("TableId"));
-                table.setTableStatus(rs.getString("TableStatus"));
-                table.setNumberOfSeats(rs.getInt("NumberOfSeats"));
-                tableList.add(table); // Add Table object to tableList
+            TableDAO tableDAO = new TableDAO(); // Use TableDAO
+            ResultSet rs = tableDAO.getAllTable(); // Get all tables using TableDAO
+            List<Table> tableList = new ArrayList<>(); // Create List of Table objects
+            
+            try {
+                while (rs.next()) {
+                    Table table = new Table(); // Create Table object
+                    table.setTableId(rs.getInt("TableId"));
+                    table.setTableStatus(rs.getString("TableStatus"));
+                    table.setNumberOfSeats(rs.getInt("NumberOfSeats"));
+                    tableList.add(table); // Add Table object to tableList
+                }
+            } catch (SQLException e) {
+                e.printStackTrace(); // Log exception, in real app use a logger
             }
-        } catch (SQLException e) {
-            e.printStackTrace(); // Log exception, in real app use a logger
+            
+            request.setAttribute("tableList", tableList); // Set tableList to request attribute
+            request.getRequestDispatcher("ManageTable/ViewTableList.jsp").forward(request, response); // Forward to ViewTableList.jsp    }
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(ViewTableListController.class.getName()).log(Level.SEVERE, null, ex); 
+        } catch (SQLException ex) {
+            Logger.getLogger(ViewTableListController.class.getName()).log(Level.SEVERE, null, ex);
         }
-
-        request.setAttribute("tableList", tableList); // Set tableList to request attribute
-        request.getRequestDispatcher("ManageTable/ViewTableList.jsp").forward(request, response); // Forward to ViewTableList.jsp    }
     }
 
     /**

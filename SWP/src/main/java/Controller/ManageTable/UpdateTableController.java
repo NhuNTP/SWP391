@@ -13,6 +13,9 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -103,19 +106,25 @@ public class UpdateTableController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        int TableId = Integer.parseInt(request.getParameter("TableIdHidden")); // Get NumberOfSeats as String    }
-        String TableStatus = request.getParameter("TableStatus");
-        int NumberOfSeats = Integer.parseInt(request.getParameter("NumberOfSeats")); // Get NumberOfSeats as String    }
-
-        TableDAO dao = new TableDAO();
-        Table table = new Table(TableId, TableStatus, NumberOfSeats);
-        int count = dao.updateTable(TableId, table);
-
-        // Redirect based on whether the update was successful
-        if (count > 0) {
-            response.sendRedirect("ViewTableList");
-        } else {
-            response.sendRedirect("UpdateTable?id=" + TableId);
+        try {
+            int TableId = Integer.parseInt(request.getParameter("TableIdHidden")); // Get NumberOfSeats as String    }
+            String TableStatus = request.getParameter("TableStatus");
+            int NumberOfSeats = Integer.parseInt(request.getParameter("NumberOfSeats")); // Get NumberOfSeats as String    }
+            
+            TableDAO dao = new TableDAO();
+            Table table = new Table(TableId, TableStatus, NumberOfSeats);
+            int count = dao.updateTable(TableId, table);
+            
+            // Redirect based on whether the update was successful
+            if (count > 0) {
+                response.sendRedirect("ViewTableList");
+            } else {
+                response.sendRedirect("UpdateTable?id=" + TableId);
+            }
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(UpdateTableController.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SQLException ex) {
+            Logger.getLogger(UpdateTableController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     /**

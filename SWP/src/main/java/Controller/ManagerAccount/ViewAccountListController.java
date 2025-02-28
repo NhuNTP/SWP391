@@ -14,6 +14,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -65,29 +67,35 @@ public class ViewAccountListController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        AccountDAO dao = new AccountDAO();
-        ResultSet rs = dao.getAllAccount();
-        List<Account> accountList = new ArrayList<>();
-
         try {
-            while (rs.next()) {
-                Account account = new Account();
-                account.setUserId(rs.getInt("UserId"));
-                account.setUserEmail(rs.getString("UserEmail"));
-                account.setUserPassword(rs.getString("UserPassword"));
-                account.setUserName(rs.getString("UserName"));
-                account.setUserRole(rs.getString("UserRole"));
-                account.setIdentityCard(rs.getString("IdentityCard"));
-                account.setUserAddress(rs.getString("UserAddress"));
-                account.setUserImage(rs.getString("UserImage")); // **Quan trọng: Đảm bảo lấy cột UserImage**
-                accountList.add(account);
+            AccountDAO dao = new AccountDAO();
+            ResultSet rs = dao.getAllAccount();
+            List<Account> accountList = new ArrayList<>();
+            
+            try {
+                while (rs.next()) {
+                    Account account = new Account();
+                    account.setUserId(rs.getInt("UserId"));
+                    account.setUserEmail(rs.getString("UserEmail"));
+                    account.setUserPassword(rs.getString("UserPassword"));
+                    account.setUserName(rs.getString("UserName"));
+                    account.setUserRole(rs.getString("UserRole"));
+                    account.setIdentityCard(rs.getString("IdentityCard"));
+                    account.setUserAddress(rs.getString("UserAddress"));
+                    account.setUserImage(rs.getString("UserImage")); // **Quan trọng: Đảm bảo lấy cột UserImage**
+                    accountList.add(account);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace(); // In thực tế nên log lỗi thay vì in ra console
             }
-        } catch (SQLException e) {
-            e.printStackTrace(); // In thực tế nên log lỗi thay vì in ra console
+            
+            request.setAttribute("accountList", accountList); // Lưu danh sách account vào request attribute
+            request.getRequestDispatcher("ManageAccount/ViewAccountList.jsp").forward(request, response);
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(ViewAccountListController.class.getName()).log(Level.SEVERE, null, ex); 
+        } catch (SQLException ex) {
+            Logger.getLogger(ViewAccountListController.class.getName()).log(Level.SEVERE, null, ex);
         }
-
-        request.setAttribute("accountList", accountList); // Lưu danh sách account vào request attribute
-        request.getRequestDispatcher("ManageAccount/ViewAccountList.jsp").forward(request, response);
     }
 
     /**
