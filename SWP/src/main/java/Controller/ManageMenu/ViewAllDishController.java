@@ -28,7 +28,7 @@ public class ViewAllDishController extends HttpServlet {
         if (dishList != null) {
             request.setAttribute("dishList", dishList); // Set dishes as attribute
 
-            RequestDispatcher dispatcher = request.getRequestDispatcher("ManageMenu/viewalldish.jsp"); // Forward to JSP
+            RequestDispatcher dispatcher = request.getRequestDispatcher("/ManageMenu/viewalldish.jsp"); // Forward to JSP
             dispatcher.forward(request, response);
         } else {
             // Handle error appropriately (e.g., display an error page)

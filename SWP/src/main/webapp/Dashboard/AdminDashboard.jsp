@@ -57,8 +57,8 @@
     <div class="sidebar col-md-2 p-3">
       <h4 class="text-center mb-4">Quản Lý</h4>
       <ul class="nav flex-column">
-        <li class="nav-item"><a href="#" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
-        <li class="nav-item"><a href="#" class="nav-link"><i class="fas fa-utensils me-2"></i>Quản lý món ăn</a></li>
+        <li class="nav-item"><a href="Dashboard/AdminDashboard.jsp" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
+        <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-utensils me-2"></i>Quản lý món ăn</a></li>
         <li class="nav-item"><a href="#" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Quản lý đơn hàng</a></li>
         <li class="nav-item"><a href="#" class="nav-link"><i class="fas fa-users me-2"></i>Quản lý nhân viên</a></li>
         <li class="nav-item"><a href="#" class="nav-link"><i class="fas fa-chart-bar me-2"></i>Báo cáo doanh thu</a></li>
