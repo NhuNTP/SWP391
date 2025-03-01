@@ -15,18 +15,24 @@ public class OrderDetail {
     private int dishId;
     private int quantity;
     private double subtotal;
+    private String dishName;
+    private Integer quantityUsed;
 
     public OrderDetail() {
 
     }
 
-    public OrderDetail(int orderDetailId, int orderId, int dishId, int quantity, double subtotal) {
+    public OrderDetail(int orderDetailId, int orderId, int dishId, int quantity, double subtotal, String dishName, Integer quantityUsed) {
         this.orderDetailId = orderDetailId;
         this.orderId = orderId;
         this.dishId = dishId;
         this.quantity = quantity;
         this.subtotal = subtotal;
+        this.dishName = dishName;
+        this.quantityUsed = quantityUsed;
     }
+
+
 
     public int getOrderDetailId() {
         return orderDetailId;
@@ -62,6 +68,22 @@ public class OrderDetail {
 
     public double getSubtotal() {
         return subtotal;
+    }
+
+    public String getDishName() {
+        return dishName;
+    }
+
+    public void setDishName(String dishName) {
+        this.dishName = dishName;
+    }
+
+    public Integer getQuantityUsed() {
+        return quantityUsed;
+    }
+
+    public void setQuantityUsed(Integer quantityUsed) {
+        this.quantityUsed = quantityUsed;
     }
 
     public void setSubtotal(double subtotal) {
