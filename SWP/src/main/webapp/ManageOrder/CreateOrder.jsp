@@ -4,6 +4,7 @@
     Author     : HuynhPhuBinh
 --%>
 
+<%-- CreateOrder.jsp --%>
 <%@page import="java.util.List"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
@@ -61,9 +62,40 @@
         <label for="tableId">Table ID:</label><br>
         <input type="number" id="tableId" name="tableId"><br><br>
 
+        <h3>Order Details:</h3>
+        <div id="orderDetails">
+            <div class="orderDetail">
+                <label for="dishId_1">Dish ID:</label>
+                <input type="number" id="dishId_1" name="dishId_1"><br>
+                <label for="quantity_1">Quantity:</label>
+                <input type="number" id="quantity_1" name="quantity_1"><br>
+                <hr>
+            </div>
+        </div>
+        <button type="button" onclick="addOrderDetail()">Add More</button><br><br>
+
         <input type="submit" value="Create Order">
     </form>
 
     <button onclick="window.location.href = 'ViewOrderList'">Back to Order List</button>
+
+    <script>
+        let orderDetailCount = 1;
+
+        function addOrderDetail() {
+            orderDetailCount++;
+            let orderDetailsDiv = document.getElementById("orderDetails");
+            let newOrderDetailDiv = document.createElement("div");
+            newOrderDetailDiv.className = "orderDetail";
+            newOrderDetailDiv.innerHTML = `
+                <label for="dishId_${orderDetailCount}">Dish ID:</label>
+                <input type="number" id="dishId_${orderDetailCount}" name="dishId_${orderDetailCount}"><br>
+                <label for="quantity_${orderDetailCount}">Quantity:</label>
+                <input type="number" id="quantity_${orderDetailCount}" name="quantity_${orderDetailCount}"><br>
+                <hr>
+            `;
+            orderDetailsDiv.appendChild(newOrderDetailDiv);
+        }
+    </script>
 </body>
 </html>

@@ -2,9 +2,11 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
  */
+// ViewOrderDetailController.java
 package Controller.ManageOrder;
 
 import DAO.OrderDAO;
+import Model.Order;
 import Model.OrderDetail;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
@@ -24,27 +26,34 @@ public class ViewOrderDetailController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        List<OrderDetail> orderDetails = null;
         // 1. Lấy orderId từ request
-       int orderId = Integer.parseInt(request.getParameter("orderId"));
-        // 2. Gọi DAO để lấy danh sách OrderDetail từ database
+        int orderId = Integer.parseInt(request.getParameter("orderId"));
+
+        // 2. Gọi DAO để lấy Order
         OrderDAO orderDAO = new OrderDAO();
+        Order order = null;
         try {
-            orderDetails = orderDAO.getOrderDetailsByOrderId(orderId); // SỬA Ở ĐÂY
-        } catch (SQLException ex) {
-            Logger.getLogger(ViewOrderDetailController.class.getName()).log(Level.SEVERE, null, ex);
+            order = orderDAO.getOrderById(orderId);
         } catch (ClassNotFoundException ex) {
             Logger.getLogger(ViewOrderDetailController.class.getName()).log(Level.SEVERE, null, ex);
         }
-        // 3. Kiểm tra xem danh sách OrderDetail có null hoặc rỗng không
-        if (orderDetails != null && !orderDetails.isEmpty()) {
-            request.setAttribute("orderDetails", orderDetails); // Gửi danh sách OrderDetail
-            // 4. Hiển thị trang chi tiết OrderDetail
-            request.getRequestDispatcher("ManageOrder/ViewOrderDetail.jsp").forward(request, response);
-            return; // Kết thúc nếu thành công
+
+        // 3. Kiểm tra xem Order có null không
+        if (order == null) {
+            request.setAttribute("errorMessage", "Order not found");
+            request.getRequestDispatcher("ViewOrderList").forward(request, response);
+            return;
         }
-        // Xử lý trường hợp không tìm thấy order detail (ví dụ: hiển thị thông báo lỗi)
-        request.setAttribute("errorMessage", "No order details found for Order ID: " + orderId);
-        request.getRequestDispatcher("ViewOrderList").forward(request, response);
+
+        // 4. Lấy danh sách OrderDetail từ Order (đã được lấy trong getOrderById)
+        List<OrderDetail> orderDetails = order.getOrderDetails();
+
+        // 5. Gửi Order và OrderDetails đến view
+        request.setAttribute("order", order);
+        request.setAttribute("orderDetails", orderDetails);
+        request.getRequestDispatcher("ManageOrder/ViewOrderDetail.jsp").forward(request, response);
+        
+        
     }
+    
 }
