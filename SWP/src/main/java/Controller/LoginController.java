@@ -90,19 +90,19 @@ public class LoginController extends HttpServlet {
                 
                 switch (account.getUserRole()) {
                     case "Admin":
-                        response.sendRedirect("home.jsp");
+                        response.sendRedirect("Dashboard/AdminDashboard.jsp");
                         break;
                     case "Manager":
-                        response.sendRedirect("manager/dashboard.jsp");
+                        response.sendRedirect("Dashboard/ManagerDashboard.jsp");
                         break;
                     case "Cashier":
-                        response.sendRedirect("cashier/dashboard.jsp");
+                        response.sendRedirect("Dashboard/CashierDashboard.jsp");
                         break;
                     case "Waiter":
-                        response.sendRedirect("waiter/dashboard.jsp");
+                        response.sendRedirect("Dashboard/WaiterDashboard.jsp");
                         break;
                     case "kitchen staff":
-                        response.sendRedirect("kitchen/dashboard.jsp");
+                        response.sendRedirect("Dashboard/KitchenstaffDashboard.jsp");
                         break;
                     default:
                         response.sendRedirect("LoginPpage.jsp");
