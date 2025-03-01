@@ -17,6 +17,7 @@
     </head>
 
     <body>
+       
         <nav class="navbar navbar-inverse">
             <div class="container-fluid">
                 <div class="navbar-header">
@@ -40,6 +41,7 @@
                     <th> Quantity</th>
                     <th> Unit</th>
                     <th> Description</th>
+                    <th> Item Image</th>
 
 
                 </tr>
@@ -58,6 +60,18 @@
                     <Td valign="middle"><% out.print(listItem.getItemQuantity()); %></td>
                     <Td valign="middle"><% out.print(listItem.getItemUnit()); %></td>
                     <Td valign="middle"><% out.print(listItem.getItemDescription()); %></td>
+                    <Td valign="middle">
+                        <%
+                            String imagePath = listItem.getItemImage();
+                            if (imagePath != null && !imagePath.isEmpty()) {
+                        %>
+                        <img src="<%= imagePath%>" alt="<%= listItem.getItemName()%>" style="max-width: 100px; max-height: 100px;">
+                        <%
+                            } else {
+                                out.print("No Image"); // Hoặc hiển thị một hình ảnh placeholder nếu muốn
+                            }
+                        %>
+                    </td>
 
 
                     <Td valign="middle">

@@ -30,7 +30,8 @@ public class InventoryDAO extends DB.DBContext {
                             rs.getDouble("ItemPrice"),
                             rs.getInt("ItemQuantity"),
                             rs.getString("ItemUnit"),
-                            rs.getString("ItemDescription")
+                            rs.getString("ItemDescription"),
+                            rs.getString("ItemImage")
                     );
                     //    System.out.println("--- Inventory Item " + rowCount + " ---");
                     System.out.println("ItemId: " + inventoryItem.getItemId());
@@ -40,6 +41,7 @@ public class InventoryDAO extends DB.DBContext {
                     System.out.println("ItemQuantity: " + inventoryItem.getItemQuantity());
                     System.out.println("ItemUnit: " + inventoryItem.getItemUnit());
                     System.out.println("ItemDescription: " + inventoryItem.getItemDescription());
+                    System.out.println("ItemImage: " + inventoryItem.getItemImage());
                     System.out.println("-----------------------");
                     inventoryItemList.add(inventoryItem);
                 }
@@ -53,8 +55,8 @@ public class InventoryDAO extends DB.DBContext {
     }
 
     public void addNewInventoryItem(Inventory inventory) { // Changed parameter type to Model.InventoryItem
-        String sql = "INSERT INTO [dbo].[Inventory] (ItemName, ItemType, ItemPrice, ItemQuantity, ItemUnit, ItemDescription) " // Updated column names to InventoryItem properties
-                + "VALUES ( ?, ?, ?, ?, ?, ?)"; // Updated number of placeholders to match the number of columns
+        String sql = "INSERT INTO [dbo].[Inventory] (ItemName, ItemType, ItemPrice, ItemQuantity, ItemUnit, ItemDescription,ItemImage) " // Updated column names to InventoryItem properties
+                + "VALUES ( ?, ?, ?, ?, ?, ?, ?)"; // Updated number of placeholders to match the number of columns
         try {
             PreparedStatement st = getConnection().prepareStatement(sql);
 
@@ -64,6 +66,7 @@ public class InventoryDAO extends DB.DBContext {
             st.setInt(4, inventory.getItemQuantity());          // Set ItemQuantity (assuming ItemQuantity is int)
             st.setString(5, inventory.getItemUnit());          // Set ItemUnit
             st.setString(6, inventory.getItemDescription());    // Set ItemDescription
+            st.setString(7, inventory.getItemImage());    // Set ItemDescription
 
             st.executeUpdate();
         } catch (Exception e) {

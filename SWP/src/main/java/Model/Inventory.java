@@ -16,8 +16,13 @@ public class Inventory {
     private int ItemQuantity;
     private String ItemUnit;
     private String ItemDescription;
+    private String ItemImage;
 
-    public Inventory(int ItemId, String ItemName, String ItemType, double ItemPrice, int ItemQuantity, String ItemUnit, String ItemDescription) {
+    public Inventory() {
+    }
+
+    
+    public Inventory(int ItemId, String ItemName, String ItemType, double ItemPrice, int ItemQuantity, String ItemUnit, String ItemDescription, String ItemImage) {
         this.ItemId = ItemId;
         this.ItemName = ItemName;
         this.ItemType = ItemType;
@@ -25,66 +30,83 @@ public class Inventory {
         this.ItemQuantity = ItemQuantity;
         this.ItemUnit = ItemUnit;
         this.ItemDescription = ItemDescription;
+        this.ItemImage = ItemImage;
+    }
+
+    public Inventory(String ItemName, String ItemType, double ItemPrice, int ItemQuantity, String ItemUnit, String ItemDescription, String ItemImage) {
+        this.ItemName = ItemName;
+        this.ItemType = ItemType;
+        this.ItemPrice = ItemPrice;
+        this.ItemQuantity = ItemQuantity;
+        this.ItemUnit = ItemUnit;
+        this.ItemDescription = ItemDescription;
+        this.ItemImage = ItemImage;
     }
 
     
-    
-    public Inventory() {
-    }
-
     public int getItemId() {
         return ItemId;
     }
 
-    public void setItemId(int itemId) {
-        this.ItemId = itemId;
+    public void setItemId(int ItemId) {
+        this.ItemId = ItemId;
     }
 
     public String getItemName() {
         return ItemName;
     }
 
-    public void setItemName(String itemName) {
-        this.ItemName = itemName;
+    public void setItemName(String ItemName) {
+        this.ItemName = ItemName;
     }
 
     public String getItemType() {
         return ItemType;
     }
 
-    public void setItemType(String itemType) {
-        this.ItemType = itemType;
+    public void setItemType(String ItemType) {
+        this.ItemType = ItemType;
     }
 
     public double getItemPrice() {
         return ItemPrice;
     }
 
-    public void setItemPrice(double itemPrice) {
-        this.ItemPrice = itemPrice;
+    public void setItemPrice(double ItemPrice) {
+        this.ItemPrice = ItemPrice;
     }
 
     public int getItemQuantity() {
         return ItemQuantity;
     }
 
-    public void setItemQuantity(int itemQuantity) {
-        this.ItemQuantity = itemQuantity;
+    public void setItemQuantity(int ItemQuantity) {
+        this.ItemQuantity = ItemQuantity;
     }
 
     public String getItemUnit() {
         return ItemUnit;
     }
 
-    public void setItemUnit(String itemUnit) {
-        this.ItemUnit = itemUnit;
+    public void setItemUnit(String ItemUnit) {
+        this.ItemUnit = ItemUnit;
     }
 
     public String getItemDescription() {
         return ItemDescription;
     }
 
-    public void setItemDescription(String itemDescription) {
-        this.ItemDescription = itemDescription;
+    public void setItemDescription(String ItemDescription) {
+        this.ItemDescription = ItemDescription;
     }
+
+    public String getItemImage() {
+        return ItemImage;
+    }
+
+    public void setItemImage(String ItemImage) {
+        this.ItemImage = ItemImage;
+    }
+
+
 }

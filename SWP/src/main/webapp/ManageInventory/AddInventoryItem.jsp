@@ -30,7 +30,7 @@
             <div class="form-horizontal">
                 <h5>Enter Item Details</h5>
                 <hr />
-                <form action="../AddInventoryItemController" method="POST">
+                <form action="../AddInventoryItemController" method="POST" enctype="multipart/form-data">
                     <div class="form-group">
                         <label class="control-label col-md-2">Item Name</label>
                         <div class="col-md-10">
@@ -38,7 +38,7 @@
                         </div>
                     </div>
 
-                      <div class="form-group">
+                    <div class="form-group">
                         <label class="control-label col-md-2">Item Type</label>
                         <div class="col-md-10">
                             <select class="form-control" name="itemType" required> <%-- Changed to <select> element and added required --%>
@@ -86,7 +86,10 @@
                             <textarea class="form-control" name="itemDescription" placeholder="Enter Item Description"></textarea>
                         </div>
                     </div>
-
+                    <div class="form-group">
+                        <label for="itemImage">Image </label>
+                        <input type="file" class="form-control" id="itemImage" name="itemImage">  <!-- Input type file để chọn file hình ảnh -->
+                    </div>
                     <div class="form-group">
                         <div class="col-md-offset-2 col-md-10">
                             <input type="submit" value="Add Item" class="btn btn-warning" />
