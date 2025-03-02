@@ -85,7 +85,7 @@ public class ViewTableListController extends HttpServlet {
             }
             
             request.setAttribute("tableList", tableList); // Set tableList to request attribute
-            request.getRequestDispatcher("ManageTable/ViewTableList.jsp").forward(request, response); // Forward to ViewTableList.jsp    }
+            request.getRequestDispatcher("ManageTable/testTable.jsp").forward(request, response); // Forward to ViewTableList.jsp    }
         } catch (ClassNotFoundException ex) {
             Logger.getLogger(ViewTableListController.class.getName()).log(Level.SEVERE, null, ex); 
         } catch (SQLException ex) {
