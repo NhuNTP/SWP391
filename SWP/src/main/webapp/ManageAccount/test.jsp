@@ -657,7 +657,7 @@
         <div class="d-flex">
             <!-- Sidebar -->
             <div class="sidebar col-md-2 p-3">
-                <h4 class="text-center mb-4">Quản Lý</h4>
+                <h4 class="text-center mb-4">Admin</h4>
                 <ul class="nav flex-column">
                     <li class="nav-item"><a href="Dashboard/AdminDashboard.jsp" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-utensils me-2"></i>Menu Management</a></li>
