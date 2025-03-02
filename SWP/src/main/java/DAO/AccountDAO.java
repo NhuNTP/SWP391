@@ -22,17 +22,17 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class AccountDAO {
+
     private Connection conn;
     private String sql;
 
     public AccountDAO() throws ClassNotFoundException, SQLException {
         conn = DBContext.getConnection();
     }
-    
+
     public Account login(String username, String password) {
         String query = "SELECT * FROM Account WHERE UserName = ? AND UserPassword = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {
             ps.setString(1, username);
             ps.setString(2, password);
             ResultSet rs = ps.executeQuery();
@@ -53,12 +53,12 @@ public class AccountDAO {
         }
         return null;
     }
-    
+
     public ResultSet getAllAccount() {
         ResultSet rs = null;
         try {
             Statement st = conn.createStatement();
-            sql = "SELECT * FROM Account";
+            sql = "SELECT * FROM Account where IsDeleted = 0";
             rs = st.executeQuery(sql);
         } catch (SQLException ex) {
             Logger.getLogger(AccountDAO.class.getName()).log(Level.SEVERE, null, ex);
@@ -134,11 +134,12 @@ public class AccountDAO {
         return count;
     }
 
-    public int deleteNotificationsByUserId(int userId) { // Phương thức mới để xóa notifications
+    public int deleteNotificationsByUserId(int userId) {
         int count = 0;
         try {
-            sql = "DELETE FROM Notification WHERE UserId = ?";
-            PreparedStatement pst = conn.prepareStatement(sql); // Sử dụng connection từ DBContext
+            // Assuming you want to soft delete notifications as well
+            sql = "UPDATE Notification SET IsDeleted = 1 WHERE UserId = ?";
+            PreparedStatement pst = conn.prepareStatement(sql);
             pst.setInt(1, userId);
             count = pst.executeUpdate();
         } catch (SQLException ex) {
@@ -147,53 +148,27 @@ public class AccountDAO {
         return count;
     }
 
-    public int deleteAccount(int id) throws ClassNotFoundException { // Phương thức Delete đã sửa đổi
+    // Xóa mềm tài khoản (soft delete) - Thay đổi phương thức deleteAccount
+    public int deleteAccount(int id) {
         int count = 0;
-        Connection conn = null; // Khai báo connection trong phương thức
-        PreparedStatement pstDeleteNotifications = null; // PreparedStatements cho cả hai truy vấn
-        PreparedStatement pstDeleteAccount = null;
-
         try {
-            conn = getConnection(); // Lấy connection từ DBContext
-            conn.setAutoCommit(false); // Bắt đầu transaction
-
-            // Bước 1: Xóa các notifications liên quan
-            int notificationsDeleted = deleteNotificationsByUserId(id);
-            System.out.println("Notifications deleted: " + notificationsDeleted); // Log số notifications đã xóa
-
-            // Bước 2: Xóa tài khoản
-            sql = "DELETE FROM Account WHERE UserId=?";
-            pstDeleteAccount = conn.prepareStatement(sql);
-            pstDeleteAccount.setInt(1, id);
-            count = pstDeleteAccount.executeUpdate();
-
-            conn.commit(); // Commit transaction nếu cả hai bước thành công
-
+            sql = "UPDATE Account SET IsDeleted = 1 WHERE UserId = ?"; // Đặt IsDeleted thành 1 thay vì xóa
+            PreparedStatement pst = conn.prepareStatement(sql);
+            pst.setInt(1, id);
+            count = pst.executeUpdate();
         } catch (SQLException ex) {
-            if (conn != null) {
-                try {
-                    conn.rollback(); // Rollback transaction nếu có lỗi
-                    System.err.println("Transaction rolled back due to error."); // Log rollback
-                } catch (SQLException rollbackEx) {
-                    Logger.getLogger(AccountDAO.class.getName()).log(Level.SEVERE, null, rollbackEx);
-                }
-            }
-            Logger.getLogger(AccountDAO.class.getName()).log(Level.SEVERE, null, ex);
-            count = 0; // Đảm bảo count = 0 khi có lỗi
+            LOGGER.log(Level.SEVERE, "Error delete account", ex); // Use the logger
         }
         return count;
     }
-  
-  
+
     private static final Logger LOGGER = Logger.getLogger(AccountDAO.class.getName());
 
     public List<String> getAllRoles() {
         List<String> roles = new ArrayList<>();
         String sql = "SELECT DISTINCT UserRole FROM Account"; // Adjust table and column names as needed
 
-        try (Connection connection = DBContext.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(sql);
-             ResultSet resultSet = preparedStatement.executeQuery()) {
+        try (Connection connection = DBContext.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(sql); ResultSet resultSet = preparedStatement.executeQuery()) {
 
             while (resultSet.next()) {
                 roles.add(resultSet.getString("UserRole")); // Adjust column name as needed
@@ -210,8 +185,7 @@ public class AccountDAO {
         List<Integer> userIds = new ArrayList<>();
         String sql = "SELECT UserId FROM Account WHERE UserRole = ?"; // Adjust table and column names as needed
 
-        try (Connection connection = DBContext.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+        try (Connection connection = DBContext.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
             preparedStatement.setString(1, role);
 
@@ -227,5 +201,5 @@ public class AccountDAO {
         }
         return userIds;
     }
-    
+
 }

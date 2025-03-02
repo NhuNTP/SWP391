@@ -1,81 +1,31 @@
 <%--
-    Document   : test
-    Created on : Feb 28, 2025, 9:42:15 PM
+    Document   : TableManagement
+    Created on : Feb 29, 2025, 10:00:00 AM
     Author     : ADMIN
 --%>
 
 <%@page import="java.util.List"%>
-<%@page import="Model.Account"%>
-<%@page import="DAO.AccountDAO"%>
+<%@page import="Model.Table"%>
+<%@page import="DAO.TableDAO"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html lang="vi">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Employee Account List - Admin Dashboard</title>
+        <title>Table Management - Admin Dashboard</title>
         <script>
-            function confirmDelete(userId, userName) {
-                if (confirm('Bạn có chắc chắn muốn xóa tài khoản ID: ' + userId + ' - Tên người dùng: ' + userName + ' không?')) {
-                    window.location.href = 'DeleteAccount?id=' + userId;
+            function confirmDelete(tableId, tableStatus) {
+                if (confirm('Bạn có chắc chắn muốn xóa bàn ID: ' + tableId + ' - Trạng thái: ' + tableStatus + ' không?')) {
+                    window.location.href = 'DeleteTable?id=' + tableId;
                 }
-            }
-            function validateForm() {
-                let email = document.getElementById("UserEmail").value.trim();
-                let password = document.getElementById("UserPassword").value.trim();
-                let name = document.getElementById("UserName").value.trim();
-                let role = document.getElementById("UserRole").value;
-                let idCard = document.getElementById("IdentityCard").value.trim();
-                let address = document.getElementById("UserAddress").value.trim();
-
-                if (!email || !password || !name || !role || !idCard || !address) {
-                    alert("Vui lòng điền đầy đủ tất cả các trường.");
-                    return false;
-                }
-
-                if (!email.endsWith("@gmail.com")) {
-                    alert("Email phải kết thúc bằng '@gmail.com'.");
-                    return false;
-                }
-
-                if (!/^\d{12}$/.test(idCard)) {
-                    alert("Số CMND/CCCD phải đúng 12 chữ số.");
-                    return false;
-                }
-
-                return true;
-            }
-            function validateUpdateForm() {
-                let email = document.getElementById("EditUserEmail").value.trim();
-                let password = document.getElementById("EditUserPassword").value.trim();
-                let name = document.getElementById("EditUserName").value.trim();
-                let role = document.getElementById("EditUserRole").value;
-                let idCard = document.getElementById("EditIdentityCard").value.trim();
-                let address = document.getElementById("EditUserAddress").value.trim();
-
-                if (!email || !password || !name || !role || !idCard || !address) {
-                    alert("Vui lòng điền đầy đủ tất cả các trường.");
-                    return false;
-                }
-
-                if (!email.endsWith("@gmail.com")) {
-                    alert("Email phải kết thúc bằng '@gmail.com'.");
-                    return false;
-                }
-
-                if (!/^\d{12}$/.test(idCard)) {
-                    alert("Số CMND/CCCD phải đúng 12 chữ số.");
-                    return false;
-                }
-
-                return true;
             }
         </script>
         <link rel="stylesheet" href="style.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <style>
-            /* Existing styles... */
+            /* Bắt đầu nội dung CSS từ tệp style.css */
             body {
                 font-family: 'Roboto', sans-serif;
                 background-color: #f8f9fa;
@@ -109,6 +59,16 @@
                 position: relative;
                 height: 300px;
             }
+            /* CSS giữ nguyên từ code trước - bao gồm CSS cho modal */
+            /* Bắt đầu nội dung CSS từ tệp style.css */
+            /*            body, h1, h2, h3, h4, h5, h6, p, ul, li {
+                            margin: 0;
+                            padding: 0;
+                            list-style: none;
+                            text-decoration: none;
+                            color: #333;
+                            font-family: sans-serif;
+                        }*/
 
             body {
                 font-size: 14px;
@@ -124,6 +84,7 @@
             .header-container, .nav-container, .container {
                 max-width: 1200px;
                 margin: 0 auto;
+                /*                padding: 0 20px;*/
                 display: flex;
                 align-items: center;
             }
@@ -218,7 +179,6 @@
                 border-radius: 5px;
                 font-weight: bold;
             }
-
 
 
             .container {
@@ -451,9 +411,6 @@
                     margin-bottom: 10px;
                 }
             }
-            /* Kết thúc nội dung CSS */
-
-            /* CSS cho Modal - GIỮ NGUYÊN */
             .modal {
                 display: none;
                 position: fixed;
@@ -548,7 +505,7 @@
                 font-size: 2rem;
             }
             /* Custom styles for table buttons */
-            .btn-edit {
+            .btn-edit-table {
                 background-color: #007bff; /* Blue color for edit */
                 color: white;
                 border: none;
@@ -561,11 +518,11 @@
                 justify-content: center;
             }
 
-            .btn-edit:hover {
+            .btn-edit-table:hover {
                 background-color: #0056b3; /* Darker blue on hover */
             }
 
-            .btn-delete {
+            .btn-delete-table {
                 background-color: #dc3545; /* Red color for delete */
                 color: white;
                 border: none;
@@ -579,13 +536,14 @@
                 margin-left: 5px; /* Add some spacing between buttons */
             }
 
-            .btn-delete:hover {
+            .btn-delete-table:hover {
                 background-color: #c82333; /* Darker red on hover */
             }
 
-            .btn-edit i, .btn-delete i {
+            .btn-edit-table i, .btn-delete-table i {
                 margin-right: 5px; /* Spacing between icon and text */
             }
+
             /* Basic table styling for better look */
             .employee-grid table {
                 width: 100%;
@@ -616,6 +574,7 @@
     <body>
         <div class="d-flex">
             <!-- Sidebar -->
+
             <div class="sidebar col-md-2 p-3">
                 <h4 class="text-center mb-4">Quản Lý</h4>
                 <ul class="nav flex-column">
@@ -635,64 +594,45 @@
                         <main class="content-area">
                             <div class="content-header">
                                 <div class="search-bar">
-                                    <input type="text" placeholder="Tìm theo mã, tên nhân viên">
+                                    <input type="text" placeholder="Tìm theo mã bàn, trạng thái">
                                 </div>
                                 <div class="header-buttons">
-                                    <button class="add-employee-btn"><i class="far fa-plus"></i> Nhân viên</button>
+                                    <button class="add-table-btn"><i class="far fa-plus"></i> Bàn ăn</button>
 
                                 </div>
                             </div>
 
                             <div class="employee-grid">
-                                <table class="table table-striped table-bordered table-hover">
+                                <table class="table table-striped table-bordered table-hover"> <%-- Added Bootstrap table classes --%>
                                     <thead>
                                         <tr>
                                             <th>No.</th>
                                             <th>ID</th>
-                                            <th>Image</th>
-                                            <th>Account Email</th>
-                                            <th>Account Password</th>
-                                            <th>Account Name</th>
-                                            <th>Account Role</th>
-                                            <th>Identity Card</th>
-                                            <th>User Address</th>
+                                            <th>Status</th>
+                                            <th>Number of Seats</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <%-- Sử dụng scriptlet để lặp qua accountList --%>
+                                        <%-- Sử dụng scriptlet để lặp qua tableList --%>
                                         <%
-                                            List<Account> accounts = (List<Account>) request.getAttribute("accountList");
-                                            if (accounts != null && !accounts.isEmpty()) {
+                                            List<Table> tables = (List<Table>) request.getAttribute("tableList");
+                                            if (tables != null && !tables.isEmpty()) {
                                                 int counter = 1;
-                                                for (Account account : accounts) {
+                                                for (Table table : tables) {
                                         %>
                                         <tr>
                                             <td><%= counter++%></td>
-                                            <td><%= account.getUserId()%></td>
+                                            <td><%= table.getTableId()%></td>
+                                            <td><%= table.getTableStatus()%></td>
+                                            <td><%= table.getNumberOfSeats()%></td>
                                             <td>
-                                                <% String imagePath = request.getContextPath() + account.getUserImage();%>
-                                                <%-- Đường dẫn ảnh: <%= imagePath%><br> --%>
-                                                <img src="<%= imagePath%>" alt="User Image" width="80" height="80" style="border-radius: 50%; object-fit: cover;"/>
-                                            </td>
-                                            <td><%= account.getUserEmail()%></td>
-                                            <td><%= account.getUserPassword()%></td>
-                                            <td><%= account.getUserName()%></td>
-                                            <td><%= account.getUserRole()%></td>
-                                            <td><%= account.getIdentityCard()%></td>
-                                            <td><%= account.getUserAddress()%></td>
-                                            <td>
-                                                <a href="#" class="edit-employee-btn btn-edit"
-                                                   data-userid="<%=account.getUserId()%>"
-                                                   data-useremail="<%=account.getUserEmail()%>"
-                                                   data-username="<%=account.getUserName()%>"
-                                                   data-userpassword="<%=account.getUserPassword()%>"
-                                                   data-userrole="<%=account.getUserRole()%>"
-                                                   data-identitycard="<%=account.getIdentityCard()%>"
-                                                   data-useraddress="<%=account.getUserAddress()%>"
-                                                   data-userimage="<%=account.getUserImage()%>"
-                                                   ><i class="fas fa-edit"></i> Edit</a>
-                                                <a href="#" onclick="confirmDelete('<%= account.getUserId()%>', '<%= account.getUserName()%>')" class="btn-delete"><i class="fas fa-trash-alt"></i> Delete</a>
+                                                <a href="#" class="edit-table-btn btn-edit-table"     <%-- Added btn-edit-table class --%>
+                                                   data-tableid="<%=table.getTableId()%>"
+                                                   data-tablestatus="<%=table.getTableStatus()%>"
+                                                   data-numberofseats="<%=table.getNumberOfSeats()%>"
+                                                   ><i class="fas fa-edit"></i>Edit</a> <%-- Added edit icon --%>
+                                                <a href="#" onclick="confirmDelete('<%= table.getTableId()%>', '<%= table.getTableStatus()%>')" class="btn-delete btn-delete-table"><i class="fas fa-trash-alt"></i>Delete</a> <%-- Added btn-delete-table class and delete icon --%>
                                             </td>
                                         </tr>
                                         <%
@@ -700,10 +640,10 @@
                                         } else {
                                         %>
                                         <tr>
-                                            <td colspan="10">
+                                            <td colspan="5">
                                                 <div class="no-data">
-                                                    <i class="fal fa-user"></i>
-                                                    <span>Gian hàng chưa có nhân viên.<br>Nhấn <a href="#">vào đây</a> để thêm mới nhân viên.</span>
+                                                    <i class="fas fa-table"></i>
+                                                    <span>Không có bàn ăn nào.<br>Nhấn <a href="#">vào đây</a> để thêm mới bàn ăn.</span>
                                                 </div>
                                             </td>
                                         </tr>
@@ -719,178 +659,128 @@
             </div>
         </div>
 
-        <!-- Modal Create Employee Account -->
-        <div id="createEmployeeModal" class="modal">
+        <!-- Modal Create Table -->
+        <div id="createTableModal" class="modal">
             <div class="modal-content">
                 <span class="close-button">×</span>
-                <h2>Create New Employee Account</h2>
+                <h2>Create New Table</h2>
                 <div class="modal-form-container">
-                    <form method="post" action="CreateAccount" enctype="multipart/form-data" onsubmit="return validateForm()">
+                    <form method="post" action="CreateTable">
                         <div>
-                            <label for="UserEmail">Email Address</label>
-                            <input type="email" id="UserEmail" name="UserEmail" placeholder="Enter email">
-                        </div>
-                        <div>
-                            <label for="UserPassword">Password</label>
-                            <input type="password" id="UserPassword" name="UserPassword" placeholder="Password">
-                        </div>
-                        <div>
-                            <label for="UserName">Full Name</label>
-                            <input type="text" id="UserName" name="UserName" placeholder="Enter full name">
-                        </div>
-                        <div>
-                            <label for="UserRole">Role</label>
-                            <select id="UserRole" name="UserRole">
-                                <option value="Manager">Manager</option>
-                                <option value="Cashier">Cashier</option>
-                                <option value="Waiter">Waiter</option>
-                                <option value="Kitchen staff">Kitchen staff</option>
+                            <label for="TableStatus">Table Status</label>
+                            <select id="TableStatus" name="TableStatus">
+                                <option value="Available">Available</option>
+                                <option value="Occupied">Occupied</option>
+                                <option value="Reserved">Reserved</option>
+                                <option value="Unavailable">Unavailable</option>
                             </select>
                         </div>
                         <div>
-                            <label for="IdentityCard">Identity Card (12 digits)</label>
-                            <input type="text" id="IdentityCard" name="IdentityCard" placeholder="Enter 12-digit ID Card number">
-                        </div>
-                        <div>
-                            <label for="UserAddress">Address</label>
-                            <input type="text" id="UserAddress" name="UserAddress" placeholder="Enter address">
-                        </div>
-                        <div>
-                            <label for="UserImage">Profile Image</label>
-                            <input type="file" id="UserImage" name="UserImage">
+                            <label for="NumberOfSeats">Number Of Seats</label>
+                            <input type="number" id="NumberOfSeats" name="NumberOfSeats" >
                         </div>
                         <div class="modal-actions">
-                            <input type="submit" class="btn btn-primary" name="btnSubmit" value="Create Account"/>
-                            <button type="button" class="btn btn-secondary close-button">Cancel</button>
+                            <input type="submit" class="btn btn-primary" name="btnSubmit" value="Create Table"/> <%-- Bootstrap button style --%>
+                            <button type="button" class="btn btn-secondary close-button">Cancel</button> <%-- Bootstrap button style --%>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
 
-        <!-- Modal Edit Employee Account -->
-        <div id="editEmployeeModal" class="modal">
+        <!-- Modal Edit Table Status -->
+        <div id="editTableModal" class="modal">
             <div class="modal-content">
                 <span class="close-button">×</span>
-                <h2>Edit Employee Account</h2>
+                <h2>Edit Table Status</h2>
                 <div class="modal-form-container">
-                    <form method="post" action="UpdateAccount" enctype="multipart/form-data" onsubmit="return validateUpdateForm()">
-                        <input type="hidden" id="EditUserIdHidden" name="UserIdHidden" value=""/>
+                    <form method="post" action="UpdateTable">
+                        <input type="hidden" id="EditTableIdHidden" name="TableIdHidden" value=""/>
                         <div>
                             <div>
-                                <div>
-                                    <img id="EditCurrentImage" src="" alt="Current Image" style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover;"/>
-                                </div>
-                                <label for="EditUserImage">Update Profile Image</label>
-                                <input type="file" id="EditUserImage" name="UserImage"/>
+                                <label for="EditTableId">Table ID</label>
+                                <input type="text" id="EditTableId" name="TableId" value="" readonly/>
                             </div>
                             <div>
-                                <div>
-                                    <label for="EditUserId">User ID</label>
-                                    <input type="text" id="EditUserId" name="UserId" value="" readonly/>
-                                </div>
-                                <div>
-                                    <label for="EditUserEmail">Email Address</label>
-                                    <input type="email" id="EditUserEmail" name="UserEmail" value=""/>
-                                </div>
-                                <div>
-                                    <label for="EditUserPassword">Password</label>
-                                    <input type="password" id="EditUserPassword" name="UserPassword" value=""/>
-                                </div>
-                                <div>
-                                    <label for="EditUserName">Full Name</label>
-                                    <input type="text" id="EditUserName" name="UserName" value=""/>
-                                </div>
-                                <div>
-                                    <label for="EditUserRole">Role</label>
-                                    <select id="EditUserRole" name="UserRole">
-                                        <option value="Manager">Manager</option>
-                                        <option value="Cashier">Cashier</option>
-                                        <option value="Waiter">Waiter</option>
-                                        <option value="Kitchen staff">Kitchen staff</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label for="EditIdentityCard">Identity Card (12 digits)</label>
-                                    <input type="text" id="EditIdentityCard" name="IdentityCard" value=""/>
-                                </div>
-                                <div>
-                                    <label for="EditUserAddress">Address</label>
-                                    <input type="text" id="EditUserAddress" name="UserAddress" value=""/>
-                                </div>
+                                <label for="EditNumberOfSeats">Number Of Seats</label>
+                                <input type="number" id="EditNumberOfSeats" name="NumberOfSeats" value="" />
+                            </div>
+                            <div>
+                                <label for="EditTableStatus">Table Status</label>
+                                <select id="EditTableStatus" name="TableStatus">
+                                    <option value="Available">Available</option>
+                                    <option value="Occupied">Occupied</option>
+                                    <option value="Reserved">Reserved</option>
+                                    <option value="Unavailable">Unavailable</option>
+                                </select>
                             </div>
                         </div>
 
                         <!-- Save and Back to List Buttons -->
                         <div class="modal-actions">
-                            <input type="submit" class="btn btn-primary" name="btnSubmit" value="Save Changes"/>
-                            <button type="button" class="btn btn-secondary close-button">Cancel</button>
+                            <input type="submit" class="btn btn-primary" name="btnSubmit" value="Save Changes"/> <%-- Bootstrap button style --%>
+                            <button type="button" class="btn btn-secondary close-button">Cancel</button> <%-- Bootstrap button style --%>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
 
-
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                // Modal Create Account
-                var createModal = document.getElementById("createEmployeeModal");
-                var createBtn = document.querySelector(".add-employee-btn");
-                var closeCreateButtons = document.querySelectorAll("#createEmployeeModal .close-button");
+                // Modal Create Table
+                var createTableModel = document.getElementById("createTableModal");
+                var createTableBtn = document.querySelector(".add-table-btn");
+                var closeCreateTableButtons = document.querySelectorAll("#createTableModal .close-button");
 
-                if (createBtn && createModal) {
-                    createBtn.onclick = function () {
-                        createModal.style.display = "block";
+                if (createTableBtn && createTableModel) {
+                    createTableBtn.onclick = function () {
+                        createTableModel.style.display = "block";
                     }
                 }
 
-                if (closeCreateButtons) {
-                    closeCreateButtons.forEach(function (btnClose) {
+                if (closeCreateTableButtons) {
+                    closeCreateTableButtons.forEach(function (btnClose) {
                         btnClose.onclick = function () {
-                            createModal.style.display = "none";
+                            createTableModel.style.display = "none";
                         }
                     });
                 }
 
-                // Modal Edit Account
-                var editModal = document.getElementById("editEmployeeModal");
-                var editButtons = document.querySelectorAll(".edit-employee-btn");
-                var closeEditButtons = document.querySelectorAll("#editEmployeeModal .close-button");
+                // Modal Edit Table
+                var editTableModel = document.getElementById("editTableModal");
+                var editTableButtons = document.querySelectorAll(".edit-table-btn");
+                var closeEditTableButtons = document.querySelectorAll("#editTableModal .close-button");
 
-                if (editButtons) {
-                    editButtons.forEach(function (btnEdit) {
+                if (editTableButtons) {
+                    editTableButtons.forEach(function (btnEdit) {
                         btnEdit.onclick = function (e) {
                             e.preventDefault();
-                            document.getElementById('EditUserIdHidden').value = btnEdit.dataset.userid;
-                            document.getElementById('EditUserId').value = btnEdit.dataset.userid;
-                            document.getElementById('EditUserEmail').value = btnEdit.dataset.useremail;
-                            document.getElementById('EditUserName').value = btnEdit.dataset.username;
-                            document.getElementById('EditUserPassword').value = btnEdit.dataset.userpassword;
-                            document.getElementById('EditUserRole').value = btnEdit.dataset.userrole;
-                            document.getElementById('EditIdentityCard').value = btnEdit.dataset.identitycard;
-                            document.getElementById('EditUserAddress').value = btnEdit.dataset.useraddress;
-                            document.getElementById('EditCurrentImage').src = '<%= request.getContextPath()%>' + btnEdit.dataset.userimage;
+                            document.getElementById('EditTableIdHidden').value = btnEdit.dataset.tableid;
+                            document.getElementById('EditTableId').value = btnEdit.dataset.tableid;
+                            document.getElementById('EditTableStatus').value = btnEdit.dataset.tablestatus;
+                            document.getElementById('EditNumberOfSeats').value = btnEdit.dataset.numberofseats;
 
-                            editModal.style.display = "block";
+                            editTableModel.style.display = "block";
                         }
                     });
                 }
 
-                if (closeEditButtons) {
-                    closeEditButtons.forEach(function (btnClose) {
+                if (closeEditTableButtons) {
+                    closeEditTableButtons.forEach(function (btnClose) {
                         btnClose.onclick = function () {
-                            editModal.style.display = "none";
+                            editTableModel.style.display = "none";
                         }
                     });
                 }
+
 
                 window.onclick = function (event) {
-                    if (event.target == createModal) {
-                        createModal.style.display = "none";
+                    if (event.target == createTableModel) {
+                        createTableModel.style.display = "none";
                     }
-                    if (event.target == editModal) {
-                        editModal.style.display = "none";
+                    if (event.target == editTableModel) {
+                        editTableModel.style.display = "none";
                     }
                 }
             });
