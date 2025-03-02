@@ -616,90 +616,94 @@
             <div class="sidebar col-md-2 p-3">
                 <h4 class="text-center mb-4">Admin</h4>
                 <ul class="nav flex-column">
-                    <li class="nav-item"><a href="Dashboard/AdminDashboard.jsp" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
+                      <li class="nav-item"><a href="Dashboard/AdminDashboard.jsp" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-utensils me-2"></i>Menu Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewAccountList" class="nav-link"><i class="fas fa-users me-2"></i>Employee Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewTableList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Table Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewOrderList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Order Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCustomerList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Customer Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCouponController" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Coupon Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewInventoryController" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Inventory Management</a></li>
                 </ul>
             </div>
-
             <div class="col-md-10 bg-white p-3">
-                <!-- Navbar -->
-                <div class="text-left mb-4">
-                    <h4>Table Management</h4>
-                </div>
-                <div class="content-header">
-                    <div class="search-filter">
-                        <div class="search-bar">
-                            <input type="text" id="searchInput" placeholder="Search"> 
+                <section class="main-content">
+                    <div class="container-fluid">
+                        <div class="text-left mb-4">
+                            <h4>Table Management</h4>
                         </div>
-                        <div class="filter-bar">
-                            <select id="statusFilter">
-                                <option value="">All Status</option>
-                                <option value="Available">Available</option> <!-- Sửa value -->
-                                <option value="Occupied">Occupied</option> <!-- Sửa value -->
-                                <option value="Reserved">Reserved</option>  <!-- Sửa value -->
-                            </select>
-                        </div>
-                    </div>
-                    <div class="header-buttons">
-                        <button class="add-table-btn"><i class="far fa-plus"></i> Table </button>
-
-                    </div>
-                </div>
-                <table class="table table-striped table-bordered table-hover"> <%-- Added Bootstrap table classes --%>
-                    <thead>
-                        <tr>
-                            <th>No.</th>
-                            <th>ID</th>
-                            <th>Status</th>
-                            <th>Number of Seats</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <%-- Sử dụng scriptlet để lặp qua tableList --%>
-                        <%
-                            List<Table> tables = (List<Table>) request.getAttribute("tableList");
-                            if (tables != null && !tables.isEmpty()) {
-                                int counter = 1;
-                                for (Table table : tables) {
-                        %>
-                        <tr>
-                            <td><%= counter++%></td>
-                            <td><%= table.getTableId()%></td>
-                            <td><%= table.getTableStatus()%></td>
-                            <td><%= table.getNumberOfSeats()%></td>
-                            <td>
-                                <a href="#" class="edit-table-btn btn-edit-table"     <%-- Added btn-edit-table class --%>
-                                   data-tableid="<%=table.getTableId()%>"
-                                   data-tablestatus="<%=table.getTableStatus()%>"
-                                   data-numberofseats="<%=table.getNumberOfSeats()%>"
-                                   ><i class="fas fa-edit"></i>Edit</a> <%-- Added edit icon --%>
-                                <a href="#" onclick="confirmDelete('<%= table.getTableId()%>', '<%= table.getTableStatus()%>')" class="btn-delete btn-delete-table"><i class="fas fa-trash-alt"></i>Delete</a> <%-- Added btn-delete-table class and delete icon --%>
-                            </td>
-                        </tr>
-                        <%
-                            }
-                        } else {
-                        %>
-                        <tr>
-                            <td colspan="5">
-                                <div class="no-data">
-                                    <i class="fas fa-table"></i>
-                                    <span>Không có bàn ăn nào.<br>Nhấn <a href="#">vào đây</a> để thêm mới bàn ăn.</span>
+                        <div class="content-header">
+                            <div class="search-filter">
+                                <div class="search-bar">
+                                    <input type="text" id="searchInput" placeholder="Search"> 
                                 </div>
-                            </td>
-                        </tr>
-                        <%
-                            }
-                        %>
-                    </tbody>
-                </table>
-                </main>
+                                <div class="filter-bar">
+                                    <select id="statusFilter">
+                                        <option value="">All Status</option>
+                                        <option value="Available">Available</option> <!-- Sửa value -->
+                                        <option value="Occupied">Occupied</option> <!-- Sửa value -->
+                                        <option value="Reserved">Reserved</option>  <!-- Sửa value -->
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="header-buttons">
+                                <button class="add-table-btn"><i class="far fa-plus"></i> Table </button>
+
+                            </div>
+                        </div>
+                        <div class="employee-grid">
+                            <table class="table table-striped table-bordered table-hover"> <%-- Added Bootstrap table classes --%>
+                                <thead>
+                                    <tr>
+                                        <th>No.</th>
+                                        <th>ID</th>
+                                        <th>Status</th>
+                                        <th>Number of Seats</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <%-- Sử dụng scriptlet để lặp qua tableList --%>
+                                    <%
+                                        List<Table> tables = (List<Table>) request.getAttribute("tableList");
+                                        if (tables != null && !tables.isEmpty()) {
+                                            int counter = 1;
+                                            for (Table table : tables) {
+                                    %>
+                                    <tr>
+                                        <td><%= counter++%></td>
+                                        <td><%= table.getTableId()%></td>
+                                        <td><%= table.getTableStatus()%></td>
+                                        <td><%= table.getNumberOfSeats()%></td>
+                                        <td>
+                                            <a href="#" class="edit-table-btn btn-edit-table"     <%-- Added btn-edit-table class --%>
+                                               data-tableid="<%=table.getTableId()%>"
+                                               data-tablestatus="<%=table.getTableStatus()%>"
+                                               data-numberofseats="<%=table.getNumberOfSeats()%>"
+                                               ><i class="fas fa-edit"></i>Edit</a> <%-- Added edit icon --%>
+                                            <a href="#" onclick="confirmDelete('<%= table.getTableId()%>', '<%= table.getTableStatus()%>')" class="btn-delete btn-delete-table"><i class="fas fa-trash-alt"></i>Delete</a> <%-- Added btn-delete-table class and delete icon --%>
+                                        </td>
+                                    </tr>
+                                    <%
+                                        }
+                                    } else {
+                                    %>
+                                    <tr>
+                                        <td colspan="5">
+                                            <div class="no-data">
+                                                <i class="fas fa-table"></i>
+                                                <span>Không có bàn ăn nào.<br>Nhấn <a href="#">vào đây</a> để thêm mới bàn ăn.</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <%
+                                        }
+                                    %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
             </div>
         </section>
     </div>

@@ -353,7 +353,6 @@
 
     <body>
         <div class="d-flex">
-            <!-- Sidebar (GIỮ NGUYÊN) -->
             <div class="sidebar col-md-2 p-3">
                 <h4 class="text-center mb-4">Quản Lý</h4>
                 <ul class="nav flex-column">
@@ -393,7 +392,6 @@
                                     <span class="sr-only">Error:</span>
                                     Update coupon failed!
                                 </div>
-
                                 <table class="table table-bordered"  method="post">
                                     <thead>
                                         <tr>
