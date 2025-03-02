@@ -33,7 +33,6 @@ import java.util.UUID;
 public class AddInventoryItemController extends HttpServlet {
 
 //    private static final String UPLOAD_DIR = "ManageInventory/item_images"; // Thư mục lưu trữ hình ảnh (trong web app)
-
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -88,7 +87,7 @@ public class AddInventoryItemController extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         try {
-            // 1. Lấy dữ liệu từ form
+            // 1. Lấy dữ liệu từ form (giữ nguyên)
             String itemName = request.getParameter("itemName");
             String itemType = request.getParameter("itemType");
             double itemPrice = Double.parseDouble(request.getParameter("itemPrice"));
@@ -98,48 +97,66 @@ public class AddInventoryItemController extends HttpServlet {
 
             // 2. Xử lý upload hình ảnh
             Part filePart = request.getPart("itemImage");
-            String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+            String relativeImagePath = null; // Khởi tạo relativeImagePath là null
 
-            // 3. Tạo đường dẫn lưu trữ hình ảnh
-            String webAppRoot = getServletContext().getRealPath("/");
+            if (filePart != null && filePart.getSize() > 0 && filePart.getSubmittedFileName() != null && !filePart.getSubmittedFileName().isEmpty()) {
+                // Hình ảnh đã được chọn và tải lên
 
-            // Đi ngược lên để đến thư mục gốc của project (giả sử cấu trúc thư mục chuẩn)
-            File webAppRootDir = new File(webAppRoot);
-            File targetDir = webAppRootDir.getParentFile(); // Đi lên thư mục 'target'
-            File projectRootDir = targetDir.getParentFile(); // Đi lên thư mục gốc của project
-
-            // Tạo đường dẫn đến thư mục src/main/webapp
-            String srcWebAppPath = new File(projectRootDir, "src/main/webapp").getAbsolutePath();
-            String relativePath = "ManageInventory/item_images"; // Đường dẫn tương đối trong web app
-            String uploadPath = srcWebAppPath + File.separator + relativePath; // Đường dẫn tuyệt đối đến src/main/webapp
-
-            // Kiểm tra và tạo thư mục (giữ nguyên)
-            File uploadDir = new File(uploadPath);
-            if (!uploadDir.exists()) {
-                if (uploadDir.mkdirs()) {
-                    System.out.println("Directory created successfully: " + uploadPath);
-                } else {
-                    System.out.println("Failed to create directory: " + uploadPath);
+                String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+                String fileExtension = "";
+                int dotIndex = fileName.lastIndexOf('.');
+                if (dotIndex > 0 && dotIndex < fileName.length() - 1) {
+                    fileExtension = fileName.substring(dotIndex);
                 }
+
+                // Lấy tên hình ảnh người dùng nhập (nếu có)
+                String userImageName = request.getParameter("imageName");
+                String uniqueFileName;
+
+                if (userImageName != null && !userImageName.trim().isEmpty()) {
+                    String sanitizedImageName = userImageName.replaceAll("[^a-zA-Z0-9_\\-]", "_");
+                    uniqueFileName = sanitizedImageName + fileExtension; // Sử dụng tên người dùng, bỏ UUID prefix (nếu bạn muốn)
+                } else {
+                    uniqueFileName = UUID.randomUUID().toString() + "_" + fileName; // Sử dụng UUID + tên file gốc
+                }
+
+                // 3. Tạo đường dẫn lưu trữ hình ảnh (giữ nguyên phần đường dẫn)
+                String webAppRoot = getServletContext().getRealPath("/");
+                File webAppRootDir = new File(webAppRoot);
+                File targetDir = webAppRootDir.getParentFile();
+                File projectRootDir = targetDir.getParentFile();
+                String srcWebAppPath = new File(projectRootDir, "src/main/webapp").getAbsolutePath();
+                String relativePath = "ManageInventory/item_images";
+                String uploadPath = srcWebAppPath + File.separator + relativePath;
+                
+                File uploadDir = new File(uploadPath);
+                if (!uploadDir.exists()) {
+                    uploadDir.mkdirs();
+                }
+
+                // 4. Xử lý tên file an toàn
+                String filePath = uploadPath + File.separator + uniqueFileName;
+                relativeImagePath = "ManageInventory/item_images/" + uniqueFileName; // Cập nhật relativeImagePath ở đây
+
+                // Lưu file
+                try (InputStream fileContent = filePart.getInputStream()) {
+                    Files.copy(fileContent, Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
+                    System.out.println("File saved successfully to: " + filePath);
+                }
+
+            } else {
+                // Không có hình ảnh nào được chọn
+                relativeImagePath = null; // Đặt relativeImagePath thành null khi không có hình ảnh
+                System.out.println("No image uploaded for item: " + itemName); // Log để theo dõi
             }
 
-            // 4. Xử lý tên file an toàn (giữ nguyên)
-            String uniqueFileName = UUID.randomUUID().toString() + "_" + fileName;
-            String filePath = uploadPath + File.separator + uniqueFileName;
-            String relativeImagePath = "ManageInventory/item_images/" + uniqueFileName;
-
-            // Lưu file (giữ nguyên)
-            try (InputStream fileContent = filePart.getInputStream()) {
-                Files.copy(fileContent, Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
-                System.out.println("File saved successfully to: " + filePath);
-            }
-
-            // 5. Thêm vào database (giữ nguyên)
+            // 5. Thêm vào database
             Inventory newItem = new Inventory(itemName, itemType, itemPrice, itemQuantity, itemUnit, itemDescription, relativeImagePath);
             InventoryDAO inventoryDAO = new InventoryDAO();
             inventoryDAO.addNewInventoryItem(newItem);
 
-            // 6. Chuyển hướng (giữ nguyên)
+            // 6. Chuyển hướng
+            
             response.sendRedirect("ViewInventoryController");
 
         } catch (Exception e) {

@@ -17,7 +17,7 @@
     </head>
 
     <body>
-       
+
         <nav class="navbar navbar-inverse">
             <div class="container-fluid">
                 <div class="navbar-header">
@@ -77,16 +77,18 @@
                     <Td valign="middle">
 
 
-                        <form action="ManageCoupon/UpdateCoupon.jsp?couponID=<% out.print(listItem.getItemId()); %>" method="post" style="display:inline;">
-                            <input type="hidden" name="couponId" value="<% out.print(listItem.getItemId()); %>">
-                            <%-- The following inputs are related to coupon from the original JSTL page, adjust them to InventoryItem properties if needed --%>
-                            <input type="hidden" name="discountAmount" value="<% out.print(listItem.getItemPrice()); %>"> <%-- Example: Using ItemPrice as a placeholder --%>
-                            <input type="hidden" name="expirationDate" value="<% out.print("N/A"); %>"> <%-- Example: No expiration date for inventory item --%>
-                            <input type="hidden" name="isUsed" value="<% out.print("false"); %>"> <%-- Example:  Not applicable for inventory item --%>
+                        <form action="ManageInventory/UpdateInventoryItem.jsp" method="post" style="display:inline;"> <%-- Sửa lại action ở đây --%>
+                            <input type="hidden" name="itemId" value="<% out.print(listItem.getItemId()); %>">
+                            <input type="hidden" name="itemName" value="<% out.print(listItem.getItemName()); %>">
+                            <input type="hidden" name="itemType" value="<% out.print(listItem.getItemType()); %>">
+                            <input type="hidden" name="itemPrice" value="<% out.print(listItem.getItemPrice()); %>">
+                            <input type="hidden" name="itemQuantity" value="<% out.print(listItem.getItemQuantity()); %>">
+                            <input type="hidden" name="itemUnit" value="<% out.print(listItem.getItemUnit()); %>">
+                            <input type="hidden" name="itemDescription" value="<% out.print(listItem.getItemDescription());%>">
+                            <input type="hidden" name="itemImage" value="<%= listItem.getItemImage() != null ? listItem.getItemImage() : ""%>"> <%-- QUAN TRỌNG: Phải có input itemImage --%>
 
                             <button type="submit" class="btn btn-warning">Update</button>
                         </form>
-
                         <form action="ManageCoupon/DeleteCoupon.jsp" method="post" style="display:inline;">
                             <input type="hidden" name="couponId" value="<% out.print(listItem.getItemId()); %>">
                             <%-- The following inputs are related to coupon from the original JSTL page, adjust them to InventoryItem properties if needed --%>
@@ -107,7 +109,7 @@
                 </tr>
                 <%
                     } // end if inventoryItemList not null and not empty
-%>
+                %>
 
 
             </table>

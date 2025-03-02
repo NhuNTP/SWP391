@@ -8,8 +8,4 @@
             30
         </session-timeout>
     </session-config>
-    <context-param>
-        <param-name>item_images_upload_dir</param-name>
-        <param-value>src/main/webapp/ManageInventory/item_images</param-value>
-    </context-param>
 </web-app>
