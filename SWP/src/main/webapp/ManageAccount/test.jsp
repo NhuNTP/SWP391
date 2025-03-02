@@ -663,6 +663,7 @@
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-utensils me-2"></i>Menu Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewAccountList" class="nav-link"><i class="fas fa-users me-2"></i>Employee Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewTableList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Table Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewOrderList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Order Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCustomerList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Customer Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCouponController" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Coupon Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewInventoryController" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Inventory Management</a></li>
@@ -670,106 +671,110 @@
             </div>
 
             <!-- Main Content -->
-            <div class="col-md-10 bg-white p-3">
-                <!-- Navbar -->
-                <div class="text-left mb-4">
-                    <h4>Employee Management</h4>
-                </div>
-                <div class="content-header">
-                    <div class="search-filter">
-                        <div class="search-bar">
-                            <input type="text" id="searchInput" placeholder="Search">  <!-- Thêm id="searchInput" -->
+            <div class="col-md-10 bg-white p-3 main-content-area">
+                <section class="main-content">
+                    <div class="container-fluid">
+                        <div class="text-left mb-4">
+                            <h4>Employee Management</h4>
                         </div>
-                        <div class="filter-bar">
-                            <select id="roleFilter">
-                                <option value="">All Roles</option>  <!-- Thêm option "All Roles" -->
-                                <option value="Waiter">Waiter</option>
-                                <option value="Manager">Manager</option>
-                                <option value="Waiter">Waiter</option>
-                                <option value="Kitchen staff">Kitchen staff</option>
-                                <option value="Cashier">Cashier</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="header-buttons">
-                        <button class="add-employee-btn"><i class="far fa-plus"></i> Employee </button>
-                    </div>
-                </div>
-                <table class="table table-striped table-bordered table-hover">
-                    <thead>
-                        <tr>
-                            <th>No.</th>
-                            <th>ID</th>
-                            <th>Image</th>
-                            <th>Account Email</th>
-                            <th>Account Password</th>
-                            <th>Account Name</th>
-                            <th>Account Role</th>
-                            <th>Identity Card</th>
-                            <th>User Address</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <%-- Sử dụng scriptlet để lặp qua accountList --%>
-                        <%
-                            List<Account> accounts = (List<Account>) request.getAttribute("accountList");
-                            if (accounts != null && !accounts.isEmpty()) {
-                                int counter = 1;
-                                for (Account account : accounts) {
-                        %>
-                        <tr>
-                            <td><%= counter++%></td>
-                            <td><%= account.getUserId()%></td>
-                            <td>
-                                <% String imagePath = request.getContextPath() + account.getUserImage();%>
-                                <%-- Đường dẫn ảnh: <%= imagePath%><br> --%>
-                                <img src="<%= imagePath%>" alt="User Image" width="80" height="80" style="border-radius: 50%; object-fit: cover;"/>
-                            </td>
-                            <td><%= account.getUserEmail()%></td>
-                            <td><%= account.getUserPassword()%></td>
-                            <td><%= account.getUserName()%></td>
-                            <td><%= account.getUserRole()%></td>
-                            <td><%= account.getIdentityCard()%></td>
-                            <td><%= account.getUserAddress()%></td>
-                            <td>
-                                <a href="#" class="edit-employee-btn btn-edit"
-                                   data-userid="<%=account.getUserId()%>"
-                                   data-useremail="<%=account.getUserEmail()%>"
-                                   data-username="<%=account.getUserName()%>"
-                                   data-userpassword="<%=account.getUserPassword()%>"
-                                   data-userrole="<%=account.getUserRole()%>"
-                                   data-identitycard="<%=account.getIdentityCard()%>"
-                                   data-useraddress="<%=account.getUserAddress()%>"
-                                   data-userimage="<%=account.getUserImage()%>"
-                                   ><i class="fas fa-edit"></i> Edit</a>
-                                <a href="#" onclick="confirmDelete('<%= account.getUserId()%>', '<%= account.getUserName()%>')" class="btn-delete"><i class="fas fa-trash-alt"></i> Delete</a>
-                            </td>
-                        </tr>
-                        <%
-                            }
-                        } else {
-                        %>
-                        <tr>
-                            <td colspan="10">
-                                <div class="no-data">
-                                    <i class="fal fa-user"></i>
-                                    <span>
-                                        <%-- Kiểm tra xem có phải là kết quả từ việc tìm kiếm không --%>
-                                        <% if (request.getParameter("search") != null) { %>
-                                        Không tìm thấy kết quả.
-                                        <% } else { %>
-                                        Gian hàng chưa có nhân viên. Nhấn <a href="#">vào đây</a> để thêm mới nhân viên.
-                                        <% } %>
-                                    </span>
+                        <div class="content-header">
+                            <div class="search-filter">
+                                <div class="search-bar">
+                                    <input type="text" id="searchInput" placeholder="Search">  <!-- Thêm id="searchInput" -->
                                 </div>
-                            </td>
-                        </tr>
-                        <%
-                            }
-                        %>
-                    </tbody>
-                </table>
+                                <div class="filter-bar">
+                                    <select id="roleFilter">
+                                        <option value="">All Roles</option>  <!-- Thêm option "All Roles" -->
+                                        <option value="Waiter">Waiter</option>
+                                        <option value="Manager">Manager</option>
+                                        <option value="Waiter">Waiter</option>
+                                        <option value="Kitchen staff">Kitchen staff</option>
+                                        <option value="Cashier">Cashier</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="header-buttons">
+                                <button class="add-employee-btn"><i class="far fa-plus"></i> Employee </button>
+                            </div>
+                        </div>
+                        <div class="employee-grid">
+                            <table class="table table-striped table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>No.</th>
+                                        <th>ID</th>
+                                        <th>Image</th>
+                                        <th>Account Email</th>
+                                        <th>Account Password</th>
+                                        <th>Account Name</th>
+                                        <th>Account Role</th>
+                                        <th>Identity Card</th>
+                                        <th>User Address</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <%-- Sử dụng scriptlet để lặp qua accountList --%>
+                                    <%
+                                        List<Account> accounts = (List<Account>) request.getAttribute("accountList");
+                                        if (accounts != null && !accounts.isEmpty()) {
+                                            int counter = 1;
+                                            for (Account account : accounts) {
+                                    %>
+                                    <tr>
+                                        <td><%= counter++%></td>
+                                        <td><%= account.getUserId()%></td>
+                                        <td>
+                                            <% String imagePath = request.getContextPath() + account.getUserImage();%>
+                                            <%-- Đường dẫn ảnh: <%= imagePath%><br> --%>
+                                            <img src="<%= imagePath%>" alt="User Image" width="80" height="80" style="border-radius: 50%; object-fit: cover;"/>
+                                        </td>
+                                        <td><%= account.getUserEmail()%></td>
+                                        <td><%= account.getUserPassword()%></td>
+                                        <td><%= account.getUserName()%></td>
+                                        <td><%= account.getUserRole()%></td>
+                                        <td><%= account.getIdentityCard()%></td>
+                                        <td><%= account.getUserAddress()%></td>
+                                        <td>
+                                            <a href="#" class="edit-employee-btn btn-edit"
+                                               data-userid="<%=account.getUserId()%>"
+                                               data-useremail="<%=account.getUserEmail()%>"
+                                               data-username="<%=account.getUserName()%>"
+                                               data-userpassword="<%=account.getUserPassword()%>"
+                                               data-userrole="<%=account.getUserRole()%>"
+                                               data-identitycard="<%=account.getIdentityCard()%>"
+                                               data-useraddress="<%=account.getUserAddress()%>"
+                                               data-userimage="<%=account.getUserImage()%>"
+                                               ><i class="fas fa-edit"></i> Edit</a>
+                                            <a href="#" onclick="confirmDelete('<%= account.getUserId()%>', '<%= account.getUserName()%>')" class="btn-delete"><i class="fas fa-trash-alt"></i> Delete</a>
+                                        </td>
+                                    </tr>
+                                    <%
+                                        }
+                                    } else {
+                                    %>
+                                    <tr>
+                                        <td colspan="10">
+                                            <div class="no-data">
+                                                <i class="fal fa-user"></i>
+                                                <span>
+                                                    <%-- Kiểm tra xem có phải là kết quả từ việc tìm kiếm không --%>
+                                                    <% if (request.getParameter("search") != null) { %>
+                                                    Không tìm thấy kết quả.
+                                                    <% } else { %>
+                                                    Gian hàng chưa có nhân viên. Nhấn <a href="#">vào đây</a> để thêm mới nhân viên.
+                                                    <% } %>
+                                                </span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <%
+                                        }
+                                    %>
+                                </tbody>
+                            </table>
+                        </div>  
+                </section>
             </div>
         </div>
 
