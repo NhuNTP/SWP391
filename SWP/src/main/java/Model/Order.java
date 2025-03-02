@@ -8,90 +8,100 @@ package Model;
  *
  * @author HuynhPhuBinh
  */
+
 import java.util.Date;
+import java.util.List;
+
 public class Order {
-    private int OrderId;
-    private int UserId; // Liên kết với Account
-    private int CustomerId; // Liên kết với Customer (có thể null)
-    private Date OrderDate;
-    private String OrderStatus;
-    private String OrderType;
-    private String OrderDescription;
-    private int CouponId; // Liên kết với Coupon (có thể null)
-    private int TableId; // Liên kết với Table (có thể null)
+    private int orderId;
+    private int userId;
+    private int customerId;
+    private Date orderDate;
+    private String orderStatus;
+    private String orderType;
+    private String orderDescription;
+    private int couponId;
+    private int tableId;
+    private List<OrderDetail> orderDetails; // Thêm thuộc tính này
 
-    public Order() {
-    }
-
+    // Getters and setters
     public int getOrderId() {
-        return OrderId;
+        return orderId;
     }
 
     public void setOrderId(int orderId) {
-        this.OrderId = orderId;
+        this.orderId = orderId;
     }
 
     public int getUserId() {
-        return UserId;
+        return userId;
     }
 
     public void setUserId(int userId) {
-        this.UserId = userId;
+        this.userId = userId;
     }
 
     public int getCustomerId() {
-        return CustomerId;
+        return customerId;
     }
 
     public void setCustomerId(int customerId) {
-        this.CustomerId = customerId;
+        this.customerId = customerId;
     }
 
     public Date getOrderDate() {
-        return OrderDate;
+        return orderDate;
     }
 
     public void setOrderDate(Date orderDate) {
-        this.OrderDate = orderDate;
+        this.orderDate = orderDate;
     }
 
     public String getOrderStatus() {
-        return OrderStatus;
+        return orderStatus;
     }
 
     public void setOrderStatus(String orderStatus) {
-        this.OrderStatus = orderStatus;
+        this.orderStatus = orderStatus;
     }
 
     public String getOrderType() {
-        return OrderType;
+        return orderType;
     }
 
     public void setOrderType(String orderType) {
-        this.OrderType = orderType;
+        this.orderType = orderType;
     }
 
     public String getOrderDescription() {
-        return OrderDescription;
+        return orderDescription;
     }
 
     public void setOrderDescription(String orderDescription) {
-        this.OrderDescription = orderDescription;
+        this.orderDescription = orderDescription;
     }
 
     public int getCouponId() {
-        return CouponId;
+        return couponId;
     }
 
     public void setCouponId(int couponId) {
-        this.CouponId = couponId;
+        this.couponId = couponId;
     }
 
     public int getTableId() {
-        return TableId;
+        return tableId;
     }
 
     public void setTableId(int tableId) {
-        this.TableId = tableId;
+        this.tableId = tableId;
+    }
+
+    public List<OrderDetail> getOrderDetails() {
+        return orderDetails;
+    }
+
+    public void setOrderDetails(List<OrderDetail> orderDetails) {
+        this.orderDetails = orderDetails;
     }
 }

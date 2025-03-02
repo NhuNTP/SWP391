@@ -107,5 +107,9 @@ public class Account {
         this.UserImage = UserImage;
     }
 
+    public int getAccountId() {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
 
 }
