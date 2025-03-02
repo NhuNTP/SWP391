@@ -14,6 +14,9 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -74,39 +77,45 @@ public class LoginController extends HttpServlet {
     @Override
      protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String username = request.getParameter("username");
-        String password = request.getParameter("password");
-
-        AccountDAO accountDAO = new AccountDAO();
-        Account account = accountDAO.login(username, password);
-
-        if (account != null) {
-              HttpSession session = request.getSession();
-            session.setAttribute("account", account);
+        try {
+            String username = request.getParameter("username");
+            String password = request.getParameter("password");
             
-            switch (account.getUserRole()) {
-                case "Admin":
-                    response.sendRedirect("home.jsp");
-                    break;
-                case "Manager":
-                    response.sendRedirect("manager/dashboard.jsp");
-                    break;
-                case "Cashier":
-                    response.sendRedirect("cashier/dashboard.jsp");
-                    break;
-                case "Waiter":
-                    response.sendRedirect("waiter/dashboard.jsp");
-                    break;
-                case "kitchen staff":
-                    response.sendRedirect("kitchen/dashboard.jsp");
-                    break;
-                default:
-                    response.sendRedirect("LoginPpage.jsp");
-                    break;
+            AccountDAO accountDAO = new AccountDAO();
+            Account account = accountDAO.login(username, password);
+            
+            if (account != null) {
+                HttpSession session = request.getSession();
+                session.setAttribute("account", account);
+                
+                switch (account.getUserRole()) {
+                    case "Admin":
+                        response.sendRedirect("Dashboard/AdminDashboard.jsp");
+                        break;
+                    case "Manager":
+                        response.sendRedirect("Dashboard/ManagerDashboard.jsp");
+                        break;
+                    case "Cashier":
+                        response.sendRedirect("Dashboard/CashierDashboard.jsp");
+                        break;
+                    case "Waiter":
+                        response.sendRedirect("Dashboard/WaiterDashboard.jsp");
+                        break;
+                    case "kitchen staff":
+                        response.sendRedirect("Dashboard/KitchenstaffDashboard.jsp");
+                        break;
+                    default:
+                        response.sendRedirect("LoginPpage.jsp");
+                        break;
+                }
+            } else {
+                request.setAttribute("error", "Tên hoặc mật khẩu không đúng!");
+                request.getRequestDispatcher("LoginPage.jsp").forward(request, response);
             }
-        } else {
-            request.setAttribute("error", "Tên hoặc mật khẩu không đúng!");
-            request.getRequestDispatcher("LoginPage.jsp").forward(request, response);
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SQLException ex) {
+            Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     /**

@@ -42,6 +42,6 @@ public class ViewCustomerListController extends HttpServlet {
             Logger.getLogger(ViewCustomerListController.class.getName()).log(Level.SEVERE, null, ex);
         }
         request.setAttribute("customerList", customerList);
-        request.getRequestDispatcher("/ManageCustomer/ViewCustomerList.jsp").forward(request, response);
+        request.getRequestDispatcher("ManageCustomer/ViewCustomerList.jsp").forward(request, response);
     }
 }

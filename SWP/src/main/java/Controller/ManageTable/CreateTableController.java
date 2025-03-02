@@ -13,6 +13,9 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -75,19 +78,25 @@ public class CreateTableController extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        String TableStatus = request.getParameter("TableStatus");
-        int NumberOfSeats = Integer.parseInt(request.getParameter("NumberOfSeats")); // Get NumberOfSeats as String
-
-        // Step 2: Create Table object
-        Table table = new Table(TableStatus, NumberOfSeats);
-        TableDAO tableDAO = new TableDAO();
-        int count = tableDAO.createTable(table);
-
-        // Step 4: Redirect based on result
-        if (count > 0) {
-            response.sendRedirect("ViewTableList"); // Redirect to view table list on success
-        } else {
-            response.sendRedirect("CreateTable"); // Redirect back to create table page on failure
+        try {
+            String TableStatus = request.getParameter("TableStatus");
+            int NumberOfSeats = Integer.parseInt(request.getParameter("NumberOfSeats")); // Get NumberOfSeats as String
+            
+            // Step 2: Create Table object
+            Table table = new Table(TableStatus, NumberOfSeats);
+            TableDAO tableDAO = new TableDAO();
+            int count = tableDAO.createTable(table);
+            
+            // Step 4: Redirect based on result
+            if (count > 0) {
+                response.sendRedirect("ViewTableList"); // Redirect to view table list on success
+            } else {
+                response.sendRedirect("CreateTable"); // Redirect back to create table page on failure
+            }
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(CreateTableController.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SQLException ex) {
+            Logger.getLogger(CreateTableController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 

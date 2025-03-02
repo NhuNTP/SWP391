@@ -42,7 +42,7 @@ public class UpdateCustomerProfileController extends HttpServlet {
             Logger.getLogger(UpdateCustomerProfileController.class.getName()).log(Level.SEVERE, null, ex);
         }
         request.setAttribute("customer", customer);
-        request.getRequestDispatcher("/ManageCustomer/UpdateCustomerProfile.jsp").forward(request, response);
+        request.getRequestDispatcher("ManageCustomer/UpdateCustomerProfile.jsp").forward(request, response);
     }
 
     @Override

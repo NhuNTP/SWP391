@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.UUID;
 
 /**
  *
@@ -34,8 +35,6 @@ import java.nio.file.StandardCopyOption;
 )
 
 public class CreateAccountController extends HttpServlet {
-
-    private static final String UPLOAD_DIRECTORY = "img"; // **Sử dụng đường dẫn tương đối từ project root**
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -89,7 +88,7 @@ public class CreateAccountController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String userImagePath = null; // Đường dẫn ảnh, ban đầu là null (không có ảnh mặc định)
+        response.setContentType("text/html;charset=UTF-8");
         try {
             // Step 1: Get all text form parameters (giữ nguyên)
             String UserEmail = request.getParameter("UserEmail");
@@ -98,46 +97,64 @@ public class CreateAccountController extends HttpServlet {
             String UserRole = request.getParameter("UserRole");
             String IdentityCard = request.getParameter("IdentityCard");
             String UserAddress = request.getParameter("UserAddress");
-            // Step 2: Handle image file upload
-            Part filePart = request.getPart("UserImage"); // Lấy Part từ input name="UserImage"
-            if (filePart != null && filePart.getSize() > 0) { // Kiểm tra nếu có file được upload
-                String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString(); // Lấy tên file gốc
-                String fileExtension = fileName.substring(fileName.lastIndexOf(".")); // Lấy đuôi file
+            
+            // 2. Xử lý upload hình ảnh
+            Part filePart = request.getPart("UserImage");
+            String UserImage = null; // Khởi tạo relativeImagePath là null
 
-                // Tạo tên file duy nhất để tránh trùng lặp (ví dụ: timestamp + tên file gốc)
-                String uniqueFileName = System.currentTimeMillis() + "_" + fileName;
+            if (filePart != null && filePart.getSize() > 0 && filePart.getSubmittedFileName() != null && !filePart.getSubmittedFileName().isEmpty()) {
+                // Hình ảnh đã được chọn và tải lên
 
-                String uploadPath = getServletContext().getRealPath("") + UPLOAD_DIRECTORY; // Đường dẫn thư mục img
-                System.out.println("uploadPath: " + uploadPath); // **[DEBUG] In ra uploadPath**
+                String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+                String fileExtension = "";
+                int dotIndex = fileName.lastIndexOf('.');
+                if (dotIndex > 0 && dotIndex < fileName.length() - 1) {
+                    fileExtension = fileName.substring(dotIndex);
+                }
+
+                // Lấy tên hình ảnh người dùng nhập (nếu có)
+                String userImageName = request.getParameter("UserImage");
+                String uniqueFileName;
+
+                if (userImageName != null && !userImageName.trim().isEmpty()) {
+                    String sanitizedImageName = userImageName.replaceAll("[^a-zA-Z0-9_\\-]", "_");
+                    uniqueFileName = sanitizedImageName + fileExtension; // Sử dụng tên người dùng, bỏ UUID prefix (nếu bạn muốn)
+                } else {
+                    uniqueFileName = UUID.randomUUID().toString() + "_" + fileName; // Sử dụng UUID + tên file gốc
+                }
+
+                // 3. Tạo đường dẫn lưu trữ hình ảnh (giữ nguyên phần đường dẫn)
+                String webAppRoot = getServletContext().getRealPath("/");
+                File webAppRootDir = new File(webAppRoot);
+                File targetDir = webAppRootDir.getParentFile();
+                File projectRootDir = targetDir.getParentFile();
+                String srcWebAppPath = new File(projectRootDir, "src/main/webapp").getAbsolutePath();
+                String relativePath = "ManageAccount/account_img";
+                String uploadPath = srcWebAppPath + File.separator + relativePath;
 
                 File uploadDir = new File(uploadPath);
                 if (!uploadDir.exists()) {
-                    boolean dirCreated = uploadDir.mkdirs(); // Tạo thư mục nếu chưa tồn tại
-                    System.out.println("Thư mục img được tạo: " + dirCreated); // **[DEBUG] Kiểm tra tạo thư mục**
-                } else {
-                    System.out.println("Thư mục img đã tồn tại."); // **[DEBUG] Thư mục đã tồn tại**
+                    uploadDir.mkdirs();
                 }
 
-                String filePath = uploadPath + File.separator + uniqueFileName; // Đường dẫn đầy đủ để lưu file
-                System.out.println("filePath: " + filePath); // **[DEBUG] In ra filePath**
+                // 4. Xử lý tên file an toàn
+                String filePath = uploadPath + File.separator + uniqueFileName;
+                UserImage = "ManageAccount/account_img/" + uniqueFileName; // Cập nhật relativeImagePath ở đây
 
-                // Lưu file lên server
-                try (InputStream inputStream = filePart.getInputStream()) {
-                    Files.copy(inputStream, Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
-                    System.out.println("File đã được lưu thành công: " + filePath); // **[DEBUG] Lưu file thành công**
-                } catch (IOException copyException) {
-                    System.err.println("Lỗi khi lưu file: " + copyException.getMessage()); // **[DEBUG] Lỗi Lưu File**
-                    copyException.printStackTrace(); // **In stacktrace lỗi**
-                    throw copyException; // Re-throw để Servlet xử lý lỗi chung
+                // Lưu file
+                try (InputStream fileContent = filePart.getInputStream()) {
+                    Files.copy(fileContent, Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
+                    System.out.println("File saved successfully to: " + filePath);
                 }
 
-                userImagePath = "/" + UPLOAD_DIRECTORY + "/" + uniqueFileName; // Đường dẫn tương đối để lưu vào database (ví dụ: /img/...)
-                System.out.println("userImagePath (database): " + userImagePath); // **[DEBUG] Đường dẫn DB**
-
-            } // Không có khối else nữa, userImagePath vẫn là null nếu không upload file
+            } else {
+                // Không có hình ảnh nào được chọn
+                UserImage = null; // Đặt relativeImagePath thành null khi không có hình ảnh
+                System.out.println("No image uploaded for item: " + UserName); // Log để theo dõi
+            }
 
             // Step 3: Create Account object
-            Account account = new Account(UserEmail, UserPassword, UserName, UserRole, IdentityCard, UserAddress, userImagePath);
+            Account account = new Account(UserEmail, UserPassword, UserName, UserRole, IdentityCard, UserAddress, UserImage);
             AccountDAO dao = new AccountDAO();
 
             // Step 4: Create account in database

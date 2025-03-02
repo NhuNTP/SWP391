@@ -42,13 +42,7 @@ public class DeleteCustomerController extends HttpServlet {
         } catch (ClassNotFoundException ex) {
             Logger.getLogger(DeleteCustomerController.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-        if (success) {
-            request.getSession().setAttribute("message", "Xóa khách hàng thành công!");
-        } else {
-            request.getSession().setAttribute("error", "Không thể xóa khách hàng!");
-        }
-        
-        response.sendRedirect("ViewCustomerList");
+
+        response.sendRedirect("ViewCustomerList"); // Redirect regardless of success/failure
     }
 }

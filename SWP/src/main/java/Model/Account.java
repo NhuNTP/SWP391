@@ -6,7 +6,7 @@ package Model;
 
 /**
  *
- * @author LxP
+ * @author ADMIN
  */
 public class Account {
 
@@ -16,20 +16,30 @@ public class Account {
     private String UserName;
     private String UserRole;
     private String IdentityCard;
-    private String AccountAddress;
+    private String UserAddress;
     private String UserImage;
 
     public Account() {
     }
 
-    public Account(int UserId, String UserEmail, String UserPassword, String UserName, String UserRole, String IdentityCard, String AccountAddress, String UserImage) {
+    public Account(int UserId, String UserEmail, String UserPassword, String UserName, String UserRole, String IdentityCard, String UserAddress, String UserImage) {
         this.UserId = UserId;
         this.UserEmail = UserEmail;
         this.UserPassword = UserPassword;
         this.UserName = UserName;
         this.UserRole = UserRole;
         this.IdentityCard = IdentityCard;
-        this.AccountAddress = AccountAddress;
+        this.UserAddress = UserAddress;
+        this.UserImage = UserImage;
+    }
+
+    public Account(String UserEmail, String UserPassword, String UserName, String UserRole, String IdentityCard, String UserAddress, String UserImage) {
+        this.UserEmail = UserEmail;
+        this.UserPassword = UserPassword;
+        this.UserName = UserName;
+        this.UserRole = UserRole;
+        this.IdentityCard = IdentityCard;
+        this.UserAddress = UserAddress;
         this.UserImage = UserImage;
     }
 
@@ -81,12 +91,12 @@ public class Account {
         this.IdentityCard = IdentityCard;
     }
 
-    public String getAccountAddress() {
-        return AccountAddress;
+    public String getUserAddress() {
+        return UserAddress;
     }
 
-    public void setAccountAddress(String AccountAddress) {
-        this.AccountAddress = AccountAddress;
+    public void setUserAddress(String UserAddress) {
+        this.UserAddress = UserAddress;
     }
 
     public String getUserImage() {
@@ -96,4 +106,10 @@ public class Account {
     public void setUserImage(String UserImage) {
         this.UserImage = UserImage;
     }
+
+    public int getAccountId() {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+
 }
