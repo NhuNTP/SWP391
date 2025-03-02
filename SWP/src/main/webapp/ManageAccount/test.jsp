@@ -16,7 +16,7 @@
         <title>Employee Account List - Admin Dashboard</title>
         <script>
             function confirmDelete(userId, userName) {
-                if (confirm('Bạn có chắc chắn muốn xóa tài khoản ID: ' + userId + ' - Tên người dùng: ' + userName + ' không?')) {
+                if (confirm('Are you sure you want to delete the account with ID: ' + userId + ' - user name: ' + userName + '?')) {
                     window.location.href = 'DeleteAccount?id=' + userId;
                 }
             }
@@ -639,7 +639,7 @@
             }
 
             .sidebar .nav-link {
-                font-size: 1rem; /* Hoặc 16px, tùy vào AdminDashboard.jsp */
+                font-size: 0.9rem; /* Hoặc 16px, tùy vào AdminDashboard.jsp */
             }
 
             .sidebar h4{
@@ -648,6 +648,39 @@
 
             .table-bordered {
                 border-radius: 20px; /* Bo tròn viền ngoài của bảng */
+            }
+            .rounded-image {
+                width: 100px;  /* Giữ nguyên kích thước, hoặc điều chỉnh nếu cần */
+                height: 100px;
+                border-radius: 50%; /* Làm tròn ảnh */
+                object-fit: cover; /* Đảm bảo ảnh lấp đầy khung tròn */
+                object-position: center; /* Căn giữa ảnh */
+            }
+
+            /* Style phân trang */
+            .pagination {
+                display: flex;
+                justify-content: center;
+                list-style: none;
+                padding: 0;
+                margin-top: 20px;
+            }
+
+            .pagination li {
+                margin: 0 5px;
+            }
+
+            .pagination a {
+                padding: 5px 10px;
+                border: 1px solid #ccc;
+                text-decoration: none;
+                color: black;
+                border-radius: 3px;
+            }
+
+            .pagination a.active {
+                background-color: #3498db;
+                color: white;
             }
 
         </style>
@@ -714,23 +747,57 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <%-- Sử dụng scriptlet để lặp qua accountList --%>
                                     <%
                                         List<Account> accounts = (List<Account>) request.getAttribute("accountList");
-                                        if (accounts != null && !accounts.isEmpty()) {
-                                            int counter = 1;
-                                            for (Account account : accounts) {
+                                        int pageSize = 4; // Số tài khoản trên mỗi trang
+                                        int totalAccounts = (accounts != null) ? accounts.size() : 0;
+                                        int totalPages = (int) Math.ceil((double) totalAccounts / pageSize);
+                                        int currentPage = 1; // Mặc định là trang 1
+
+                                        // Lấy trang hiện tại từ request
+                                        String pageParam = request.getParameter("page");
+                                        if (pageParam != null && !pageParam.isEmpty()) {
+                                            try {
+                                                currentPage = Integer.parseInt(pageParam);
+                                                if (currentPage < 1) {
+                                                    currentPage = 1;
+                                                }
+                                                if (currentPage > totalPages) {
+                                                    currentPage = totalPages;
+                                                }
+                                            } catch (NumberFormatException e) {
+                                                currentPage = 1;
+                                            }
+                                        }
+
+                                        // Xác định phạm vi hiển thị
+                                        int startIndex = (currentPage - 1) * pageSize;
+                                        int endIndex = Math.min(startIndex + pageSize, totalAccounts);
+                                        List<Account> paginatedAccounts = (accounts != null) ? accounts.subList(startIndex, endIndex) : null;
+
+                                        if (paginatedAccounts != null && !paginatedAccounts.isEmpty()) {
+                                            int counter = startIndex + 1;
+                                            for (Account account : paginatedAccounts) {
                                     %>
                                     <tr>
                                         <td><%= counter++%></td>
                                         <td><%= account.getUserId()%></td>
                                         <td>
-                                            <% String imagePath = request.getContextPath() + account.getUserImage();%>
-                                            <%-- Đường dẫn ảnh: <%= imagePath%><br> --%>
-                                            <img src="<%= imagePath%>" alt="User Image" width="80" height="80" style="border-radius: 50%; object-fit: cover;"/>
+                                            <%
+                                                String imagePath = account.getUserImage();
+                                                if (imagePath != null && !imagePath.trim().isEmpty()) {
+                                            %>
+                                            <img src="<%= imagePath%>" alt="<%= account.getUserName()%> " class="rounded-image">
+                                            <%
+                                            } else {
+                                            %>
+                                            No Image
+                                            <%
+                                                }
+                                            %>
                                         </td>
                                         <td><%= account.getUserEmail()%></td>
-                                        <td><%= account.getUserPassword()%></td>
+                                        <td><%= account.getUserPassword()%></td> 
                                         <td><%= account.getUserName()%></td>
                                         <td><%= account.getUserRole()%></td>
                                         <td><%= account.getIdentityCard()%></td>
@@ -744,9 +811,12 @@
                                                data-userrole="<%=account.getUserRole()%>"
                                                data-identitycard="<%=account.getIdentityCard()%>"
                                                data-useraddress="<%=account.getUserAddress()%>"
-                                               data-userimage="<%=account.getUserImage()%>"
-                                               ><i class="fas fa-edit"></i> Edit</a>
-                                            <a href="#" onclick="confirmDelete('<%= account.getUserId()%>', '<%= account.getUserName()%>')" class="btn-delete"><i class="fas fa-trash-alt"></i> Delete</a>
+                                               data-userimage="<%=account.getUserImage()%>">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </a>
+                                            <a href="#" onclick="confirmDelete('<%= account.getUserId()%>', '<%= account.getUserName()%>')" class="btn-delete">
+                                                <i class="fas fa-trash-alt"></i> Delete
+                                            </a>
                                         </td>
                                     </tr>
                                     <%
@@ -758,11 +828,10 @@
                                             <div class="no-data">
                                                 <i class="fal fa-user"></i>
                                                 <span>
-                                                    <%-- Kiểm tra xem có phải là kết quả từ việc tìm kiếm không --%>
                                                     <% if (request.getParameter("search") != null) { %>
-                                                    Không tìm thấy kết quả.
+                                                    Can not find result.
                                                     <% } else { %>
-                                                    Gian hàng chưa có nhân viên. Nhấn <a href="#">vào đây</a> để thêm mới nhân viên.
+                                                    NOT ACCOUNT HERE. CLICK <a href="#">HERE</a> TO ADD NEW EMPLOYEE.
                                                     <% } %>
                                                 </span>
                                             </div>
@@ -774,6 +843,26 @@
                                 </tbody>
                             </table>
                         </div>  
+
+                        <%-- Phân trang --%>
+                        <% if (totalPages > 1) { %>
+                        <ul class="pagination">
+                            <%-- Nút Previous --%>
+                            <% if (currentPage > 1) {%>
+                            <li><a href="?page=<%= currentPage - 1%>">Back</a></li>
+                                <% } %>
+
+                            <%-- Các số trang --%>
+                            <% for (int i = 1; i <= totalPages; i++) {%>
+                            <li><a href="?page=<%= i%>" <% if (currentPage == i) { %>class="active"<% }%>><%= i%></a></li>
+                                <% } %>
+
+                            <%-- Nút Next --%>
+                            <% if (currentPage < totalPages) {%>
+                            <li><a href="?page=<%= currentPage + 1%>">Next</a></li>
+                                <% } %>
+                        </ul>
+                        <% }%>                
                 </section>
             </div>
         </div>

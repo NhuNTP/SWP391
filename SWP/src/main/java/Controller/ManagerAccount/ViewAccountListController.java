@@ -90,7 +90,7 @@ public class ViewAccountListController extends HttpServlet {
             }
             
             request.setAttribute("accountList", accountList); // Lưu danh sách account vào request attribute
-            request.getRequestDispatcher("ManageAccount/test.jsp").forward(request, response);
+            request.getRequestDispatcher("ManageAccount/ViewAccountList.jsp").forward(request, response);
         } catch (ClassNotFoundException ex) {
             Logger.getLogger(ViewAccountListController.class.getName()).log(Level.SEVERE, null, ex); 
         } catch (SQLException ex) {
