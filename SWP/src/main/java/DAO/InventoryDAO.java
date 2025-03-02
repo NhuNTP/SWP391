@@ -12,6 +12,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -20,7 +22,7 @@ import java.util.List;
 public class InventoryDAO extends DB.DBContext {
 
     public List<Inventory> getAllInventoryItem() {
-        String sql = "SELECT * FROM Inventory";
+        String sql = "SELECT * FROM Inventory Where isDeleted = 0";
         List<Inventory> inventoryItemList = new ArrayList<>();
         try (PreparedStatement st = getConnection().prepareStatement(sql)) {
             try (ResultSet rs = st.executeQuery()) {
@@ -101,5 +103,19 @@ public class InventoryDAO extends DB.DBContext {
             System.err.println("Lỗi cập nhật Inventory Item: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    public int deleteInventoryItemById(int itemId) throws ClassNotFoundException {
+         int count = 0;
+        try {
+            // Modified to update IsDeleted instead of deleting
+             String sql = "UPDATE [Inventory] SET IsDeleted = 1 WHERE itemId=?";
+            PreparedStatement pst = getConnection().prepareStatement(sql);
+            pst.setInt(1, itemId);
+            count = pst.executeUpdate();
+        } catch (SQLException ex) {
+            Logger.getLogger(CouponDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return count;
     }
 }

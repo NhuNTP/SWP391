@@ -17,7 +17,7 @@ public class Inventory {
     private String ItemUnit;
     private String ItemDescription;
     private String ItemImage;
-
+    private int isDeleted;
     public Inventory() {
     }
 
@@ -106,6 +106,14 @@ public class Inventory {
 
     public void setItemImage(String ItemImage) {
         this.ItemImage = ItemImage;
+    }
+
+    public int getIsDeleted() {
+        return isDeleted;
+    }
+
+    public void setIsDeleted(int isDeleted) {
+        this.isDeleted = isDeleted;
     }
 
 

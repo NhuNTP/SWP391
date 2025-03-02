@@ -14,6 +14,31 @@
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 
 
+
+
+        <script>
+            function confirmDelete(itemId) {
+                if (confirm("Are you sure you want to DELETE this coupon?")) {
+                    $.ajax({
+                        url: "DeleteInventoryItemController", 
+                        type: "POST", // Sử dụng phương thức POST để xóa
+                        data: {itemID: itemId}, // Truyền couponId làm tham số
+                        success: function (data) {
+                            // Xử lý khi xóa thành công
+                            alert("Delete coupon successfull!");
+                            // Tải lại trang hoặc cập nhật lại danh sách coupon để hiển thị thay đổi
+                            window.location.reload(); // Cách đơn giản nhất là tải lại trang
+                            // Hoặc bạn có thể cập nhật phần tử HTML hiển thị danh sách coupon bằng jQuery
+                        },
+                        error: function (jqXHR, textStatus, errorThrown) {
+                            // Xử lý khi xóa thất bại
+                            alert("Error when delete coupon: " + textStatus + ", " + errorThrown);
+                        }
+                    });
+                }
+            }
+        </script>
+
     </head>
 
     <body>
@@ -89,14 +114,7 @@
 
                             <button type="submit" class="btn btn-warning">Update</button>
                         </form>
-                        <form action="ManageCoupon/DeleteCoupon.jsp" method="post" style="display:inline;">
-                            <input type="hidden" name="couponId" value="<% out.print(listItem.getItemId()); %>">
-                            <%-- The following inputs are related to coupon from the original JSTL page, adjust them to InventoryItem properties if needed --%>
-                            <input type="hidden" name="discountAmount" value="<% out.print(listItem.getItemPrice()); %>"> <%-- Example: Using ItemPrice as a placeholder --%>
-                            <input type="hidden" name="expirationDate" value="<% out.print("N/A"); %>"> <%-- Example: No expiration date for inventory item --%>
-                            <input type="hidden" name="isUsed" value="<% out.print("false"); %>"> <%-- Example:  Not applicable for inventory item --%>
-                            <button type="submit" class="btn btn-danger">Delete</button>
-                        </form>
+                        <button type="button" class="btn btn-danger" onclick="confirmDelete('<%= listItem.getItemId()%>')">Delete</button> 
                     </td>
                 </tr>
 
@@ -109,7 +127,7 @@
                 </tr>
                 <%
                     } // end if inventoryItemList not null and not empty
-                %>
+%>
 
 
             </table>
