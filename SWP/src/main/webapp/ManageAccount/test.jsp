@@ -264,8 +264,6 @@
                 flex: 1;
                 background-color: #fff;
                 padding: 20px;
-                border: 1px solid #eee;
-                border-radius: 5px;
             }
 
             .content-header {
@@ -275,11 +273,39 @@
                 margin-bottom: 20px;
             }
 
+            /* Style cho ô input tìm kiếm */
             .search-bar input {
                 padding: 8px 12px;
                 border: 1px solid #ccc;
                 border-radius: 3px;
                 width: 250px;
+            }
+
+            .filter-bar select {
+                padding: 8px 12px;
+                border: 1px solid #ccc;
+                border-radius: 3px;
+                width: auto;
+                background-color: white;
+                font-size: 14px;
+                font-family: inherit;
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                appearance: none;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Cpath fill='%23333' d='M2 0L0 2h4zm0 5L0 3h4z'/%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-position: right 0.7em top 50%, 0 0;
+                background-size: 0.65em auto, 100%;
+                padding-right: 30px;
+            }
+
+            /* Đặt search, filter và button cạnh nhau */
+            .search-filter {
+                display: flex;         /* Bật Flexbox */
+                align-items: center;    /* Căn giữa theo chiều dọc */
+                gap: 10px;            /* Khoảng cách giữa các phần tử */
+                flex-wrap: wrap;       /* Cho phép xuống dòng nếu không đủ chỗ */
+                justify-content: flex-start; /* Căn các phần tử về bên trái */
             }
 
             .header-buttons button {
@@ -611,111 +637,139 @@
             .employee-grid tbody tr:hover {
                 background-color: #f0f0f0; /* Optional: Hover effect */
             }
+
+            .sidebar .nav-link {
+                font-size: 1rem; /* Hoặc 16px, tùy vào AdminDashboard.jsp */
+            }
+
+            .sidebar h4{
+                font-size: 1.5rem;
+            }
+
+            .table-bordered {
+                border-radius: 20px; /* Bo tròn viền ngoài của bảng */
+            }
+
         </style>
     </head>
     <body>
+
         <div class="d-flex">
             <!-- Sidebar -->
             <div class="sidebar col-md-2 p-3">
-                <h4 class="text-center mb-4">Quản Lý</h4>
+                <h4 class="text-center mb-4">Admin</h4>
                 <ul class="nav flex-column">
                     <li class="nav-item"><a href="Dashboard/AdminDashboard.jsp" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-utensils me-2"></i>Quản lý món ăn</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewTableList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Quản lý đặt bàn</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewAccountList" class="nav-link"><i class="fas fa-users me-2"></i>Quản lý nhân viên</a></li>
-                    <li class="nav-item"><a href="#" class="nav-link"><i class="fas fa-chart-bar me-2"></i>Báo cáo doanh thu</a></li>
-                    <li class="nav-item"><a href="#" class="nav-link"><i class="fas fa-cog me-2"></i>Cài đặt</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-utensils me-2"></i>Menu Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewAccountList" class="nav-link"><i class="fas fa-users me-2"></i>Employee Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewTableList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Table Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCustomerList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Customer Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCouponController" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Coupon Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewInventoryController" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Inventory Management</a></li>
                 </ul>
             </div>
 
             <!-- Main Content -->
-            <div class="col-md-10 p-4">
-                <section class="main-content">
-                    <div class="container-fluid">
-                        <main class="content-area">
-                            <div class="content-header">
-                                <div class="search-bar">
-                                    <input type="text" placeholder="Tìm theo mã, tên nhân viên">
-                                </div>
-                                <div class="header-buttons">
-                                    <button class="add-employee-btn"><i class="far fa-plus"></i> Nhân viên</button>
-
-                                </div>
-                            </div>
-
-                            <div class="employee-grid">
-                                <table class="table table-striped table-bordered table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>No.</th>
-                                            <th>ID</th>
-                                            <th>Image</th>
-                                            <th>Account Email</th>
-                                            <th>Account Password</th>
-                                            <th>Account Name</th>
-                                            <th>Account Role</th>
-                                            <th>Identity Card</th>
-                                            <th>User Address</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <%-- Sử dụng scriptlet để lặp qua accountList --%>
-                                        <%
-                                            List<Account> accounts = (List<Account>) request.getAttribute("accountList");
-                                            if (accounts != null && !accounts.isEmpty()) {
-                                                int counter = 1;
-                                                for (Account account : accounts) {
-                                        %>
-                                        <tr>
-                                            <td><%= counter++%></td>
-                                            <td><%= account.getUserId()%></td>
-                                            <td>
-                                                <% String imagePath = request.getContextPath() + account.getUserImage();%>
-                                                <%-- Đường dẫn ảnh: <%= imagePath%><br> --%>
-                                                <img src="<%= imagePath%>" alt="User Image" width="80" height="80" style="border-radius: 50%; object-fit: cover;"/>
-                                            </td>
-                                            <td><%= account.getUserEmail()%></td>
-                                            <td><%= account.getUserPassword()%></td>
-                                            <td><%= account.getUserName()%></td>
-                                            <td><%= account.getUserRole()%></td>
-                                            <td><%= account.getIdentityCard()%></td>
-                                            <td><%= account.getUserAddress()%></td>
-                                            <td>
-                                                <a href="#" class="edit-employee-btn btn-edit"
-                                                   data-userid="<%=account.getUserId()%>"
-                                                   data-useremail="<%=account.getUserEmail()%>"
-                                                   data-username="<%=account.getUserName()%>"
-                                                   data-userpassword="<%=account.getUserPassword()%>"
-                                                   data-userrole="<%=account.getUserRole()%>"
-                                                   data-identitycard="<%=account.getIdentityCard()%>"
-                                                   data-useraddress="<%=account.getUserAddress()%>"
-                                                   data-userimage="<%=account.getUserImage()%>"
-                                                   ><i class="fas fa-edit"></i> Edit</a>
-                                                <a href="#" onclick="confirmDelete('<%= account.getUserId()%>', '<%= account.getUserName()%>')" class="btn-delete"><i class="fas fa-trash-alt"></i> Delete</a>
-                                            </td>
-                                        </tr>
-                                        <%
-                                            }
-                                        } else {
-                                        %>
-                                        <tr>
-                                            <td colspan="10">
-                                                <div class="no-data">
-                                                    <i class="fal fa-user"></i>
-                                                    <span>Gian hàng chưa có nhân viên.<br>Nhấn <a href="#">vào đây</a> để thêm mới nhân viên.</span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <%
-                                            }
-                                        %>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </main>
+            <div class="col-md-10 bg-white p-3">
+                <!-- Navbar -->
+                <div class="text-left mb-4">
+                    <h4>Employee Management</h4>
+                </div>
+                <div class="content-header">
+                    <div class="search-filter">
+                        <div class="search-bar">
+                            <input type="text" id="searchInput" placeholder="Search">  <!-- Thêm id="searchInput" -->
+                        </div>
+                        <div class="filter-bar">
+                            <select id="roleFilter">
+                                <option value="">All Roles</option>  <!-- Thêm option "All Roles" -->
+                                <option value="Waiter">Waiter</option>
+                                <option value="Manager">Manager</option>
+                                <option value="Waiter">Waiter</option>
+                                <option value="Kitchen staff">Kitchen staff</option>
+                                <option value="Cashier">Cashier</option>
+                            </select>
+                        </div>
                     </div>
-                </section>
+                    <div class="header-buttons">
+                        <button class="add-employee-btn"><i class="far fa-plus"></i> Employee </button>
+                    </div>
+                </div>
+                <table class="table table-striped table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th>ID</th>
+                            <th>Image</th>
+                            <th>Account Email</th>
+                            <th>Account Password</th>
+                            <th>Account Name</th>
+                            <th>Account Role</th>
+                            <th>Identity Card</th>
+                            <th>User Address</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <%-- Sử dụng scriptlet để lặp qua accountList --%>
+                        <%
+                            List<Account> accounts = (List<Account>) request.getAttribute("accountList");
+                            if (accounts != null && !accounts.isEmpty()) {
+                                int counter = 1;
+                                for (Account account : accounts) {
+                        %>
+                        <tr>
+                            <td><%= counter++%></td>
+                            <td><%= account.getUserId()%></td>
+                            <td>
+                                <% String imagePath = request.getContextPath() + account.getUserImage();%>
+                                <%-- Đường dẫn ảnh: <%= imagePath%><br> --%>
+                                <img src="<%= imagePath%>" alt="User Image" width="80" height="80" style="border-radius: 50%; object-fit: cover;"/>
+                            </td>
+                            <td><%= account.getUserEmail()%></td>
+                            <td><%= account.getUserPassword()%></td>
+                            <td><%= account.getUserName()%></td>
+                            <td><%= account.getUserRole()%></td>
+                            <td><%= account.getIdentityCard()%></td>
+                            <td><%= account.getUserAddress()%></td>
+                            <td>
+                                <a href="#" class="edit-employee-btn btn-edit"
+                                   data-userid="<%=account.getUserId()%>"
+                                   data-useremail="<%=account.getUserEmail()%>"
+                                   data-username="<%=account.getUserName()%>"
+                                   data-userpassword="<%=account.getUserPassword()%>"
+                                   data-userrole="<%=account.getUserRole()%>"
+                                   data-identitycard="<%=account.getIdentityCard()%>"
+                                   data-useraddress="<%=account.getUserAddress()%>"
+                                   data-userimage="<%=account.getUserImage()%>"
+                                   ><i class="fas fa-edit"></i> Edit</a>
+                                <a href="#" onclick="confirmDelete('<%= account.getUserId()%>', '<%= account.getUserName()%>')" class="btn-delete"><i class="fas fa-trash-alt"></i> Delete</a>
+                            </td>
+                        </tr>
+                        <%
+                            }
+                        } else {
+                        %>
+                        <tr>
+                            <td colspan="10">
+                                <div class="no-data">
+                                    <i class="fal fa-user"></i>
+                                    <span>
+                                        <%-- Kiểm tra xem có phải là kết quả từ việc tìm kiếm không --%>
+                                        <% if (request.getParameter("search") != null) { %>
+                                        Không tìm thấy kết quả.
+                                        <% } else { %>
+                                        Gian hàng chưa có nhân viên. Nhấn <a href="#">vào đây</a> để thêm mới nhân viên.
+                                        <% } %>
+                                    </span>
+                                </div>
+                            </td>
+                        </tr>
+                        <%
+                            }
+                        %>
+                    </tbody>
+                </table>
             </div>
         </div>
 
@@ -894,6 +948,37 @@
                     }
                 }
             });
+
+
+            const searchInput = document.getElementById('searchInput');
+            const roleFilter = document.getElementById('roleFilter'); // Lấy phần tử select
+            const table = document.querySelector('.table');
+            const rows = table.querySelectorAll('tbody tr');
+
+            function filterTable() {
+                const searchText = searchInput.value.toLowerCase();
+                const selectedRole = roleFilter.value; // Lấy role được chọn
+
+                rows.forEach(row => {
+                    const id = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                    const name = row.querySelector('td:nth-child(6)').textContent.toLowerCase();
+                    const email = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
+                    const role = row.querySelector('td:nth-child(7)').textContent; // Lấy role của hàng, không chuyển thành chữ thường
+
+                    let matchesSearch = id.includes(searchText) || name.includes(searchText) || email.includes(searchText);
+                    let matchesRole = selectedRole === '' || role === selectedRole; // So sánh với role được chọn, hoặc hiển thị tất cả nếu chọn "All Roles"
+
+                    if (matchesSearch && matchesRole) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            }
+
+            searchInput.addEventListener('keyup', filterTable); // Gọi hàm filterTable khi gõ vào ô tìm kiếm
+            roleFilter.addEventListener('change', filterTable); // Gọi hàm filterTable khi thay đổi lựa chọn trong dropdown
+
         </script>
     </body>
 </html>

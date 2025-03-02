@@ -235,12 +235,41 @@
                 margin-bottom: 20px;
             }
 
+            /* Style cho ô input tìm kiếm */
             .search-bar input {
                 padding: 8px 12px;
                 border: 1px solid #ccc;
                 border-radius: 3px;
                 width: 250px;
             }
+
+            .filter-bar select {
+                padding: 8px 12px;
+                border: 1px solid #ccc;
+                border-radius: 3px;
+                width: auto;
+                background-color: white;
+                font-size: 14px;
+                font-family: inherit;
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                appearance: none;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Cpath fill='%23333' d='M2 0L0 2h4zm0 5L0 3h4z'/%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-position: right 0.7em top 50%, 0 0;
+                background-size: 0.65em auto, 100%;
+                padding-right: 30px;
+            }
+
+            /* Đặt search, filter và button cạnh nhau */
+            .search-filter {
+                display: flex;         /* Bật Flexbox */
+                align-items: center;    /* Căn giữa theo chiều dọc */
+                gap: 10px;            /* Khoảng cách giữa các phần tử */
+                flex-wrap: wrap;       /* Cho phép xuống dòng nếu không đủ chỗ */
+                justify-content: flex-start; /* Căn các phần tử về bên trái */
+            }
+
 
             .header-buttons button {
                 padding: 8px 15px;
@@ -569,221 +598,265 @@
             .employee-grid tbody tr:hover {
                 background-color: #f0f0f0; /* Optional: Hover effect */
             }
+
+            .sidebar .nav-link {
+                font-size: 1rem; /* Hoặc 16px, tùy vào AdminDashboard.jsp */
+            }
+
+            .sidebar h4{
+                font-size: 1.5rem;
+            }
+
+
         </style>
     </head>
     <body>
         <div class="d-flex">
             <!-- Sidebar -->
-
             <div class="sidebar col-md-2 p-3">
-                <h4 class="text-center mb-4">Quản Lý</h4>
+                <h4 class="text-center mb-4">Admin</h4>
                 <ul class="nav flex-column">
                     <li class="nav-item"><a href="Dashboard/AdminDashboard.jsp" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-utensils me-2"></i>Quản lý món ăn</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewTableList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Quản lý đặt bàn</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewAccountList" class="nav-link"><i class="fas fa-users me-2"></i>Quản lý nhân viên</a></li>
-                    <li class="nav-item"><a href="#" class="nav-link"><i class="fas fa-chart-bar me-2"></i>Báo cáo doanh thu</a></li>
-                    <li class="nav-item"><a href="#" class="nav-link"><i class="fas fa-cog me-2"></i>Cài đặt</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-utensils me-2"></i>Menu Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewAccountList" class="nav-link"><i class="fas fa-users me-2"></i>Employee Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewTableList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Table Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCustomerList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Customer Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCouponController" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Coupon Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewInventoryController" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Inventory Management</a></li>
                 </ul>
             </div>
 
-            <!-- Main Content -->
-            <div class="col-md-10 p-4">
-                <section class="main-content">
-                    <div class="container-fluid">
-                        <main class="content-area">
-                            <div class="content-header">
-                                <div class="search-bar">
-                                    <input type="text" placeholder="Tìm theo mã bàn, trạng thái">
-                                </div>
-                                <div class="header-buttons">
-                                    <button class="add-table-btn"><i class="far fa-plus"></i> Bàn ăn</button>
-
-                                </div>
-                            </div>
-
-                            <div class="employee-grid">
-                                <table class="table table-striped table-bordered table-hover"> <%-- Added Bootstrap table classes --%>
-                                    <thead>
-                                        <tr>
-                                            <th>No.</th>
-                                            <th>ID</th>
-                                            <th>Status</th>
-                                            <th>Number of Seats</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <%-- Sử dụng scriptlet để lặp qua tableList --%>
-                                        <%
-                                            List<Table> tables = (List<Table>) request.getAttribute("tableList");
-                                            if (tables != null && !tables.isEmpty()) {
-                                                int counter = 1;
-                                                for (Table table : tables) {
-                                        %>
-                                        <tr>
-                                            <td><%= counter++%></td>
-                                            <td><%= table.getTableId()%></td>
-                                            <td><%= table.getTableStatus()%></td>
-                                            <td><%= table.getNumberOfSeats()%></td>
-                                            <td>
-                                                <a href="#" class="edit-table-btn btn-edit-table"     <%-- Added btn-edit-table class --%>
-                                                   data-tableid="<%=table.getTableId()%>"
-                                                   data-tablestatus="<%=table.getTableStatus()%>"
-                                                   data-numberofseats="<%=table.getNumberOfSeats()%>"
-                                                   ><i class="fas fa-edit"></i>Edit</a> <%-- Added edit icon --%>
-                                                <a href="#" onclick="confirmDelete('<%= table.getTableId()%>', '<%= table.getTableStatus()%>')" class="btn-delete btn-delete-table"><i class="fas fa-trash-alt"></i>Delete</a> <%-- Added btn-delete-table class and delete icon --%>
-                                            </td>
-                                        </tr>
-                                        <%
-                                            }
-                                        } else {
-                                        %>
-                                        <tr>
-                                            <td colspan="5">
-                                                <div class="no-data">
-                                                    <i class="fas fa-table"></i>
-                                                    <span>Không có bàn ăn nào.<br>Nhấn <a href="#">vào đây</a> để thêm mới bàn ăn.</span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <%
-                                            }
-                                        %>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </main>
-                    </div>
-                </section>
-            </div>
-        </div>
-
-        <!-- Modal Create Table -->
-        <div id="createTableModal" class="modal">
-            <div class="modal-content">
-                <span class="close-button">×</span>
-                <h2>Create New Table</h2>
-                <div class="modal-form-container">
-                    <form method="post" action="CreateTable">
-                        <div>
-                            <label for="TableStatus">Table Status</label>
-                            <select id="TableStatus" name="TableStatus">
-                                <option value="Available">Available</option>
-                                <option value="Occupied">Occupied</option>
-                                <option value="Reserved">Reserved</option>
-                                <option value="Unavailable">Unavailable</option>
+            <div class="col-md-10 bg-white p-3">
+                <!-- Navbar -->
+                <div class="text-left mb-4">
+                    <h4>Table Management</h4>
+                </div>
+                <div class="content-header">
+                    <div class="search-filter">
+                        <div class="search-bar">
+                            <input type="text" id="searchInput" placeholder="Search"> 
+                        </div>
+                        <div class="filter-bar">
+                            <select id="statusFilter">
+                                <option value="">All Status</option>
+                                <option value="Available">Available</option> <!-- Sửa value -->
+                                <option value="Occupied">Occupied</option> <!-- Sửa value -->
+                                <option value="Reserved">Reserved</option>  <!-- Sửa value -->
                             </select>
                         </div>
-                        <div>
-                            <label for="NumberOfSeats">Number Of Seats</label>
-                            <input type="number" id="NumberOfSeats" name="NumberOfSeats" >
-                        </div>
-                        <div class="modal-actions">
-                            <input type="submit" class="btn btn-primary" name="btnSubmit" value="Create Table"/> <%-- Bootstrap button style --%>
-                            <button type="button" class="btn btn-secondary close-button">Cancel</button> <%-- Bootstrap button style --%>
-                        </div>
-                    </form>
+                    </div>
+                    <div class="header-buttons">
+                        <button class="add-table-btn"><i class="far fa-plus"></i> Table </button>
+
+                    </div>
                 </div>
+                <table class="table table-striped table-bordered table-hover"> <%-- Added Bootstrap table classes --%>
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th>ID</th>
+                            <th>Status</th>
+                            <th>Number of Seats</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <%-- Sử dụng scriptlet để lặp qua tableList --%>
+                        <%
+                            List<Table> tables = (List<Table>) request.getAttribute("tableList");
+                            if (tables != null && !tables.isEmpty()) {
+                                int counter = 1;
+                                for (Table table : tables) {
+                        %>
+                        <tr>
+                            <td><%= counter++%></td>
+                            <td><%= table.getTableId()%></td>
+                            <td><%= table.getTableStatus()%></td>
+                            <td><%= table.getNumberOfSeats()%></td>
+                            <td>
+                                <a href="#" class="edit-table-btn btn-edit-table"     <%-- Added btn-edit-table class --%>
+                                   data-tableid="<%=table.getTableId()%>"
+                                   data-tablestatus="<%=table.getTableStatus()%>"
+                                   data-numberofseats="<%=table.getNumberOfSeats()%>"
+                                   ><i class="fas fa-edit"></i>Edit</a> <%-- Added edit icon --%>
+                                <a href="#" onclick="confirmDelete('<%= table.getTableId()%>', '<%= table.getTableStatus()%>')" class="btn-delete btn-delete-table"><i class="fas fa-trash-alt"></i>Delete</a> <%-- Added btn-delete-table class and delete icon --%>
+                            </td>
+                        </tr>
+                        <%
+                            }
+                        } else {
+                        %>
+                        <tr>
+                            <td colspan="5">
+                                <div class="no-data">
+                                    <i class="fas fa-table"></i>
+                                    <span>Không có bàn ăn nào.<br>Nhấn <a href="#">vào đây</a> để thêm mới bàn ăn.</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <%
+                            }
+                        %>
+                    </tbody>
+                </table>
+                </main>
             </div>
-        </div>
+        </section>
+    </div>
+</div>
 
-        <!-- Modal Edit Table Status -->
-        <div id="editTableModal" class="modal">
-            <div class="modal-content">
-                <span class="close-button">×</span>
-                <h2>Edit Table Status</h2>
-                <div class="modal-form-container">
-                    <form method="post" action="UpdateTable">
-                        <input type="hidden" id="EditTableIdHidden" name="TableIdHidden" value=""/>
-                        <div>
-                            <div>
-                                <label for="EditTableId">Table ID</label>
-                                <input type="text" id="EditTableId" name="TableId" value="" readonly/>
-                            </div>
-                            <div>
-                                <label for="EditNumberOfSeats">Number Of Seats</label>
-                                <input type="number" id="EditNumberOfSeats" name="NumberOfSeats" value="" />
-                            </div>
-                            <div>
-                                <label for="EditTableStatus">Table Status</label>
-                                <select id="EditTableStatus" name="TableStatus">
-                                    <option value="Available">Available</option>
-                                    <option value="Occupied">Occupied</option>
-                                    <option value="Reserved">Reserved</option>
-                                    <option value="Unavailable">Unavailable</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Save and Back to List Buttons -->
-                        <div class="modal-actions">
-                            <input type="submit" class="btn btn-primary" name="btnSubmit" value="Save Changes"/> <%-- Bootstrap button style --%>
-                            <button type="button" class="btn btn-secondary close-button">Cancel</button> <%-- Bootstrap button style --%>
-                        </div>
-                    </form>
+<!-- Modal Create Table -->
+<div id="createTableModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button">×</span>
+        <h2>Create New Table</h2>
+        <div class="modal-form-container">
+            <form method="post" action="CreateTable">
+                <div>
+                    <label for="TableStatus">Table Status</label>
+                    <select id="TableStatus" name="TableStatus">
+                        <option value="Available">Available</option>
+                        <option value="Occupied">Occupied</option>
+                        <option value="Reserved">Reserved</option>
+                    </select>
                 </div>
-            </div>
+                <div>
+                    <label for="NumberOfSeats">Number Of Seats</label>
+                    <input type="number" id="NumberOfSeats" name="NumberOfSeats" >
+                </div>
+                <div class="modal-actions">
+                    <input type="submit" class="btn btn-primary" name="btnSubmit" value="Create Table"/> <%-- Bootstrap button style --%>
+                    <button type="button" class="btn btn-secondary close-button">Cancel</button> <%-- Bootstrap button style --%>
+                </div>
+            </form>
         </div>
+    </div>
+</div>
 
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                // Modal Create Table
-                var createTableModel = document.getElementById("createTableModal");
-                var createTableBtn = document.querySelector(".add-table-btn");
-                var closeCreateTableButtons = document.querySelectorAll("#createTableModal .close-button");
+<!-- Modal Edit Table Status -->
+<div id="editTableModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button">×</span>
+        <h2>Edit Table Status</h2>
+        <div class="modal-form-container">
+            <form method="post" action="UpdateTable">
+                <input type="hidden" id="EditTableIdHidden" name="TableIdHidden" value=""/>
+                <div>
+                    <div>
+                        <label for="EditTableId">Table ID</label>
+                        <input type="text" id="EditTableId" name="TableId" value="" readonly/>
+                    </div>
+                    <div>
+                        <label for="EditNumberOfSeats">Number Of Seats</label>
+                        <input type="number" id="EditNumberOfSeats" name="NumberOfSeats" value="" />
+                    </div>
+                    <div>
+                        <label for="EditTableStatus">Table Status</label>
+                        <select id="EditTableStatus" name="TableStatus">
+                            <option value="Available">Available</option>
+                            <option value="Occupied">Occupied</option>
+                            <option value="Reserved">Reserved</option>
+                        </select>
+                    </div>
+                </div>
 
-                if (createTableBtn && createTableModel) {
-                    createTableBtn.onclick = function () {
-                        createTableModel.style.display = "block";
-                    }
-                }
+                <!-- Save and Back to List Buttons -->
+                <div class="modal-actions">
+                    <input type="submit" class="btn btn-primary" name="btnSubmit" value="Save Changes"/> <%-- Bootstrap button style --%>
+                    <button type="button" class="btn btn-secondary close-button">Cancel</button> <%-- Bootstrap button style --%>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-                if (closeCreateTableButtons) {
-                    closeCreateTableButtons.forEach(function (btnClose) {
-                        btnClose.onclick = function () {
-                            createTableModel.style.display = "none";
-                        }
-                    });
-                }
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Modal Create Table
+        var createTableModel = document.getElementById("createTableModal");
+        var createTableBtn = document.querySelector(".add-table-btn");
+        var closeCreateTableButtons = document.querySelectorAll("#createTableModal .close-button");
 
-                // Modal Edit Table
-                var editTableModel = document.getElementById("editTableModal");
-                var editTableButtons = document.querySelectorAll(".edit-table-btn");
-                var closeEditTableButtons = document.querySelectorAll("#editTableModal .close-button");
+        if (createTableBtn && createTableModel) {
+            createTableBtn.onclick = function () {
+                createTableModel.style.display = "block";
+            }
+        }
 
-                if (editTableButtons) {
-                    editTableButtons.forEach(function (btnEdit) {
-                        btnEdit.onclick = function (e) {
-                            e.preventDefault();
-                            document.getElementById('EditTableIdHidden').value = btnEdit.dataset.tableid;
-                            document.getElementById('EditTableId').value = btnEdit.dataset.tableid;
-                            document.getElementById('EditTableStatus').value = btnEdit.dataset.tablestatus;
-                            document.getElementById('EditNumberOfSeats').value = btnEdit.dataset.numberofseats;
-
-                            editTableModel.style.display = "block";
-                        }
-                    });
-                }
-
-                if (closeEditTableButtons) {
-                    closeEditTableButtons.forEach(function (btnClose) {
-                        btnClose.onclick = function () {
-                            editTableModel.style.display = "none";
-                        }
-                    });
-                }
-
-
-                window.onclick = function (event) {
-                    if (event.target == createTableModel) {
-                        createTableModel.style.display = "none";
-                    }
-                    if (event.target == editTableModel) {
-                        editTableModel.style.display = "none";
-                    }
+        if (closeCreateTableButtons) {
+            closeCreateTableButtons.forEach(function (btnClose) {
+                btnClose.onclick = function () {
+                    createTableModel.style.display = "none";
                 }
             });
-        </script>
-    </body>
+        }
+
+        // Modal Edit Table
+        var editTableModel = document.getElementById("editTableModal");
+        var editTableButtons = document.querySelectorAll(".edit-table-btn");
+        var closeEditTableButtons = document.querySelectorAll("#editTableModal .close-button");
+
+        if (editTableButtons) {
+            editTableButtons.forEach(function (btnEdit) {
+                btnEdit.onclick = function (e) {
+                    e.preventDefault();
+                    document.getElementById('EditTableIdHidden').value = btnEdit.dataset.tableid;
+                    document.getElementById('EditTableId').value = btnEdit.dataset.tableid;
+                    document.getElementById('EditTableStatus').value = btnEdit.dataset.tablestatus;
+                    document.getElementById('EditNumberOfSeats').value = btnEdit.dataset.numberofseats;
+
+                    editTableModel.style.display = "block";
+                }
+            });
+        }
+
+        if (closeEditTableButtons) {
+            closeEditTableButtons.forEach(function (btnClose) {
+                btnClose.onclick = function () {
+                    editTableModel.style.display = "none";
+                }
+            });
+        }
+
+
+        window.onclick = function (event) {
+            if (event.target == createTableModel) {
+                createTableModel.style.display = "none";
+            }
+            if (event.target == editTableModel) {
+                editTableModel.style.display = "none";
+            }
+        }
+    });
+
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const table = document.querySelector('.table');
+    const rows = table.querySelectorAll('tbody tr');
+
+    function filterTable() {
+        const searchText = searchInput.value.toLowerCase();
+        const selectedStatus = statusFilter.value;
+
+        rows.forEach(row => {
+            const numberOfSeats = row.querySelector('td:nth-child(4)').textContent.toLowerCase(); // Cột số ghế
+            const status = row.querySelector('td:nth-child(3)').textContent; // Cột trạng thái
+
+            // Tìm kiếm theo số ghế
+            let matchesSearch = numberOfSeats.includes(searchText);
+
+            // Lọc theo trạng thái
+            let matchesStatus = selectedStatus === '' || status === selectedStatus;
+
+            if (matchesSearch && matchesStatus) {
+                row.style.display = ''; // Hiển thị
+            } else {
+                row.style.display = 'none'; // Ẩn
+            }
+        });
+    }
+    searchInput.addEventListener('keyup', filterTable);
+    statusFilter.addEventListener('change', filterTable);
+</script>
+</body>
 </html>
