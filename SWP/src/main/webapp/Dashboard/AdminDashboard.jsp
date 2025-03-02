@@ -1,4 +1,3 @@
-<!-- AdminDashboard.jsp -->
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html lang="vi">
@@ -20,6 +19,7 @@
                 background-color: #f8f9fa;
             }
 
+            /* Sidebar Styles */
             .sidebar {
                 background: linear-gradient(to bottom, #2C3E50, #34495E);
                 color: white;
@@ -35,6 +35,7 @@
                 background-color: #1A252F;
             }
 
+            /* Card Stats Styles */
             .card-stats {
                 background: linear-gradient(to right, #4CAF50, #81C784);
                 color: white;
@@ -44,6 +45,7 @@
                 font-size: 2rem;
             }
 
+            /* Chart Container Styles */
             .chart-container {
                 position: relative;
                 height: 300px;
@@ -52,7 +54,6 @@
     </head>
 
     <body>
-        <!-- Sidebar -->
         <div class="d-flex">
             <div class="sidebar col-md-2 p-3">
                 <h4 class="text-center mb-4">Admin</h4>
@@ -61,6 +62,7 @@
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-utensils me-2"></i>Menu Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewAccountList" class="nav-link"><i class="fas fa-users me-2"></i>Employee Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewTableList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Table Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewOrderList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Order Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCustomerList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Customer Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCouponController" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Coupon Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewInventoryController" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Inventory Management</a></li>
