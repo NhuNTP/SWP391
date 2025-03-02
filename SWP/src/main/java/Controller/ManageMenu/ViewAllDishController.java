@@ -19,22 +19,32 @@ public class ViewAllDishController extends HttpServlet {
 
     private final MenuDAO menuDAO = new MenuDAO();
 
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+   @Override
+protected void doGet(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException {
 
-        List<Dish> dishList = menuDAO.getAllDishes();
+    String keyword = request.getParameter("keyword");
 
-        if (dishList != null) {
-            request.setAttribute("dishList", dishList); // Set dishes as attribute
+    List<Dish> dishList;
 
-            RequestDispatcher dispatcher = request.getRequestDispatcher("/ManageMenu/viewalldish.jsp"); // Forward to JSP
-            dispatcher.forward(request, response);
-        } else {
-            // Handle error appropriately (e.g., display an error page)
-            request.setAttribute("errorMessage", "Error retrieving dishes.  See server logs for details.");
-            RequestDispatcher dispatcher = request.getRequestDispatcher("error.jsp"); // Create an error.jsp page
-            dispatcher.forward(request, response);
-        }
+    if (keyword != null && !keyword.trim().isEmpty()) {
+        // Search for dishes based on the keyword
+        dishList = menuDAO.searchDishes(keyword.trim());
+    } else {
+        // Retrieve all dishes if no keyword is provided
+        dishList = menuDAO.getAllDishes();
     }
+
+    if (dishList != null) {
+        request.setAttribute("dishList", dishList); // Set dishes as attribute
+
+        RequestDispatcher dispatcher = request.getRequestDispatcher("/ManageMenu/viewalldish.jsp"); // Forward to JSP
+        dispatcher.forward(request, response);
+    } else {
+        // Handle error appropriately (e.g., display an error page)
+        request.setAttribute("errorMessage", "Error retrieving dishes. See server logs for details.");
+        RequestDispatcher dispatcher = request.getRequestDispatcher("error.jsp"); // Create an error.jsp page
+        dispatcher.forward(request, response);
+    }
+}
 }

@@ -32,6 +32,18 @@
         <input type="hidden" name="oldDishImage" value="<%= dish.getDishImage() %>">
         <input type="file" id="dishImage" name="dishImage"><br><br>
 
+        <label for="dishStatus">Dish Status:</label><br>
+        <select id="dishStatus" name="dishStatus">
+            <option value="Available" <%= "Available".equals(dish.getDishStatus()) ? "selected" : "" %>>Available</option>
+            <option value="Unavailable" <%= "Unavailable".equals(dish.getDishStatus()) ? "selected" : "" %>>Unavailable</option>
+        </select><br><br>
+
+        <label for="ingredientStatus">Ingredient Status:</label><br>
+        <select id="ingredientStatus" name="ingredientStatus">
+            <option value="Sufficient" <%= "Sufficient".equals(dish.getIngredientStatus()) ? "selected" : "" %>>Sufficient</option>
+            <option value="Insufficient" <%= "Insufficient".equals(dish.getIngredientStatus()) ? "selected" : "" %>>Insufficient</option>
+        </select><br><br>
+
         <input type="submit" value="Update">
     </form>
 

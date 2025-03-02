@@ -34,18 +34,19 @@ public class UpdateDishController extends HttpServlet {
         try {
             int dishId = Integer.parseInt(request.getParameter("dishId"));
             // Fetch the dish details based on dishId
-            Dish dish = getDishById(dishId);  // Implement this method (see below)
+            Dish dish = menuDAO.getDishById(dishId);  // Use the method from DAO directly
+            if (dish == null) {
+                request.setAttribute("errorMessage", "Dish not found with ID: " + dishId);
+                RequestDispatcher dispatcher = request.getRequestDispatcher("error.jsp");
+                dispatcher.forward(request, response);
+                return;
+            }
             request.setAttribute("dish", dish);
 
             RequestDispatcher dispatcher = request.getRequestDispatcher("ManageMenu/updatedish.jsp"); // Create updatedish.jsp
             dispatcher.forward(request, response);
         } catch (NumberFormatException e) {
             request.setAttribute("errorMessage", "Invalid Dish ID.");
-            RequestDispatcher dispatcher = request.getRequestDispatcher("error.jsp");
-            dispatcher.forward(request, response);
-        } catch (Exception ex) {
-            Logger.getLogger(UpdateDishController.class.getName()).log(Level.SEVERE, null, ex);
-            request.setAttribute("errorMessage", "Error retrieving dish: " + ex.getMessage());
             RequestDispatcher dispatcher = request.getRequestDispatcher("error.jsp");
             dispatcher.forward(request, response);
         }
@@ -61,6 +62,9 @@ public class UpdateDishController extends HttpServlet {
             String dishType = request.getParameter("dishType");
             double dishPrice = Double.parseDouble(request.getParameter("dishPrice"));
             String dishDescription = request.getParameter("dishDescription");
+            String dishStatus = request.getParameter("dishStatus");  // Get dish status from form
+            String ingredientStatus = request.getParameter("ingredientStatus"); // Get ingredient status from form
+
 
              // Handle image upload
             String uploadPath = getServletContext().getRealPath("") + File.separator + UPLOAD_DIRECTORY;
@@ -85,6 +89,9 @@ public class UpdateDishController extends HttpServlet {
             dish.setDishPrice(dishPrice);
             dish.setDishDescription(dishDescription);
             dish.setDishImage(dishImage);
+            dish.setDishStatus(dishStatus); // Set dish status
+            dish.setIngredientStatus(ingredientStatus); // Set ingredient status
+
 
 
             boolean isUpdated = menuDAO.updateDish(dish);
@@ -100,15 +107,5 @@ public class UpdateDishController extends HttpServlet {
         }
 
         response.sendRedirect("viewalldish");
-    }
-
-    private Dish getDishById(int dishId) throws SQLException, ClassNotFoundException {
-        List<Dish> dishList = menuDAO.getAllDishes(); // Retrieve all dishes
-        for (Dish dish : dishList) {
-            if (dish.getDishId() == dishId) {
-                return dish; // Return the dish if the DishId matches
-            }
-        }
-        return null; // Return null if no dish matches the DishId
     }
 }
