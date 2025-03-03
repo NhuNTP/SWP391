@@ -1,30 +1,31 @@
-<%-- ViewOrderList.jsp --%>
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%--
+    Document   : TableManagement
+    Created on : Feb 29, 2025, 10:00:00 AM
+    Author     : ADMIN
+--%>
+
 <%@page import="java.util.List"%>
 <%@page import="Model.Table"%>
+<%@page import="DAO.TableDAO"%>
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
-<html>
+<html lang="vi">
     <head>
         <meta charset="UTF-8">
-        <title>Select Table for Order</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Table Management - Admin Dashboard</title>
         <script>
             function confirmDelete(tableId, tableStatus) {
-                if (confirm('Bạn có chắc chắn muốn xóa bàn ID: ' + tableId + ' - Trạng thái: ' + tableStatus + ' không?')) {
+                if (confirm('Are you sure you want to delete the table with ID: ' + tableId + ' - Status: ' + tableStatus + '?')) {
                     window.location.href = 'DeleteTable?id=' + tableId;
-                } else {
                 }
-            }
-
-            function selectTable(tableId) {
-                // Chuyển hướng đến trang tạo order với tableId
-                window.location.href = "CreateOrder?tableId=" + tableId;
             }
         </script>
         <link rel="stylesheet" href="style.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <style>
-            /* Existing styles... */
+            /* Bắt đầu nội dung CSS từ tệp style.css */
             body {
                 font-family: 'Roboto', sans-serif;
                 background-color: #f8f9fa;
@@ -58,6 +59,16 @@
                 position: relative;
                 height: 300px;
             }
+            /* CSS giữ nguyên từ code trước - bao gồm CSS cho modal */
+            /* Bắt đầu nội dung CSS từ tệp style.css */
+            /*            body, h1, h2, h3, h4, h5, h6, p, ul, li {
+                            margin: 0;
+                            padding: 0;
+                            list-style: none;
+                            text-decoration: none;
+                            color: #333;
+                            font-family: sans-serif;
+                        }*/
 
             body {
                 font-size: 14px;
@@ -73,6 +84,7 @@
             .header-container, .nav-container, .container {
                 max-width: 1200px;
                 margin: 0 auto;
+                /*                padding: 0 20px;*/
                 display: flex;
                 align-items: center;
             }
@@ -169,7 +181,6 @@
             }
 
 
-
             .container {
                 display: flex;
             }
@@ -213,6 +224,8 @@
                 flex: 1;
                 background-color: #fff;
                 padding: 20px;
+                border: 1px solid #eee;
+                border-radius: 5px;
             }
 
             .content-header {
@@ -256,6 +269,7 @@
                 flex-wrap: wrap;       /* Cho phép xuống dòng nếu không đủ chỗ */
                 justify-content: flex-start; /* Căn các phần tử về bên trái */
             }
+
 
             .header-buttons button {
                 padding: 8px 15px;
@@ -426,9 +440,6 @@
                     margin-bottom: 10px;
                 }
             }
-            /* Kết thúc nội dung CSS */
-
-            /* CSS cho Modal - GIỮ NGUYÊN */
             .modal {
                 display: none;
                 position: fixed;
@@ -523,7 +534,7 @@
                 font-size: 2rem;
             }
             /* Custom styles for table buttons */
-            .btn-edit {
+            .btn-edit-table {
                 background-color: #007bff; /* Blue color for edit */
                 color: white;
                 border: none;
@@ -536,12 +547,11 @@
                 justify-content: center;
             }
 
-            .btn-edit:hover {
+            .btn-edit-table:hover {
                 background-color: #0056b3; /* Darker blue on hover */
-
             }
 
-            .btn-delete {
+            .btn-delete-table {
                 background-color: #dc3545; /* Red color for delete */
                 color: white;
                 border: none;
@@ -555,13 +565,14 @@
                 margin-left: 5px; /* Add some spacing between buttons */
             }
 
-            .btn-delete:hover {
+            .btn-delete-table:hover {
                 background-color: #c82333; /* Darker red on hover */
             }
 
-            .btn-edit i, .btn-delete i {
+            .btn-edit-table i, .btn-delete-table i {
                 margin-right: 5px; /* Spacing between icon and text */
             }
+
             /* Basic table styling for better look */
             .employee-grid table {
                 width: 100%;
@@ -589,96 +600,407 @@
             }
 
             .sidebar .nav-link {
-                font-size: 1rem; /* Hoặc 16px, tùy vào AdminDashboard.jsp */
+                font-size: 0.9rem; /* Hoặc 16px, tùy vào AdminDashboard.jsp */
             }
 
             .sidebar h4{
                 font-size: 1.5rem;
             }
-
-            .table-bordered {
-                border-radius: 20px; /* Bo tròn viền ngoài của bảng */
+            .table-grid {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr); /* 4 columns */
+                gap: 10px; /* Spacing between table items */
             }
 
+            .table-item {
+                border: 1px solid #ddd;
+                padding: 10px;
+                border-radius: 5px;
+                background-color: white;
+                display: flex;
+                flex-direction: column; /* Stack content vertically */
+                justify-content: space-between; /* Space out content and buttons */
+                min-height: 100px; /* Adjust as needed */
+                position: relative; /* For absolute positioning of buttons */
+            }
+            /* Status Colors */
+            .table-item.available {
+                background-color: #fffff5;
+            }
+
+            .table-item.occupied {
+                background-color: #c7fdc4; /* Light green */
+            }
+
+            .table-item.reserved {
+                background-color: #b6eaff; /* Blue */
+                color: white;  /* White text for reserved */
+            }
+
+            .table-info {
+                text-align: left; /* Left-align table information */
+                margin-bottom: 10px; /* Space between info and buttons */
+            }
+            .table-id-seats {
+                font-weight: bold;
+            }
+            .table-buttons {
+                position: absolute;
+                top: 5px;
+                right: 5px;
+                display: flex;
+                flex-direction: column; /* Stack buttons vertically */
+                gap: 5px; /* Space between buttons */
+            }
+
+            /* Style for individual buttons (make them equal size) */
+            .table-buttons a { /* Apply to both edit and delete buttons */
+                padding: 5px; /* Consistent padding */
+                border: 1px solid #ccc;
+                background-color: #ffffff;
+                text-decoration: none;
+                color: black;
+                border-radius: 3px;
+                width: 25px;      /* Set a fixed width */
+                height: 25px;      /* Set a fixed height */
+                display: flex;    /* Use flexbox for centering */
+                align-items: center; /* Center vertically */
+                justify-content: center; /* Center horizontally */
+            }
+
+            .no-data {
+                grid-column: span 4;
+                text-align: center;
+            }
+
+            /* Style for the icons (optional, for consistent size) */
+            .table-buttons a i {
+                font-size: 16px;  /* Adjust icon size as needed */
+            }
+
+            /* Style phân trang */
+            .pagination {
+                display: flex;
+                justify-content: center;
+                list-style: none;
+                padding: 0;
+                margin-top: 20px;
+            }
+
+            .pagination li {
+                margin: 0 5px;
+            }
+
+            .pagination a {
+                padding: 5px 10px;
+                border: 1px solid #ccc;
+                text-decoration: none;
+                color: black;
+                border-radius: 3px;
+            }
+
+            .pagination a.active {
+                background-color: #3498db;
+                color: white;
+            }
         </style>
     </head>
     <body>
-
         <div class="d-flex">
             <!-- Sidebar -->
             <div class="sidebar col-md-2 p-3">
                 <h4 class="text-center mb-4">Admin</h4>
                 <ul class="nav flex-column">
                     <li class="nav-item"><a href="Dashboard/AdminDashboard.jsp" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-utensils me-2"></i>Menu Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-list-alt me-2"></i>Menu Management</a></li>  <!-- Hoặc fas fa-utensils -->
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewAccountList" class="nav-link"><i class="fas fa-users me-2"></i>Employee Management</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewTableList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Table Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewTableList" class="nav-link"><i class="fas fa-building me-2"></i>Table Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewOrderList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Order Management</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCustomerList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Customer Management</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCouponController" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Coupon Management</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewInventoryController" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Inventory Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCustomerList" class="nav-link"><i class="fas fa-user-friends me-2"></i>Customer Management</a></li> <!-- Hoặc fas fa-users -->
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCouponController" class="nav-link"><i class="fas fa-tag me-2"></i>Coupon Management</a></li> <!-- Hoặc fas fa-ticket-alt -->
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewInventoryController" class="nav-link"><i class="fas fa-boxes me-2"></i>Inventory Management</a></li>
                 </ul>
             </div>
-
-            <!-- Main Content -->
             <div class="col-md-10 bg-white p-3">
-                <!-- Navbar -->
-                <div class="text-left mb-4">
-                    <h4>Select Table for Order</h4>
-                </div>
-                <div class="content-header">
-                    <div class="search-filter">
-                        <div class="search-bar">
-                            <input type="text" id="searchInput" placeholder="Search">  <!-- Thêm id="searchInput" -->
+                <section class="main-content">
+                    <div class="container-fluid">
+                        <div class="text-left mb-4">
+                            <h4>Table Management</h4>
                         </div>
-                    </div>
-                </div>
-                <div class = "employee-grid">
-                <table class="table table-striped table-bordered table-hover">
-                    <thead>
-                        <tr>
-                            <th>No.</th>
-                            <th>ID</th>
-                            <th>Status</th>
-                            <th>Number of Seats</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <%
-                            List<Table> tables = (List<Table>) request.getAttribute("tableList");
-                            if (tables != null) {
-                                int counter = 1;
-                                for (Table table : tables) {
-                        %>
-                        <tr>
-                            <td><%= counter++%></td>
-                            <td><%= table.getTableId()%></td>
-                            <td><%= table.getTableStatus()%></td>
-                            <td><%= table.getNumberOfSeats()%></td>
-                            <td>
-                                <button onclick="selectTable('<%= table.getTableId()%>')" class="btn btn-primary">Select Table</button>
-                            </td>
-                        </tr>
-                        <%
+                        <div class="content-header">
+                            <div class="search-filter">
+                                <div class="search-bar">
+                                    <input type="text" id="searchInput" placeholder="Search"> 
+                                </div>
+                                <div class="filter-bar">
+                                    <select id="statusFilter">
+                                        <option value="">All Status</option>
+                                        <option value="Available">Available</option> <!-- Sửa value -->
+                                        <option value="Occupied">Occupied</option> <!-- Sửa value -->
+                                        <option value="Reserved">Reserved</option>  <!-- Sửa value -->
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="header-buttons">
+                                <button class="add-table-btn"><i class="far fa-plus"></i> Table </button>
+
+                            </div>
+                        </div>
+                        <div class="table-grid">
+                            <%
+                                List<Table> allTables = (List<Table>) request.getAttribute("tableList");
+                                int pageSize = 20; // Số bàn trên mỗi trang.  PHẢI LÀ BỘI SỐ CỦA 4!
+                                int totalTables = (allTables != null) ? allTables.size() : 0;
+                                int totalPages = (int) Math.ceil((double) totalTables / pageSize);
+                                int currentPage = 1; // Mặc định là trang 1
+
+                                // Lấy trang hiện tại từ tham số request
+                                String pageParam = request.getParameter("page");
+                                if (pageParam != null && !pageParam.isEmpty()) {
+                                    try {
+                                        currentPage = Integer.parseInt(pageParam);
+                                        if (currentPage < 1) {
+                                            currentPage = 1;
+                                        }
+                                        if (currentPage > totalPages) {
+                                            currentPage = totalPages;
+                                        }
+                                    } catch (NumberFormatException e) {
+                                        currentPage = 1; // Mặc định là 1 nếu số trang không hợp lệ
+                                    }
+                                }
+
+                                if (allTables != null && !allTables.isEmpty()) {
+                                    int startIndex = (currentPage - 1) * pageSize;
+                                    int endIndex = Math.min(startIndex + pageSize, totalTables);
+                                    List<Table> tables = allTables.subList(startIndex, endIndex);
+
+                                    for (Table table : tables) {
+                                        String tableClass = "table-item";
+                                        String statusText = table.getTableStatus();
+
+                                        if (table.getTableStatus().equals("Available")) {
+                                            tableClass += " available";
+                                        } else if (table.getTableStatus().equals("Occupied")) {
+                                            tableClass += " occupied";
+                                        } else if (table.getTableStatus().equals("Reserved")) {
+                                            tableClass += " reserved";
+                                        }
+                            %>
+                            <div class="<%= tableClass%>">
+                                <div class="table-info">
+                                    <div class="table-id"> ID: <%= table.getTableId()%> </div>
+                                    <div class="table-seats"> Number of seats <%= table.getNumberOfSeats()%></div>
+                                    <div class="table-status"><%= statusText%></div>
+                                </div>
+                                <div class="table-buttons">
+                                    <a href="#" class="edit-table-btn btn-edit-table"
+                                       data-tableid="<%=table.getTableId()%>"
+                                       data-tablestatus="<%=table.getTableStatus()%>"
+                                       data-numberofseats="<%=table.getNumberOfSeats()%>">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="#" onclick="confirmDelete('<%= table.getTableId()%>', '<%= table.getTableStatus()%>')">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            <%
                                 }
                             } else {
-                        %>
-                        <tr>
-                            <td colspan="5">
-                                <div class="no-data">
-                                    <i class="fal fa-table"></i>
-                                    <span>
-                                        No tables found.
-                                    </span>
-                                </div>
-                            </td>
-                        </tr>
+                            %>
+                            <div class="no-data">
+                                <i class="fas fa-table"></i>
+                                <span>NO TABLE HERE.<br> CLICK <a href="#">HERE</a> TO ADD NEW TABLE.</span>
+                            </div>
+                            <%
+                                }
+                            %>
+                        </div>
+                        <% if (totalPages > 1) { %>
+                        <ul class="pagination">
+                            <%-- Nút Previous --%>
+                            <% if (currentPage > 1) {%>
+                            <li><a href="?page=<%= currentPage - 1%>">Back</a></li>
+                                <% } %>
+                                <%
+                                    int startPage = Math.max(1, currentPage - 2);
+                                    int endPage = Math.min(totalPages, currentPage + 2);
+                                %>
+
+                            <% for (int i = startPage; i <= endPage; i++) {%>
+                            <li>
+                                <a href="?page=<%= i%>" class="<%= (currentPage == i) ? "active" : ""%>"><%= i%></a>
+                            </li>
+                            <% } %>
+
+                            <% if (currentPage < totalPages) {%>
+                            <li><a href="?page=<%= currentPage + 1%>">Next</a></li>
+                                <% } %>
+                        </ul>
                         <% }%>
-                    </tbody>
-                </table>
-                </div>
+
+                    </div>
+                </section>
             </div>
+        </section>
+    </div>
+</div>
+
+<!-- Modal Create Table -->
+<div id="createTableModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button">×</span>
+        <h2>Create New Table</h2>
+        <div class="modal-form-container">
+            <form method="post" action="CreateTable">
+                <div>
+                    <label for="TableStatus">Table Status</label>
+                    <select id="TableStatus" name="TableStatus">
+                        <option value="Available">Available</option>
+                        <option value="Occupied">Occupied</option>
+                        <option value="Reserved">Reserved</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="NumberOfSeats">Number Of Seats</label>
+                    <input type="number" id="NumberOfSeats" name="NumberOfSeats" min="0">
+                </div>
+                <div class="modal-actions">
+                    <input type="submit" class="btn btn-primary" name="btnSubmit" value="Create Table"/> <%-- Bootstrap button style --%>
+                    <button type="button" class="btn btn-secondary close-button">Cancel</button> <%-- Bootstrap button style --%>
+                </div>
+            </form>
         </div>
-    </body>
+    </div>
+</div>
+
+<!-- Modal Edit Table Status -->
+<div id="editTableModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button">×</span>
+        <h2>Edit Table Status</h2>
+        <div class="modal-form-container">
+            <form method="post" action="UpdateTable">
+                <input type="hidden" id="EditTableIdHidden" name="TableIdHidden" value=""/>
+                <div>
+                    <div>
+                        <label for="EditTableId">Table ID</label>
+                        <input type="text" id="EditTableId" name="TableId" value="" readonly/>
+                    </div>
+                    <div>
+                        <label for="EditNumberOfSeats">Number Of Seats</label>
+                        <input type="number" id="EditNumberOfSeats" name="NumberOfSeats" value="" min="0" />
+                    </div>
+                    <div>
+                        <label for="EditTableStatus">Table Status</label>
+                        <select id="EditTableStatus" name="TableStatus">
+                            <option value="Available">Available</option>
+                            <option value="Occupied">Occupied</option>
+                            <option value="Reserved">Reserved</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Save and Back to List Buttons -->
+                <div class="modal-actions">
+                    <input type="submit" class="btn btn-primary" name="btnSubmit" value="Save Changes"/> <%-- Bootstrap button style --%>
+                    <button type="button" class="btn btn-secondary close-button">Cancel</button> <%-- Bootstrap button style --%>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Modal Create Table
+        var createTableModel = document.getElementById("createTableModal");
+        var createTableBtn = document.querySelector(".add-table-btn");
+        var closeCreateTableButtons = document.querySelectorAll("#createTableModal .close-button");
+
+        if (createTableBtn && createTableModel) {
+            createTableBtn.onclick = function () {
+                createTableModel.style.display = "block";
+            }
+        }
+
+        if (closeCreateTableButtons) {
+            closeCreateTableButtons.forEach(function (btnClose) {
+                btnClose.onclick = function () {
+                    createTableModel.style.display = "none";
+                }
+            });
+        }
+
+        // Modal Edit Table
+        var editTableModel = document.getElementById("editTableModal");
+        var editTableButtons = document.querySelectorAll(".edit-table-btn");
+        var closeEditTableButtons = document.querySelectorAll("#editTableModal .close-button");
+
+        if (editTableButtons) {
+            editTableButtons.forEach(function (btnEdit) {
+                btnEdit.onclick = function (e) {
+                    e.preventDefault();
+                    document.getElementById('EditTableIdHidden').value = btnEdit.dataset.tableid;
+                    document.getElementById('EditTableId').value = btnEdit.dataset.tableid;
+                    document.getElementById('EditTableStatus').value = btnEdit.dataset.tablestatus;
+                    document.getElementById('EditNumberOfSeats').value = btnEdit.dataset.numberofseats;
+
+                    editTableModel.style.display = "block";
+                }
+            });
+        }
+
+        if (closeEditTableButtons) {
+            closeEditTableButtons.forEach(function (btnClose) {
+                btnClose.onclick = function () {
+                    editTableModel.style.display = "none";
+                }
+            });
+        }
+
+
+        window.onclick = function (event) {
+            if (event.target == createTableModel) {
+                createTableModel.style.display = "none";
+            }
+            if (event.target == editTableModel) {
+                editTableModel.style.display = "none";
+            }
+        }
+    });
+
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const tables = document.querySelectorAll('.table-item');
+
+    function filterTables() {
+        const searchText = searchInput.value.toLowerCase();
+        const selectedStatus = statusFilter.value;
+
+        tables.forEach(table => {
+            const seatsText = table.querySelector('.table-seats').textContent.toLowerCase(); // Lấy số ghế
+            const statusText = table.querySelector('.table-status').textContent.trim(); // Lấy trạng thái bàn
+
+            // Kiểm tra tìm kiếm số ghế
+            let matchesSearch = seatsText.includes(searchText);
+
+            // Kiểm tra bộ lọc trạng thái
+            let matchesStatus = selectedStatus === '' || statusText === selectedStatus;
+
+            // Hiển thị hoặc ẩn bàn tùy theo kết quả lọc
+            if (matchesSearch && matchesStatus) {
+                table.style.display = '';
+            } else {
+                table.style.display = 'none';
+            }
+        });
+    }
+
+// Gán sự kiện cho input tìm kiếm và filter
+    searchInput.addEventListener('keyup', filterTables);
+    statusFilter.addEventListener('change', filterTables);
+</script>
+</body>
 </html>

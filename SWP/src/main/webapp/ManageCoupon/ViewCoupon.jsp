@@ -14,11 +14,11 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Quản lý Coupon - Admin Dashboard</title>
 
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+        <!-- Font Awesome Icons -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        <!-- Chart.js -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>
             $(document).ready(function () {
                 // Function để làm mới bảng coupon
@@ -130,40 +130,39 @@
             /* CSS Reset và Font (GIỮ NGUYÊN) */
             body {
                 font-family: 'Roboto', sans-serif;
-                font-size: 14px;
-                line-height: 1.5;
-                margin: 0;
-                padding: 0;
                 background-color: #f8f9fa;
             }
 
-            /* Sidebar (GIỮ NGUYÊN) */
+            /* Sidebar Styles */
             .sidebar {
                 background: linear-gradient(to bottom, #2C3E50, #34495E);
                 color: white;
                 height: 100vh;
-                padding-top: 20px;
             }
 
-            .sidebar h4 {
-                text-align: center;
-                margin-bottom: 30px;
+            .sidebar a {
                 color: white;
-            }
-
-            .sidebar .nav-link {
-                color: white;
-                padding: 10px 20px;
-                display: block;
                 text-decoration: none;
             }
 
-            .sidebar .nav-link:hover {
+            .sidebar a:hover {
                 background-color: #1A252F;
             }
 
-            .sidebar .nav-link i {
-                margin-right: 10px;
+            /* Card Stats Styles */
+            .card-stats {
+                background: linear-gradient(to right, #4CAF50, #81C784);
+                color: white;
+            }
+
+            .card-stats i {
+                font-size: 2rem;
+            }
+
+            /* Chart Container Styles */
+            .chart-container {
+                position: relative;
+                height: 300px;
             }
 
             /* Main Content Area (CHỈNH SỬA) */
@@ -348,22 +347,29 @@
                 text-align: center;
                 color: #777;
             }
+            .sidebar .nav-link {
+                font-size: 0.9rem; /* Hoặc 16px, tùy vào AdminDashboard.jsp */
+            }
+
+            .sidebar h4{
+                font-size: 1.5rem;
+            }
         </style>
     </head>
 
     <body>
         <div class="d-flex">
             <div class="sidebar col-md-2 p-3">
-                <h4 class="text-center mb-4">Quản Lý</h4>
+                <h4 class="text-center mb-4">Admin</h4>
                 <ul class="nav flex-column">
                     <li class="nav-item"><a href="Dashboard/AdminDashboard.jsp" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-utensils me-2"></i>Quản lý món ăn</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewTableList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Quản lý đặt bàn</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewAccountList" class="nav-link"><i class="fas fa-users me-2"></i>Quản lý nhân viên</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCouponList" class="nav-link active"><i class="fas fa-gift me-2"></i>Quản lý khuyến mãi</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewInventoryList" class="nav-link"><i class="fas fa-warehouse me-2"></i>Quản lý kho</a></li>
-                    <li class="nav-item"><a href="#" class="nav-link"><i class="fas fa-chart-bar me-2"></i>Báo cáo doanh thu</a></li>
-                    <li class="nav-item"><a href="#" class="nav-link"><i class="fas fa-cog me-2"></i>Cài đặt</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-list-alt me-2"></i>Menu Management</a></li>  <!-- Hoặc fas fa-utensils -->
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewAccountList" class="nav-link"><i class="fas fa-users me-2"></i>Employee Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewTableList" class="nav-link"><i class="fas fa-building me-2"></i>Table Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewOrderList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Order Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCustomerList" class="nav-link"><i class="fas fa-user-friends me-2"></i>Customer Management</a></li> <!-- Hoặc fas fa-users -->
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCouponController" class="nav-link"><i class="fas fa-tag me-2"></i>Coupon Management</a></li> <!-- Hoặc fas fa-ticket-alt -->
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewInventoryController" class="nav-link"><i class="fas fa-boxes me-2"></i>Inventory Management</a></li>
                 </ul>
             </div>
 
@@ -382,12 +388,14 @@
                             </div>
 
                             <div class="employee-grid"> <%-- Đổi class thành employee-grid cho nhất quán --%>
-                                <div id="updateSuccessLabel" class="alert alert-success" role="alert" style="display: none; margin-bottom: 10px;">
+                                <div id="updateSuccessLabel" class="alert alert-success" role="alert" style="display: none;
+                                     margin-bottom: 10px;">
                                     <span class="glyphicon glyphicon-ok-sign" aria-hidden="true"></span>
                                     <span class="sr-only">Success:</span>
                                     Coupon updated successfully!
                                 </div>
-                                <div id="updateErrorLabel" class="alert alert-danger" role="alert" style="display: none; margin-bottom: 10px;">
+                                <div id="updateErrorLabel" class="alert alert-danger" role="alert" style="display: none;
+                                     margin-bottom: 10px;">
                                     <span class="glyphicon glyphicon-remove-sign" aria-hidden="true"></span>
                                     <span class="sr-only">Error:</span>
                                     Update coupon failed!
@@ -433,8 +441,8 @@
                                             </td>
                                         </tr>
                                         <%
-                                                }
-                                            } else {
+                                            }
+                                        } else {
                                         %>
                                         <tr>
                                             <td colspan="6">
