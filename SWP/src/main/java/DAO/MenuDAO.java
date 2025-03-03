@@ -119,20 +119,71 @@ public class MenuDAO {
         }
     }
 
-    // Delete a dish
-     public boolean deleteDish(int dishId) {
-        String sql = "DELETE FROM Dish WHERE DishId = ?";
-        try (Connection connection = DBContext.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+    // Delete a dish (chỉ xóa nếu không có trong Order Detail)
+     // Delete a dish and its related records in DishInventory (nếu không có trong Order Detail)
+    public boolean deleteDish(int dishId) {
+        Connection connection = null;
+        PreparedStatement checkOrderDetailStmt = null;
+        PreparedStatement deleteDishInventoryStmt = null;
+        PreparedStatement deleteDishStmt = null;
+        ResultSet resultSet = null;
 
-            preparedStatement.setInt(1, dishId);
+        try {
+            connection = DBContext.getConnection();
+            connection.setAutoCommit(false); // Bắt đầu transaction
 
-            int affectedRows = preparedStatement.executeUpdate();
-            return affectedRows > 0;
+            // 1. Kiểm tra xem Dish có tồn tại trong Order Detail không
+            String checkOrderDetailSql = "SELECT COUNT(*) FROM [OrderDetail] WHERE DishId = ?";  // nhớ dấu []
+            checkOrderDetailStmt = connection.prepareStatement(checkOrderDetailSql);
+            checkOrderDetailStmt.setInt(1, dishId);
+            resultSet = checkOrderDetailStmt.executeQuery();
+
+            int orderDetailCount = 0;
+            if (resultSet.next()) {
+                orderDetailCount = resultSet.getInt(1);
+            }
+
+            if (orderDetailCount == 0) {
+                // 2. Xóa các bản ghi liên quan trong DishInventory
+                String deleteDishInventorySql = "DELETE FROM Dish_Inventory WHERE DishId = ?";
+                deleteDishInventoryStmt = connection.prepareStatement(deleteDishInventorySql);
+                deleteDishInventoryStmt.setInt(1, dishId);
+                deleteDishInventoryStmt.executeUpdate();
+
+                // 3. Xóa Dish
+                String deleteDishSql = "DELETE FROM Dish WHERE DishId = ?";
+                deleteDishStmt = connection.prepareStatement(deleteDishSql);
+                deleteDishStmt.setInt(1, dishId);
+                int affectedRows = deleteDishStmt.executeUpdate();
+
+                connection.commit(); // Commit transaction
+                return affectedRows > 0;
+            } else {
+                connection.rollback(); // Rollback transaction nếu có trong Order Detail
+                return false;
+            }
 
         } catch (SQLException | ClassNotFoundException e) {
+            if (connection != null) {
+                try {
+                    connection.rollback();
+                } catch (SQLException rollbackEx) {
+                    LOGGER.log(Level.WARNING, "Error rolling back transaction", rollbackEx);
+                }
+            }
             LOGGER.log(Level.SEVERE, "Error deleting dish with ID: " + dishId, e);
             return false;
+        } finally {
+            // Đảm bảo đóng tất cả các resources trong finally block
+            try {
+                if (resultSet != null) resultSet.close();
+                if (checkOrderDetailStmt != null) checkOrderDetailStmt.close();
+                if (deleteDishInventoryStmt != null) deleteDishInventoryStmt.close();
+                if (deleteDishStmt != null) deleteDishStmt.close();
+                if (connection != null) connection.close();
+            } catch (SQLException e) {
+                LOGGER.log(Level.WARNING, "Error closing resources", e);
+            }
         }
     }
 
