@@ -158,7 +158,7 @@
                     <% for (Dish dish : dishList) {%>
                     <div class="col-md-4">
                         <div class="dish-card">
-                            <img src="<%= dish.getDishImage()%>" alt="Hình ảnh món ăn">
+                            <img src="<%= dish.getDishImage()%>" alt="Dish Image">
                             <h5><%= dish.getDishName()%></h5>
                             <p class="price"><%= dish.getDishPrice()%> VNĐ</p>
                             <p>Status: <%= dish.getDishStatus()%></p>
