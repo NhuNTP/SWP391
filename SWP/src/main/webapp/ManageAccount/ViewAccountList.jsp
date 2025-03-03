@@ -29,17 +29,17 @@
                 let address = document.getElementById("UserAddress").value.trim();
 
                 if (!email || !password || !name || !role || !idCard || !address) {
-                    alert("Vui lòng điền đầy đủ tất cả các trường.");
+                    alert("Please complete all fields.");
                     return false;
                 }
 
                 if (!email.endsWith("@gmail.com")) {
-                    alert("Email phải kết thúc bằng '@gmail.com'.");
+                    alert("Emails must end with '@gmail.com'.");
                     return false;
                 }
 
                 if (!/^\d{12}$/.test(idCard)) {
-                    alert("Số CMND/CCCD phải đúng 12 chữ số.");
+                    alert("ID card/CCCD number must be exactly 12 digits.");
                     return false;
                 }
 
