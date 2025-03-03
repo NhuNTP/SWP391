@@ -10,11 +10,8 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
-
 import java.io.File;
 import java.io.IOException;
-import java.sql.SQLException;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -31,30 +28,34 @@ public class UpdateDishController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        response.setContentType("text/html;charset=UTF-8"); // Important for AJAX
+
         try {
             int dishId = Integer.parseInt(request.getParameter("dishId"));
-            // Fetch the dish details based on dishId
             Dish dish = menuDAO.getDishById(dishId);  // Use the method from DAO directly
+
             if (dish == null) {
-                request.setAttribute("errorMessage", "Dish not found with ID: " + dishId);
-                RequestDispatcher dispatcher = request.getRequestDispatcher("error.jsp");
-                dispatcher.forward(request, response);
+                response.getWriter().write("<p>Dish not found with ID: " + dishId + "</p>"); // Send error message
                 return;
             }
             request.setAttribute("dish", dish);
+            RequestDispatcher dispatcher = request.getRequestDispatcher("ManageMenu/updatedish.jsp");
+            dispatcher.forward(request, response);
 
-            RequestDispatcher dispatcher = request.getRequestDispatcher("ManageMenu/updatedish.jsp"); // Create updatedish.jsp
-            dispatcher.forward(request, response);
         } catch (NumberFormatException e) {
-            request.setAttribute("errorMessage", "Invalid Dish ID.");
-            RequestDispatcher dispatcher = request.getRequestDispatcher("error.jsp");
-            dispatcher.forward(request, response);
+            response.getWriter().write("<p>Invalid Dish ID.</p>"); // Send error message
+        }  catch (Exception e) {
+            Logger.getLogger(UpdateDishController.class.getName()).log(Level.SEVERE, null, e);
+            response.getWriter().write("<p>An unexpected error occurred.</p>"); // Send generic error
         }
     }
+
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
+        response.setContentType("text/html;charset=UTF-8");
 
         try {
             int dishId = Integer.parseInt(request.getParameter("dishId"));
@@ -62,11 +63,10 @@ public class UpdateDishController extends HttpServlet {
             String dishType = request.getParameter("dishType");
             double dishPrice = Double.parseDouble(request.getParameter("dishPrice"));
             String dishDescription = request.getParameter("dishDescription");
-            String dishStatus = request.getParameter("dishStatus");  // Get dish status from form
-            String ingredientStatus = request.getParameter("ingredientStatus"); // Get ingredient status from form
+            String dishStatus = request.getParameter("dishStatus");
+            String ingredientStatus = request.getParameter("ingredientStatus");
 
-
-             // Handle image upload
+            // Handle image upload
             String uploadPath = getServletContext().getRealPath("") + File.separator + UPLOAD_DIRECTORY;
             File uploadDir = new File(uploadPath);
             if (!uploadDir.exists()) {
@@ -76,11 +76,11 @@ public class UpdateDishController extends HttpServlet {
             String dishImage = request.getParameter("oldDishImage"); // Keep the old image path by default
             Part filePart = request.getPart("dishImage");
             String fileName = filePart.getSubmittedFileName();
+
             if (fileName != null && !fileName.isEmpty()) {
                 dishImage = UPLOAD_DIRECTORY + "/" + fileName;
                 filePart.write(uploadPath + File.separator + fileName);
             }
-
 
             Dish dish = new Dish();
             dish.setDishId(dishId);
@@ -89,23 +89,23 @@ public class UpdateDishController extends HttpServlet {
             dish.setDishPrice(dishPrice);
             dish.setDishDescription(dishDescription);
             dish.setDishImage(dishImage);
-            dish.setDishStatus(dishStatus); // Set dish status
-            dish.setIngredientStatus(ingredientStatus); // Set ingredient status
-
-
+            dish.setDishStatus(dishStatus);
+            dish.setIngredientStatus(ingredientStatus);
 
             boolean isUpdated = menuDAO.updateDish(dish);
 
             if (isUpdated) {
-                request.getSession().setAttribute("message", "Dish updated successfully!");
+                response.getWriter().write("<p class='alert alert-success'>Dish updated successfully!</p>");
             } else {
-                request.getSession().setAttribute("errorMessage", "Failed to update dish.");
+                response.getWriter().write("<p class='alert alert-danger'>Failed to update dish.</p>");
             }
 
         } catch (NumberFormatException e) {
-            request.getSession().setAttribute("errorMessage", "Invalid data provided.");
+            response.getWriter().write("<p class='alert alert-danger'>Invalid data provided.</p>");
+            Logger.getLogger(UpdateDishController.class.getName()).log(Level.SEVERE, null, e);
+        } catch (Exception e) {
+            response.getWriter().write("<p class='alert alert-danger'>An error occurred during update.</p>");
+            Logger.getLogger(UpdateDishController.class.getName()).log(Level.SEVERE, null, e);
         }
-
-        response.sendRedirect("viewalldish");
     }
 }

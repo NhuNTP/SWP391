@@ -14,60 +14,48 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
         <style>
             /* Custom Styles */
-            body {
-                font-family: 'Roboto', sans-serif;
-                background-color: #f8f9fa;
-            }
+                  .dish-card {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            transition: transform 0.3s ease;
+            /* Thêm các thuộc tính sau */
+            height: 450px; /* Đặt chiều cao cố định cho card */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* Đẩy các phần tử lên trên và xuống dưới */
+        }
 
-            .sidebar {
-                background: linear-gradient(to bottom, #2C3E50, #34495E);
-                color: white;
-                height: 100vh;
-            }
+        .dish-card:hover {
+            transform: scale(1.05);
+        }
 
-            .sidebar a {
-                color: white;
-                text-decoration: none;
-            }
+        .dish-card img {
+            max-width: 100%;
+            /*  height: auto;  Xóa thuộc tính này */
+            height: 200px; /* Đặt chiều cao cố định cho ảnh */
+            object-fit: cover; /*  Ảnh sẽ lấp đầy khung và có thể bị crop */
+            border-radius: 10px;
+        }
 
-            .sidebar a:hover {
-                background-color: #1A252F;
-            }
+        .dish-card h5 {
+            margin-top: 10px;
+            font-size: 1.2rem;
+            color: #333;
+        }
 
-            .dish-card {
-                border: 1px solid #ddd;
-                border-radius: 10px;
-                padding: 15px;
-                margin-bottom: 20px;
-                text-align: center;
-                transition: transform 0.3s ease;
-            }
+        .dish-card p.price {
+            font-size: 1rem;
+            color: #e74c3c;
+            font-weight: bold;
+        }
 
-            .dish-card:hover {
-                transform: scale(1.05);
-            }
-
-            .dish-card img {
-                max-width: 100%;
-                height: auto;
-                border-radius: 10px;
-            }
-
-            .dish-card h5 {
-                margin-top: 10px;
-                font-size: 1.2rem;
-                color: #333;
-            }
-
-            .dish-card p.price {
-                font-size: 1rem;
-                color: #e74c3c;
-                font-weight: bold;
-            }
-
-            .search-bar {
-                margin-bottom: 20px;
-            }
+        /* Thêm class này để chứa các nút */
+        .dish-card .actions {
+            margin-top: 15px;
+        }
         </style>
     </head>
 
@@ -113,7 +101,9 @@
                         <button type="submit" class="btn btn-primary">Tìm kiếm</button>
                     </div>
                 </form>
-
+<a href="#" class="btn btn-primary add-dish-btn"
+   data-bs-toggle="modal"
+   data-bs-target="#addDishModal">Thêm món ăn mới</a>
                 <!-- Danh sách món ăn dạng card -->
                 <%
                     List<Dish> dishList = (List<Dish>) request.getAttribute("dishList");
@@ -129,12 +119,18 @@
                             <p>Status: <%= dish.getDishStatus()%></p>
                             <p>Ingredients: <%= dish.getIngredientStatus()%></p>
                             <div class="actions">
-                                <a href="updatedish?dishId=<%= dish.getDishId()%>" class="btn btn-warning btn-sm">Sửa</a>
+                                <a href="#" class="btn btn-warning btn-sm edit-dish-btn"
+                                   data-bs-toggle="modal"
+                                   data-bs-target="#editDishModal"
+                                   data-dish-id="<%= dish.getDishId()%>">Sửa</a>
                                 <form action="deletedish" method="post" style="display:inline;">
                                     <input type="hidden" name="dishId" value="<%= dish.getDishId()%>">
                                     <button type="submit" class="btn btn-danger btn-sm">Xóa</button>
                                 </form>
-                                <a href="dishdetail?dishId=<%= dish.getDishId()%>" class="btn btn-info btn-sm">Chi tiết</a>
+                                <a href="#" class="btn btn-info btn-sm view-dish-btn"
+   data-bs-toggle="modal"
+   data-bs-target="#dishDetailModal"
+   data-dish-id="<%= dish.getDishId() %>">Chi tiết</a>
                             </div>
                         </div>
                     </div>
@@ -145,9 +141,180 @@
                 <% }%>
 
                 <!-- Nút thêm món ăn mới -->
-                <a href="addnewdish" class="btn btn-primary">Thêm món ăn mới</a>
+                
             </div>
         </div>
+        <!-- Edit Dish Modal -->
+        <div class="modal fade" id="editDishModal" tabindex="-1" aria-labelledby="editDishModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editDishModalLabel">Chỉnh sửa món ăn</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Content will be loaded here via AJAX -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                        <button type="button" class="btn btn-primary" id="saveChangesBtn">Lưu thay đổi</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            $(document).ready(function () {
+                $('.edit-dish-btn').click(function () {
+                    var dishId = $(this).data('dish-id');
+                    var modalBody = $('#editDishModal .modal-body');
+
+                    // Load content from updatedish.jsp using AJAX
+                    $.ajax({
+                        url: 'updatedish',
+                        type: 'GET',
+                        data: {dishId: dishId},
+                        success: function (data) {
+                            modalBody.html(data);
+                        },
+                        error: function (xhr, status, error) {
+                            modalBody.html('<p>Error loading content.</p>');
+                            console.error(error);
+                        }
+                    });
+                });
+
+                // Handle Save Changes button click
+                $('#editDishModal').on('click', '#saveChangesBtn', function (event) {
+                    event.preventDefault(); // Prevent the default action
+
+                    // Submit the form inside the modal
+                    var form = $('#editDishModal form');
+                    $.ajax({
+                        url: form.attr('action'),
+                        type: 'POST',
+                        data: new FormData(form[0]), // Serializing the form
+                        processData: false,
+                        contentType: false,
+                        success: function (response) {
+                            // Handle the response (e.g., close the modal, refresh the dish list)
+                            $('#editDishModal').modal('hide');
+
+                            // Reload the dish list (you might need to adjust this)
+                            window.location.reload();
+                        },
+                        error: function (xhr, status, error) {
+                            console.error(error);
+                            alert('Error updating dish.');
+                        }
+                    });
+                });
+            });
+        </script>
+        
+        <!-- Dish Detail Modal -->
+<div class="modal fade" id="dishDetailModal" tabindex="-1" aria-labelledby="dishDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dishDetailModalLabel">Chi tiết món ăn</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Content will be loaded here via AJAX -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+        <script>
+    $(document).ready(function() {
+        $('.view-dish-btn').click(function() {
+            var dishId = $(this).data('dish-id');
+            var modalBody = $('#dishDetailModal .modal-body');
+
+            $.ajax({
+                url: 'dishdetail',
+                type: 'GET',
+                data: { dishId: dishId },
+                success: function(data) {
+                    modalBody.html(data);
+                },
+                error: function(xhr, status, error) {
+                    modalBody.html('<p>Error loading content.</p>');
+                    console.error(error);
+                }
+            });
+        });
+    });
+</script>
+
+<!-- Add Dish Modal -->
+<div class="modal fade" id="addDishModal" tabindex="-1" aria-labelledby="addDishModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addDishModalLabel">Thêm món ăn mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Content will be loaded here via AJAX -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" id="saveNewDishBtn">Thêm</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function() {
+        $('.add-dish-btn').click(function() {
+            var modalBody = $('#addDishModal .modal-body');
+
+            $.ajax({
+                url: 'addnewdish',
+                type: 'GET',
+                success: function(data) {
+                    modalBody.html(data);
+                },
+                error: function(xhr, status, error) {
+                    modalBody.html('<p>Error loading content.</p>');
+                    console.error(error);
+                }
+            });
+        });
+
+            // Handle Save New Dish button click
+        $('#addDishModal').on('click', '#saveNewDishBtn', function(event) {
+            event.preventDefault(); // Prevent the default action
+
+            // Submit the form inside the modal
+            var form = $('#addDishModal form');
+            $.ajax({
+                url: form.attr('action'),
+                type: 'POST',
+                data: new FormData(form[0]), // Serializing the form
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    // Handle the response (e.g., close the modal, refresh the dish list)
+                    $('#addDishModal').modal('hide');
+
+                    // Reload the dish list (you might need to adjust this)
+                    window.location.reload();
+                },
+                error: function(xhr, status, error) {
+                    console.error(error);
+                    alert('Error adding dish.');
+                }
+            });
+        });
+    });
+</script>
     </body>
 
 </html>

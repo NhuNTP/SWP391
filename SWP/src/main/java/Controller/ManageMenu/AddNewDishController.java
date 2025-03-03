@@ -23,7 +23,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
- *
  * @author LxP
  */
 @WebServlet("/addnewdish")
@@ -40,21 +39,23 @@ public class AddNewDishController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        response.setContentType("text/html;charset=UTF-8");
+
         List<Inventory> inventoryList = menuDAO.getAllInventory();
         if (inventoryList != null && !inventoryList.isEmpty()) {
             request.setAttribute("inventoryList", inventoryList);
             RequestDispatcher dispatcher = request.getRequestDispatcher("ManageMenu/addnewdish.jsp");
             dispatcher.forward(request, response);
         } else {
-            request.setAttribute("errorMessage", "No inventory items found or error retrieving inventory. See server logs.");
-            RequestDispatcher dispatcher = request.getRequestDispatcher("error.jsp");
-            dispatcher.forward(request, response);
+            response.getWriter().write("<p class='alert alert-danger'>No inventory items found or error retrieving inventory. See server logs.</p>");
         }
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
+        response.setContentType("text/html;charset=UTF-8");
 
         String dishName = request.getParameter("dishName");
         String dishType = request.getParameter("dishType");
@@ -67,16 +68,14 @@ public class AddNewDishController extends HttpServlet {
         try {
             dishPrice = Double.parseDouble(dishPriceStr);
         } catch (NumberFormatException e) {
-            request.getSession().setAttribute("errorMessage", "Invalid dish price format. Please enter a valid number.");
-            response.sendRedirect("addnewdish");
+            response.getWriter().write("<p class='alert alert-danger'>Invalid dish price format. Please enter a valid number.</p>");
             return;
         }
 
         // Check if dish name exists
         boolean dishNameExists = menuDAO.dishNameExists(dishName);
         if (dishNameExists) {
-            request.getSession().setAttribute("errorMessage", "Dish name already exists. Please choose a different name.");
-            response.sendRedirect("addnewdish");
+            response.getWriter().write("<p class='alert alert-danger'>Dish name already exists. Please choose a different name.</p>");
             return; // Stop processing if dish name exists
         }
 
@@ -96,8 +95,7 @@ public class AddNewDishController extends HttpServlet {
                 filePart.write(uploadPath + File.separator + fileName); // Lưu file lên server
             }
         } catch (Exception e) {
-            request.getSession().setAttribute("errorMessage", "Error uploading image: " + e.getMessage());
-            response.sendRedirect("addnewdish");
+            response.getWriter().write("<p class='alert alert-danger'>Error uploading image: " + e.getMessage() + "</p>");
             return;
         }
 
@@ -115,16 +113,16 @@ public class AddNewDishController extends HttpServlet {
         if (newDishId > 0) {
             // Lấy danh sách các nguyên liệu đã chọn
             String[] itemIds = request.getParameterValues("itemId");
-            
+
             if (itemIds != null && itemIds.length > 0) {
-                
+
                 boolean hasError = false;
-                
+
                 // Lọc ra các itemId và quantityUsed hợp lệ
                 List<Integer> validItemIds = Arrays.stream(itemIds)
                         .map(Integer::parseInt)
                         .collect(Collectors.toList());
-                
+
                 for (Integer itemId : validItemIds) {
                     try {
                         // Tìm quantity tương ứng với itemId
@@ -134,39 +132,37 @@ public class AddNewDishController extends HttpServlet {
                             continue;
                         }
                         int quantityUsed = Integer.parseInt(quantityParam);
-                        
+
                         DishInventory dishInventory = new DishInventory();
                         dishInventory.setDishId(newDishId);
                         dishInventory.setItemId(itemId);
                         dishInventory.setQuantityUsed(quantityUsed);
-                        
+
                         if (!menuDAO.addDishInventory(dishInventory)) {
                             LOGGER.log(Level.SEVERE, "Failed to add DishInventory for dishId: " + newDishId + ", itemId: " + itemId);
-                            request.getSession().setAttribute("errorMessage", "Error adding ingredient to dish. See server logs.");
+                            response.getWriter().write("<p class='alert alert-danger'>Error adding ingredient to dish. See server logs.</p>");
                             hasError = true;
                             break;
                         }
-                        
+
                     } catch (NumberFormatException e) {
                         // Xử lý lỗi nếu dữ liệu không hợp lệ
                         e.printStackTrace();
-                        request.getSession().setAttribute("errorMessage", "Invalid quantity for an ingredient.");
+                        response.getWriter().write("<p class='alert alert-danger'>Invalid quantity for an ingredient.</p>");
                         hasError = true;
                         break; // Thoát khỏi vòng lặp nếu có lỗi
                     }
                 }
                 if (!hasError) {
-                    request.getSession().setAttribute("message", "Dish added successfully!");
+                    response.getWriter().write("<p class='alert alert-success'>Dish added successfully!</p>");
                 }
-                
-            } else {
-                request.getSession().setAttribute("message", "Dish added successfully but there are no ingredients added!");
-            }
-            
-        } else {
-            request.getSession().setAttribute("errorMessage", "Failed to add dish. See server logs.");
-        }
 
-        response.sendRedirect("viewalldish"); // Redirect to viewalldishes after processing
+            } else {
+                response.getWriter().write("<p class='alert alert-success'>Dish added successfully but there are no ingredients added!</p>");
+            }
+
+        } else {
+            response.getWriter().write("<p class='alert alert-danger'>Failed to add dish. See server logs.</p>");
+        }
     }
 }

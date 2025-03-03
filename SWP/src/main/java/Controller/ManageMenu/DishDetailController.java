@@ -26,24 +26,23 @@ public class DishDetailController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        response.setContentType("text/html;charset=UTF-8");
+
         try {
             int dishId = Integer.parseInt(request.getParameter("dishId"));
 
             // Retrieve dish details
             Dish dish = menuDAO.getDishById(dishId);
             if (dish == null) {
-                request.setAttribute("errorMessage", "Dish not found.");
-                RequestDispatcher dispatcher = request.getRequestDispatcher("error.jsp");
-                dispatcher.forward(request, response);
+                response.getWriter().write("<p class='alert alert-danger'>Dish not found.</p>");
                 return;
             }
 
             // Retrieve dish ingredients
             List<DishInventory> dishIngredients = menuDAO.getDishIngredients(dishId);
             if (dishIngredients == null) {
-                 request.setAttribute("errorMessage", "Error retrieving dish ingredients. See server logs.");
-                 RequestDispatcher dispatcher = request.getRequestDispatcher("error.jsp");
-                dispatcher.forward(request, response);
+                response.getWriter().write("<p class='alert alert-danger'>Error retrieving dish ingredients.</p>");
+                LOGGER.log(Level.SEVERE, "Error retrieving dish ingredients for dishId: " + dishId);
                 return;
             }
 
@@ -55,9 +54,7 @@ public class DishDetailController extends HttpServlet {
                     ingredients.add(inventoryItem);
                 } else {
                     LOGGER.log(Level.WARNING, "Inventory item not found for itemId: " + dishInventory.getItemId());
-                    request.setAttribute("errorMessage", "Error retrieving inventory item. See server logs.");
-                    RequestDispatcher dispatcher = request.getRequestDispatcher("error.jsp");
-                    dispatcher.forward(request, response);
+                    response.getWriter().write("<p class='alert alert-danger'>Error retrieving inventory item.</p>");
                     return;
                 }
             }
@@ -70,9 +67,10 @@ public class DishDetailController extends HttpServlet {
             dispatcher.forward(request, response);
 
         } catch (NumberFormatException e) {
-            request.setAttribute("errorMessage", "Invalid Dish ID.");
-            RequestDispatcher dispatcher = request.getRequestDispatcher("error.jsp");
-            dispatcher.forward(request, response);
+            response.getWriter().write("<p class='alert alert-danger'>Invalid Dish ID.</p>");
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "An unexpected error occurred", e);
+            response.getWriter().write("<p class='alert alert-danger'>An unexpected error occurred.</p>");
         }
     }
 }

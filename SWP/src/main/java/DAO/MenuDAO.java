@@ -17,8 +17,11 @@ public class MenuDAO {
 
     // Dish operations
     public int addDish(Dish dish) {
-        String sql = "INSERT INTO Dish (DishName, DishType, DishPrice, DishDescription, DishImage, DishStatus, IngredientStatus, ) VALUES (?, ?, ?, ?, ?, ?, ?, ?); SELECT SCOPE_IDENTITY();";
-        try (Connection connection = DBContext.getConnection();
+        // Sửa lỗi cú pháp SQL:
+        // - Sửa tên bảng thành "Dishe" (theo tên bảng thực tế trong database)
+        // - Bỏ dấu phẩy thừa trước ")"
+        String sql = "INSERT INTO Dish (DishName, DishType, DishPrice, DishDescription, DishImage, DishStatus, IngredientStatus) VALUES (?, ?, ?, ?, ?, ?, ?); SELECT SCOPE_IDENTITY();";
+        try (Connection connection = DBContext.getConnection(); // Giả sử DBContext.getConnection() trả về một Connection
              PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             preparedStatement.setString(1, dish.getDishName());
@@ -28,7 +31,6 @@ public class MenuDAO {
             preparedStatement.setString(5, dish.getDishImage());
             preparedStatement.setString(6, dish.getDishStatus());
             preparedStatement.setString(7, dish.getIngredientStatus());
-           
 
             int affectedRows = preparedStatement.executeUpdate();
 
@@ -118,21 +120,21 @@ public class MenuDAO {
     }
 
     // Delete a dish
-    public boolean deleteDish(int dishId) {
-        String sql = "UPDATE Dish SET IsDeleted = 1 WHERE DishId = ?";
-
+     public boolean deleteDish(int dishId) {
+        String sql = "DELETE FROM Dish WHERE DishId = ?";
         try (Connection connection = DBContext.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
             preparedStatement.setInt(1, dishId);
-            int rowsUpdated = preparedStatement.executeUpdate();
-            return rowsUpdated > 0;
+
+            int affectedRows = preparedStatement.executeUpdate();
+            return affectedRows > 0;
+
         } catch (SQLException | ClassNotFoundException e) {
-            LOGGER.log(Level.SEVERE, "Error deleting dish", e);
+            LOGGER.log(Level.SEVERE, "Error deleting dish with ID: " + dishId, e);
             return false;
         }
     }
-
 
     //Update a dish
     public boolean updateDish(Dish dish) {
@@ -147,7 +149,7 @@ public class MenuDAO {
             preparedStatement.setString(5, dish.getDishImage());
             preparedStatement.setString(6, dish.getDishStatus());
             preparedStatement.setString(7, dish.getIngredientStatus());
-          
+          preparedStatement.setInt(8, dish.getDishId());
 
             int affectedRows = preparedStatement.executeUpdate();
             return affectedRows > 0;
