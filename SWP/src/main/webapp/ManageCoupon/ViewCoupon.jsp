@@ -166,7 +166,7 @@
                         <main>
                             <div class="content-header">
                                 <div class="search-bar">
-                                    <input type="text" class="form-control" placeholder="Search">
+                                    <input type="text" class="form-control" placeholder="Search" id="couponSearchInput"> <%-- Thêm id="couponSearchInput" --%>
                                 </div>
                                 <div class="header-buttons">
                                     <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#addCouponModal">
@@ -188,7 +188,7 @@
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="couponTableBody">
+                                    <tbody id="couponTableBody"> <%-- Thêm id="couponTableBody" --%>
                                         <%
                                             List<Coupon> couponList = (List<Coupon>) request.getAttribute("couponList");
                                             if (couponList != null && !couponList.isEmpty()) {
@@ -431,6 +431,28 @@
                     bindEventHandlers(); // Re-bind sau khi reload
                 });
             }
+
+            // ******************* BẮT ĐẦU ĐOẠN CODE THÊM VÀO CHO TÌM KIẾM *******************
+            $(document).ready(function () {
+                const searchInput = document.getElementById('couponSearchInput');
+                const couponTableBody = document.getElementById('couponTableBody');
+                const rows = couponTableBody.querySelectorAll('tr');
+
+                searchInput.addEventListener('keyup', function () {
+                    const searchTerm = searchInput.value.toLowerCase();
+
+                    rows.forEach(row => {
+                        let rowText = row.textContent.toLowerCase(); // Lấy toàn bộ text của hàng và chuyển sang chữ thường
+                        if (rowText.includes(searchTerm)) {
+                            row.style.display = ""; // Hiển thị hàng nếu tìm thấy
+                        } else {
+                            row.style.display = "none"; // Ẩn hàng nếu không tìm thấy                                
+                        }
+                    });
+                });
+            });
+            // ******************* KẾT THÚC ĐOẠN CODE THÊM VÀO CHO TÌM KIẾM *******************
+
         </script>
     </body>
 </html>
