@@ -1,56 +1,68 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package Controller.ManageCustomer;
 
 import DAO.CustomerDAO;
 import Model.Customer;
-import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author HuynhPhuBinh
- */
 @WebServlet("/AddCustomer")
 public class AddCustomerController extends HttpServlet {
 
-    private static final long serialVersionUID = 1L;
-    private CustomerDAO customerDAO;
-
     @Override
-    public void init() {
-        customerDAO = new CustomerDAO();
-    }
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType("text/html;charset=UTF-8");
+        request.setCharacterEncoding("UTF-8");
 
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        request.getRequestDispatcher("ManageCustomer/AddCustomer.jsp").forward(request, response);
-    }
+        String customerName = request.getParameter("CustomerName");
+        String customerPhone = request.getParameter("CustomerPhone");
+        String numberOfPaymentStr = request.getParameter("NumberOfPayment");
 
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String name = request.getParameter("customerName");
-        String phone = request.getParameter("customerPhone");
-        int numberOfPayment = Integer.parseInt(request.getParameter("numberOfPayment"));
+        int numberOfPayment = 0; // Default value
 
-        Customer customer = new Customer( name, phone, numberOfPayment); 
+        if (numberOfPaymentStr != null && !numberOfPaymentStr.isEmpty()) {
+            try {
+                numberOfPayment = Integer.parseInt(numberOfPaymentStr);
+            } catch (NumberFormatException e) {
+                e.printStackTrace(); // Log the error
+                request.setAttribute("errorMessage", "Invalid Number Of Payment. Please enter a valid number.");
+                request.getRequestDispatcher("ViewCustomerList").forward(request, response);
+                return; // Stop further processing
+            }
+        } else {
+            // Handle the case where NumberOfPayment is null or empty
+            request.setAttribute("errorMessage", "Number Of Payment is required.");
+            request.getRequestDispatcher("ViewCustomerList").forward(request, response);
+            return; // Stop further processing
+        }
+
+        Customer customer = new Customer();
+        customer.setCustomerName(customerName);
+        customer.setCustomerPhone(customerPhone);
+        customer.setNumberOfPayment(numberOfPayment);
+
+        CustomerDAO customerDAO = new CustomerDAO();
         try {
             customerDAO.addCustomer(customer);
         } catch (SQLException ex) {
             Logger.getLogger(AddCustomerController.class.getName()).log(Level.SEVERE, null, ex);
+            request.setAttribute("errorMessage", "Database error: " + ex.getMessage());
+            request.getRequestDispatcher("ViewCustomerList").forward(request, response);
+            return;
         } catch (ClassNotFoundException ex) {
             Logger.getLogger(AddCustomerController.class.getName()).log(Level.SEVERE, null, ex);
+            request.setAttribute("errorMessage", "Class not found error: " + ex.getMessage());
+            request.getRequestDispatcher("ViewCustomerList").forward(request, response);
+            return;
         }
 
-        response.sendRedirect("ViewCustomerList");
+        response.sendRedirect("ViewCustomerList"); // Redirect to ViewCustomerList after adding
     }
 }

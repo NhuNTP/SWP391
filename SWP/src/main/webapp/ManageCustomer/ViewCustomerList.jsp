@@ -1,53 +1,83 @@
 <%--
     Document   : ViewCustomerList
-    Created on : Feb 22, 2025, 9:16:19 PM
+    Created on : Mar 1, 2025, 12:00:00 AM
     Author     : HuynhPhuBinh
 --%>
 
 <%@page import="java.util.List"%>
 <%@page import="Model.Customer"%>
-<%@page import="DAO.AccountDAO"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Customer List</title>
+        <title>Customer Management - Admin Dashboard</title>
+        <link rel="stylesheet" href="style.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <script>
-            function confirmDelete(userId, userName) {
-                if (confirm('Bạn có chắc chắn muốn xóa khách hàng ID: ' + userId + ' - Tên người dùng: ' + userName + ' không?')) {
-                    window.location.href = 'DeleteCustomer?id=' + userId;
+            function confirmDelete(customerId, customerName) {
+                if (confirm('Are you sure you want to delete customer ID: ' + customerId + ' - ' + customerName + '?')) {
+                    window.location.href = 'DeleteCustomer?customerId=' + customerId;
                 }
             }
-            function validateForm() {
-                let name = document.getElementById("CustomerName").value.trim();
-                let phone = document.getElementById("CustomerPhone").value.trim();
-                let payment = document.getElementById("NumberOfPayment").value.trim();
 
-                if (!name || !phone || !payment) {
-                    alert("Vui lòng điền đầy đủ tất cả các trường.");
+            function openModal(modalId) {
+                document.getElementById(modalId).style.display = "block";
+            }
+            function closeModal(modalId) {
+                document.getElementById(modalId).style.display = "none";
+            }
+
+            function openEditModal(button) {
+                document.getElementById("editCustomerIdHidden").value = button.dataset.customerid;
+                document.getElementById("editCustomerName").value = button.dataset.customername;
+                document.getElementById("editCustomerPhone").value = button.dataset.customerphone;
+
+                // Check if dataset.numberofpayment is null/empty, and default to 0
+                let numberOfPayments = button.dataset.numberofpayment;
+                if (!numberOfPayments) { // Covers both null and empty string
+                    numberOfPayments = "0";  // Or some other appropriate default
+                }
+                document.getElementById("editNumberOfPayment").value = numberOfPayments;
+                openModal("editCustomerModal");
+            }
+
+            function searchCustomers() {
+                let searchName = document.getElementById("searchInput").value;
+                filterTable();
+            }
+            function validateNumber(inputField, fieldName) {
+                const value = inputField.value.trim();
+                if (!/^\d+$/.test(value) || parseInt(value) <= 0) {
+                    alert("Please enter a valid positive integer for " + fieldName + ".");
+                    inputField.value = ''; // Clear the invalid input
+                    inputField.focus();
                     return false;
                 }
-
-
                 return true;
             }
-            function validateUpdateForm() {
-                let name = document.getElementById("EditCustomerName").value.trim();
-                let phone = document.getElementById("EditCustomerPhone").value.trim();
-                let payment = document.getElementById("EditNumberOfPayment").value.trim();
+            function validateCreateForm() {
+                const customerPhone = document.getElementById("createCustomerPhone");
+                const numberOfPayment = document.getElementById("createNumberOfPayment");
 
-                if (!name || !phone || !payment) {
-                    alert("Vui lòng điền đầy đủ tất cả các trường.");
+                if (!validateNumber(customerPhone, "Customer Phone") || !validateNumber(numberOfPayment, "Number of Payments")) {
+                    return false;
+                }
+                return true;
+            }
+
+            function validateEditForm() {
+                const customerPhone = document.getElementById("editCustomerPhone");
+                const numberOfPayment = document.getElementById("editNumberOfPayment");
+
+                if (!validateNumber(customerPhone, "Customer Phone") || !validateNumber(numberOfPayment, "Number of Payments")) {
                     return false;
                 }
                 return true;
             }
         </script>
-        <link rel="stylesheet" href="style.css">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <style>
             /* Existing styles... */
             body {
@@ -314,7 +344,7 @@
                 margin-bottom: 10px;
             }
 
-            .mobile-menu-button {
+            .mobile-menu-button span {
                 display: none;
                 flex-direction: column;
                 justify-content: space-around;
@@ -352,16 +382,8 @@
                 align-items: flex-start;
             }
 
-            .main-nav.mobile-open .main-menu, .main-nav.mobile-open .right-menu {
-                flex-direction: column;
-                width: 100%;
-            }
-
-            .main-nav.mobile-open .main-menu li, .main-nav.mobile-open .right-menu li {
-                width: 100%;
-            }
-
-            .main-nav.mobile-open .main-menu > li > a, .main-nav.mobile-open .right-menu li a {
+            .main-nav.mobile-open .main-menu > li > a {
+                display: block;
                 padding: 15px 20px;
                 border-bottom: 1px solid #eee;
                 text-align: left;
@@ -433,7 +455,7 @@
 
                 .content-area {
                     border: none;
-                    padding: 0;
+                    padding: 20px;
                 }
 
                 .content-header {
@@ -466,99 +488,89 @@
                 background-color: rgba(0,0,0,0.4);
             }
 
+            /* Style the modal content for a cleaner look */
             .modal-content {
                 background-color: #fefefe;
-                margin: 15% auto;
+                margin: 10% auto; /* Adjust margin for better positioning */
                 padding: 20px;
                 border: 1px solid #888;
-                width: 60%;
-                border-radius: 5px;
-                position: relative;
+                width: 80%; /* Make the modal wider */
+                max-width: 600px; /* Set a maximum width */
+                border-radius: 10px; /* Round the corners */
+                box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); /* Add a subtle shadow */
+                position: relative; /* Needed for close button positioning */
             }
 
+            /* Style the close button */
             .close-button {
                 color: #aaa;
-                float: right;
+                position: absolute; /* Position it absolutely */
+                top: 10px;
+                right: 10px;
                 font-size: 28px;
                 font-weight: bold;
                 cursor: pointer;
             }
 
-            .close-button:hover,
-            .close-button:focus {
-                color: black;
-                text-decoration: none;
-                cursor: pointer;
-            }
-
-            .modal-form-container div {
-                margin-bottom: 15px;
-            }
-
+            /* Style form labels */
             .modal-form-container label {
                 display: block;
                 margin-bottom: 5px;
                 font-weight: bold;
+                color: #333; /* Darken the label text */
             }
 
+            /* Style form inputs */
             .modal-form-container input[type="text"],
-            .modal-form-container input[type="email"],
-            .modal-form-container input[type="password"],
-            .modal-form-container select,
-            .modal-form-container input[type="file"] {
-                width: calc(100% - 22px);
+            .modal-form-container input[type="number"] {
+                width: 100%;
                 padding: 10px;
+                margin-bottom: 15px;
                 border: 1px solid #ccc;
-                border-radius: 4px;
+                border-radius: 5px;
                 box-sizing: border-box;
-                font-size: 14px;
+                font-size: 16px;
             }
+
+            /* Style the modal action buttons */
             .modal-actions {
                 text-align: right;
                 margin-top: 20px;
             }
 
-            .modal-actions input[type="submit"],
-            .modal-actions button.close-button {
-                padding: 10px 20px;
+            /* Style to make the action buttons look better */
+            .modal-actions button,
+            .modal-actions input[type="submit"] {
+                padding: 12px 20px;
+                margin: 0 5px;
                 border: none;
                 border-radius: 5px;
                 cursor: pointer;
-                font-size: 14px;
-                margin-left: 10px; /* Khoảng cách giữa các nút */
-            }
-
-            .modal-actions input[type="submit"] {
-                background-color: #007bff;
+                font-size: 16px;
                 color: white;
+                background-color: #007bff;  /* Blue color */
             }
 
             .modal-actions button.close-button {
-                background-color: #dc3545;
-                color: white;
+                background-color: #6c757d;  /* Grey Color */
+            }
+
+            .modal-actions button:hover,
+            .modal-actions input[type="submit"]:hover {
+                opacity: 0.8;
             }
 
 
-            .card-stats {
-                background: linear-gradient(to right, #4CAF50, #81C784);
-                color: white;
-            }
-
-            .card-stats i {
-                font-size: 2rem;
-            }
             /* Custom styles for table buttons */
             .btn-edit {
-                background-color: #007bff; /* Blue color for edit */
+                background-color: #007bff;
                 color: white;
                 border: none;
-                padding: 5px 10px;
+                padding: 8px 12px;
                 border-radius: 5px;
                 cursor: pointer;
-                text-decoration: none; /* Remove underline if it's an <a> tag */
-                display: inline-flex; /* To align icon and text */
-                align-items: center;
-                justify-content: center;
+                text-decoration: none;
+                display: inline-block;
             }
 
             .btn-edit:hover {
@@ -566,26 +578,22 @@
             }
 
             .btn-delete {
-                background-color: #dc3545; /* Red color for delete */
+                background-color: #dc3545; /* Red color */
                 color: white;
                 border: none;
-                padding: 5px 10px;
+                padding: 8px 12px;
                 border-radius: 5px;
                 cursor: pointer;
-                text-decoration: none; /* Remove underline if it's an <a> tag */
-                display: inline-flex; /* To align icon and text */
-                align-items: center;
-                justify-content: center;
-                margin-left: 5px; /* Add some spacing between buttons */
+                text-decoration: none;
+                display: inline-block;
+                margin-left: 5px; /* A bit of space between buttons */
             }
 
             .btn-delete:hover {
-                background-color: #c82333; /* Darker red on hover */
+                background-color: #c82333;  /* Darker red on hover */
             }
 
-            .btn-edit i, .btn-delete i {
-                margin-right: 5px; /* Spacing between icon and text */
-            }
+
             /* Basic table styling for better look */
             .employee-grid table {
                 width: 100%;
@@ -605,18 +613,18 @@
             }
 
             .employee-grid tbody tr:nth-child(even) {
-                background-color: #f9f9f9; /* Optional: Even row highlight */
+                background-color: #f9f9f9;  /* Optional: Even row highlight */
             }
 
             .employee-grid tbody tr:hover {
-                background-color: #f0f0f0; /* Optional: Hover effect */
+                background-color: #f0f0f0;  /* Optional: Hover effect */
             }
 
             .sidebar .nav-link {
                 font-size: 1rem; /* Hoặc 16px, tùy vào AdminDashboard.jsp */
             }
 
-            .sidebar h4{
+            .sidebar h4 {
                 font-size: 1.5rem;
             }
 
@@ -624,6 +632,42 @@
                 border-radius: 20px; /* Bo tròn viền ngoài của bảng */
             }
 
+            /* No data message when no data is found */
+            .no-data {
+                text-align: center;
+                padding: 50px 0;
+                color: #777;
+            }
+
+            .no-data i {
+                font-size: 2em;
+                display: block;
+                margin-bottom: 10px;
+            }
+
+
+            /* search-filter section */
+            .search-filter {
+                display: flex;
+                align-items: center;
+                gap: 10px;  /* Space between search box and button */
+                flex-wrap: wrap; /* For responsiveness */
+            }
+
+            .search-bar input {
+                padding: 8px 12px;
+                border: 1px solid #ccc;
+                border-radius: 3px;
+                width: 200px; /* Adjust as needed */
+            }
+
+            .sidebar .nav-link {
+                font-size: 0.9rem; /* Hoặc 16px, tùy vào AdminDashboard.jsp */
+            }
+
+            .sidebar h4{
+                font-size: 1.5rem;
+            }
         </style>
     </head>
     <body>
@@ -634,167 +678,148 @@
                 <h4 class="text-center mb-4">Admin</h4>
                 <ul class="nav flex-column">
                     <li class="nav-item"><a href="Dashboard/AdminDashboard.jsp" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-utensils me-2"></i>Menu Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-list-alt me-2"></i>Menu Management</a></li>  <!-- Hoặc fas fa-utensils -->
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewAccountList" class="nav-link"><i class="fas fa-users me-2"></i>Employee Management</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewTableList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Table Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewTableList" class="nav-link"><i class="fas fa-building me-2"></i>Table Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewOrderList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Order Management</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCustomerList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Customer Management</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCouponController" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Coupon Management</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewInventoryController" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Inventory Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCustomerList" class="nav-link"><i class="fas fa-user-friends me-2"></i>Customer Management</a></li> <!-- Hoặc fas fa-users -->
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCouponController" class="nav-link"><i class="fas fa-tag me-2"></i>Coupon Management</a></li> <!-- Hoặc fas fa-ticket-alt -->
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewInventoryController" class="nav-link"><i class="fas fa-boxes me-2"></i>Inventory Management</a></li>
                 </ul>
             </div>
 
             <!-- Main Content -->
             <div class="col-md-10 bg-white p-3">
-                <!-- Navbar -->
+                <!-- Content Header -->
                 <div class="text-left mb-4">
                     <h4>Customer Management</h4>
                 </div>
                 <div class="content-header">
                     <div class="search-filter">
                         <div class="search-bar">
-                            <input type="text" id="searchInput" placeholder="Search">  <!-- Thêm id="searchInput" -->
+                            <input type="text" id="searchInput" placeholder="Search by Name" onkeyup="filterTable()">
                         </div>
-
                     </div>
                     <div class="header-buttons">
-                        <button class="add-employee-btn"><i class="far fa-plus"></i> Customer </button>
+                        <button class="btn btn-primary" onclick="openModal('createCustomerModal')"><i class="fas fa-plus"></i> Customer</button>
                     </div>
                 </div>
-                <table class="table table-striped table-bordered table-hover">
-                    <thead>
-                        <tr>
-                            <th>No.</th>
-                            <th>ID</th>
-                            <th>Customer Name</th>
-                            <th>Customer Phone</th>
-                            <th>Number Of Payment</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <%-- Sử dụng scriptlet để lặp qua accountList --%>
-                        <%
-                            List<Customer> customerList = (List<Customer>) request.getAttribute("customerList");
-                            if (customerList != null && !customerList.isEmpty()) {
+
+                <!-- Customer Table -->
+                <div class = "employee-grid">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Phone</th>
+                                <th>Payments</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <%
+                                List<Customer> customers = (List<Customer>) request.getAttribute("customerList");
+                                if (customers == null || customers.isEmpty()) {
+                            %>
+                            <tr>
+                                <td colspan="6" class="no-data">
+                                    <i class="fas fa-exclamation-triangle"></i>   No customers found.
+                                </td>
+                            </tr>
+                            <%
+                            } else {
                                 int counter = 1;
-                                for (Customer customer : customerList) {
-                        %>
-                        <tr>
-                            <td><%= counter++%></td>
-                            <td><%= customer.getCustomerId()%></td>
-                            <td><%= customer.getCustomerName()%></td>
-                            <td><%= customer.getCustomerPhone()%></td>
-                            <td><%= customer.getNumberOfPayment()%></td>
-                            <td>
-                                <a href="#" class="edit-employee-btn btn-edit"
-                                   data-customerid="<%=customer.getCustomerId()%>"
-                                   data-customername="<%=customer.getCustomerName()%>"
-                                   data-customerphone="<%=customer.getCustomerPhone()%>"
-                                   data-numberofpayment="<%=customer.getNumberOfPayment()%>"
-                                   ><i class="fas fa-edit"></i> Edit</a>
-                                <a href="#" onclick="confirmDelete('<%= customer.getCustomerId()%>', '<%= customer.getCustomerName()%>')" class="btn-delete"><i class="fas fa-trash-alt"></i> Delete</a>
-                            </td>
-                        </tr>
-                        <%
-                            }
-                        } else {
-                        %>
-                        <tr>
-                            <td colspan="10">
-                                <div class="no-data">
-                                    <i class="fal fa-user"></i>
-                                    <span>
-                                        <%-- Kiểm tra xem có phải là kết quả từ việc tìm kiếm không --%>
-                                        <% if (request.getParameter("search") != null) { %>
-                                        Không tìm thấy kết quả.
-                                        <% } else { %>
-                                        Gian hàng chưa có customer. Nhấn <a href="#">vào đây</a> để thêm mới customer.
-                                        <% } %>
-                                    </span>
-                                </div>
-                            </td>
-                        </tr>
-                        <%
-                            }
-                        %>
-                    </tbody>
-                </table>
+                                for (Customer customer : customers) {
+                            %>
+                            <tr>
+                                <td><%= counter++%></td>
+                                <td><%= customer.getCustomerId()%></td>
+                                <td><%= customer.getCustomerName()%></td>
+                                <td><%= customer.getCustomerPhone()%></td>
+                                <td><%= customer.getNumberOfPayment()%></td>
+                                <td>
+                                    <button class="btn btn-primary btn-sm"
+                                            data-customerid="<%= customer.getCustomerId()%>"
+                                            data-customername="<%= customer.getCustomerName()%>"
+                                            data-customerphone="<%= customer.getCustomerPhone()%>"
+                                            data-numberofpayment="<%= customer.getNumberOfPayment()%>"
+                                            onclick="openEditModal(this)">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <button class="btn btn-danger btn-sm" onclick="confirmDelete('<%= customer.getCustomerId()%>', '<%= customer.getCustomerName()%>')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </td>
+                            </tr>
+                            <%
+                                    }
+                                }
+                            %>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
         <!-- Modal Create Customer -->
-        <div id="createEmployeeModal" class="modal">
+        <div id="createCustomerModal" class="modal">
             <div class="modal-content">
-                <span class="close-button">×</span>
-                <h2>Create New Customer Account</h2>
-                <div class="modal-form-container">
-                    <form method="post" action="CreateCustomer" enctype="multipart/form-data" onsubmit="return validateForm()">
-                        <div>
-                            <label for="CustomerName">Customer Name</label>
-                            <input type="text" id="CustomerName" name="CustomerName" placeholder="Enter Customer Name">
-                        </div>
-                        <div>
-                            <label for="CustomerPhone">Customer Phone</label>
-                            <input type="text" id="CustomerPhone" name="CustomerPhone" placeholder="Customer Phone">
-                        </div>
-                        <div>
-                            <label for="NumberOfPayment">Number Of Payment</label>
-                            <input type="text" id="NumberOfPayment" name="NumberOfPayment" placeholder="Number Of Payment">
-                        </div>
-
-                        <div class="modal-actions">
-                            <input type="submit" class="btn btn-primary" name="btnSubmit" value="Create Account"/>
-                            <button type="button" class="btn btn-secondary close-button">Cancel</button>
-                        </div>
-                    </form>
-                </div>
+                <span class="close-button" onclick="closeModal('createCustomerModal')">×</span>
+                <h2>Create Customer</h2>
+                <form method="post" action="AddCustomer" class="modal-form-container">
+                    <div>
+                        <label>Name</label>
+                        <input type="text" name="CustomerName" required>
+                    </div>
+                    <div>
+                        <label>Phone</label>
+                        <input type="text" name="CustomerPhone" required min="0">
+                    </div>
+                    <div>
+                        <label>Number of Payments</label>
+                        <input type="number" name="NumberOfPayment" required min="0">
+                    </div>
+                    <div class="modal-actions">
+                        <input type="submit" value="Create" class="btn btn-primary"/>
+                    </div>
+                </form>
             </div>
         </div>
 
-        <!-- Modal Edit Employee Account -->
-        <div id="editEmployeeModal" class="modal">
+        <!-- Modal Edit Customer -->
+        <div id="editCustomerModal" class="modal">
             <div class="modal-content">
-                <span class="close-button">×</span>
-                <h2>Edit Customer Account</h2>
-                <div class="modal-form-container">
-                    <form method="post" action="UpdateCustomer" enctype="multipart/form-data" onsubmit="return validateUpdateForm()">
-                        <input type="hidden" id="EditCustomerIdHidden" name="CustomerIdHidden" value=""/>
-                        <div>
-
-                            <div>
-                                <div>
-                                    <label for="EditCustomerName">Customer Name</label>
-                                    <input type="text" id="EditCustomerName" name="CustomerName" value=""/>
-                                </div>
-                                <div>
-                                    <label for="EditCustomerPhone">Customer Phone</label>
-                                    <input type="text" id="EditCustomerPhone" name="CustomerPhone" value=""/>
-                                </div>
-                                <div>
-                                    <label for="EditNumberOfPayment">Number Of Payment</label>
-                                    <input type="text" id="EditNumberOfPayment" name="NumberOfPayment" value=""/>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Save and Back to List Buttons -->
-                        <div class="modal-actions">
-                            <input type="submit" class="btn btn-primary" name="btnSubmit" value="Save Changes"/>
-                            <button type="button" class="btn btn-secondary close-button">Cancel</button>
-                        </div>
-                    </form>
-                </div>
+                <span class="close-button" onclick="closeModal('editCustomerModal')">×</span>
+                <h2>Edit Customer</h2>
+                <form method="post" action="UpdateCustomer"  class="modal-form-container">
+                    <input type="hidden" id="editCustomerIdHidden" name="customerId">
+                    <div>
+                        <label>Name</label>
+                        <input type="text" id="editCustomerName" name="CustomerName" required>
+                    </div>
+                    <div>
+                        <label>Phone</label>
+                        <input type="text" id="editCustomerPhone" name="CustomerPhone" required min="0">
+                    </div>
+                    <div>
+                        <label>Number of Payments</label>
+                        <input type="number" id="editNumberOfPayment" name="NumberOfPayment" required min="0">
+                    </div>
+                    <div class="modal-actions">
+                        <input type="submit" value="Update" class="btn btn-primary"/>
+                    </div>
+                </form>
             </div>
         </div>
-
 
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                // Modal Create Account
-                var createModal = document.getElementById("createEmployeeModal");
-                var createBtn = document.querySelector(".add-employee-btn");
-                var closeCreateButtons = document.querySelectorAll("#createEmployeeModal .close-button");
+                // Modal Create Customer
+                var createModal = document.getElementById("createCustomerModal");
+                var createBtn = document.querySelector(".btn.btn-primary[onclick=\"openModal('createCustomerModal')\"]");
+                var closeCreateButtons = document.querySelectorAll("#createCustomerModal .close-button");
 
                 if (createBtn && createModal) {
                     createBtn.onclick = function () {
@@ -811,19 +836,18 @@
                 }
 
                 // Modal Edit Account
-                var editModal = document.getElementById("editEmployeeModal");
-                var editButtons = document.querySelectorAll(".edit-employee-btn");
-                var closeEditButtons = document.querySelectorAll("#editEmployeeModal .close-button");
+                var editModal = document.getElementById("editCustomerModal");
+                var editButtons = document.querySelectorAll(".btn.btn-primary.btn-sm");
+                var closeEditButtons = document.querySelectorAll("#editCustomerModal .close-button");
 
                 if (editButtons) {
                     editButtons.forEach(function (btnEdit) {
                         btnEdit.onclick = function (e) {
                             e.preventDefault();
-                            document.getElementById('EditCustomerIdHidden').value = btnEdit.dataset.customerid;
-                            document.getElementById('EditCustomerName').value = btnEdit.dataset.customername;
-                            document.getElementById('EditCustomerPhone').value = btnEdit.dataset.customerphone;
-                            document.getElementById('EditNumberOfPayment').value = btnEdit.dataset.numberofpayment;
-
+                            document.getElementById('editCustomerIdHidden').value = btnEdit.dataset.customerid;
+                            document.getElementById('editCustomerName').value = btnEdit.dataset.customername;
+                            document.getElementById('editCustomerPhone').value = btnEdit.dataset.customerphone;
+                            document.getElementById('editNumberOfPayment').value = btnEdit.dataset.numberofpayment;
 
                             editModal.style.display = "block";
                         }
@@ -847,36 +871,84 @@
                     }
                 }
             });
+            function validateCreateForm() {
+                const phoneInput = document.querySelector('#createCustomerModal input[name="CustomerPhone"]');
+                const paymentInput = document.querySelector('#createCustomerModal input[name="NumberOfPayment"]');
+
+                if (!/^\d+$/.test(phoneInput.value) || parseInt(phoneInput.value) <= 0) {
+                    alert("Phone number must be a positive integer.");
+                    phoneInput.focus();
+                    return false;
+                }
+                if (!/^\d+$/.test(paymentInput.value) || parseInt(paymentInput.value) <= 0) {
+                    alert("Number of Payments must be a positive integer.");
+                    paymentInput.focus();
+                    return false;
+                }
+
+                return true;
+            }
+
+
+            function validateEditForm() {
+                const phoneInput = document.querySelector('#editCustomerModal input[name="CustomerPhone"]');
+                const paymentInput = document.querySelector('#editCustomerModal input[name="NumberOfPayment"]');
+
+                if (!/^\d+$/.test(phoneInput.value) || parseInt(phoneInput.value) <= 0) {
+                    alert("Phone number must be a positive integer.");
+                    phoneInput.focus();
+                    return false;
+                }
+
+                if (!/^\d+$/.test(paymentInput.value) || parseInt(paymentInput.value) <= 0) {
+                    alert("Number of Payments must be a positive integer.");
+                    paymentInput.focus();
+                    return false;
+                }
+
+                return true;
+            }
+        </script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+
+
+
+            });
 
 
             const searchInput = document.getElementById('searchInput');
 
-            const table = document.querySelector('.table');
-            const rows = table.querySelectorAll('tbody tr');
-
             function filterTable() {
                 const searchText = searchInput.value.toLowerCase();
+                const table = document.querySelector('.employee-grid table tbody');
+                const rows = table.querySelectorAll('tr');
+                let hasResults = false; // Flag to check if there are any matching rows
 
 
                 rows.forEach(row => {
-                    const id = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-                    const name = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
-                    const phone = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
-                    const payment = row.querySelector('td:nth-child(5)').textContent.toLowerCase();
+                    const name = row.querySelector('td:nth-child(3)').textContent.toLowerCase(); //Correct Name column, not second one
+                    if (name.includes(searchText)) {
+                        row.style.display = '';  // Show the row
+                        hasResults = true;
 
-                    let matchesSearch = id.includes(searchText) || name.includes(searchText) || phone.includes(searchText) || payment.includes(searchText);
-
-                    if (matchesSearch) {
-                        row.style.display = '';
                     } else {
-                        row.style.display = 'none';
+                        row.style.display = 'none'; // Hide the row
                     }
                 });
+                const noDataRow = document.querySelector('.employee-grid table tbody .no-data-row');
+                if (noDataRow) {
+                    noDataRow.remove();
+                }
+
+                if (!hasResults) {
+                    const newRow = document.createElement('tr');
+                    newRow.classList.add('no-data-row');
+                    newRow.innerHTML = '<td colspan="6" class="no-data"><i class="fas fa-exclamation-triangle"></i>  Type in name to search!</td>';
+                    table.appendChild(newRow);
+                }
             }
-
-            searchInput.addEventListener('keyup', filterTable); // Gọi hàm filterTable khi gõ vào ô tìm kiếm
-
-
+            searchInput.addEventListener('keyup', filterTable); // Attach the filterTable function to the keyup event
         </script>
     </body>
 </html>

@@ -16,7 +16,7 @@
         <title>Table Management - Admin Dashboard</title>
         <script>
             function confirmDelete(tableId, tableStatus) {
-                if (confirm('Bạn có chắc chắn muốn xóa bàn ID: ' + tableId + ' - Trạng thái: ' + tableStatus + ' không?')) {
+                if (confirm('Are you sure you want to delete the table with ID: ' + tableId + ' - Status: ' + tableStatus + '?')) {
                     window.location.href = 'DeleteTable?id=' + tableId;
                 }
             }
@@ -600,14 +600,109 @@
             }
 
             .sidebar .nav-link {
-                font-size: 1rem; /* Hoặc 16px, tùy vào AdminDashboard.jsp */
+                font-size: 0.9rem; /* Hoặc 16px, tùy vào AdminDashboard.jsp */
             }
 
             .sidebar h4{
                 font-size: 1.5rem;
             }
+            .table-grid {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr); /* 4 columns */
+                gap: 10px; /* Spacing between table items */
+            }
 
+            .table-item {
+                border: 1px solid #ddd;
+                padding: 10px;
+                border-radius: 5px;
+                background-color: white;
+                display: flex;
+                flex-direction: column; /* Stack content vertically */
+                justify-content: space-between; /* Space out content and buttons */
+                min-height: 100px; /* Adjust as needed */
+                position: relative; /* For absolute positioning of buttons */
+            }
+            /* Status Colors */
+            .table-item.available {
+                background-color: #fffff5;
+            }
 
+            .table-item.occupied {
+                background-color: #c7fdc4; /* Light green */
+            }
+
+            .table-item.reserved {
+                background-color: #b6eaff; /* Blue */
+                color: white;  /* White text for reserved */
+            }
+
+            .table-info {
+                text-align: left; /* Left-align table information */
+                margin-bottom: 10px; /* Space between info and buttons */
+            }
+            .table-id-seats {
+                font-weight: bold;
+            }
+            .table-buttons {
+                position: absolute;
+                top: 5px;
+                right: 5px;
+                display: flex;
+                flex-direction: column; /* Stack buttons vertically */
+                gap: 5px; /* Space between buttons */
+            }
+
+            /* Style for individual buttons (make them equal size) */
+            .table-buttons a { /* Apply to both edit and delete buttons */
+                padding: 5px; /* Consistent padding */
+                border: 1px solid #ccc;
+                background-color: #ffffff;
+                text-decoration: none;
+                color: black;
+                border-radius: 3px;
+                width: 25px;      /* Set a fixed width */
+                height: 25px;      /* Set a fixed height */
+                display: flex;    /* Use flexbox for centering */
+                align-items: center; /* Center vertically */
+                justify-content: center; /* Center horizontally */
+            }
+
+            .no-data {
+                grid-column: span 4;
+                text-align: center;
+            }
+
+            /* Style for the icons (optional, for consistent size) */
+            .table-buttons a i {
+                font-size: 16px;  /* Adjust icon size as needed */
+            }
+
+            /* Style phân trang */
+            .pagination {
+                display: flex;
+                justify-content: center;
+                list-style: none;
+                padding: 0;
+                margin-top: 20px;
+            }
+
+            .pagination li {
+                margin: 0 5px;
+            }
+
+            .pagination a {
+                padding: 5px 10px;
+                border: 1px solid #ccc;
+                text-decoration: none;
+                color: black;
+                border-radius: 3px;
+            }
+
+            .pagination a.active {
+                background-color: #3498db;
+                color: white;
+            }
         </style>
     </head>
     <body>
@@ -616,7 +711,7 @@
             <div class="sidebar col-md-2 p-3">
                 <h4 class="text-center mb-4">Admin</h4>
                 <ul class="nav flex-column">
-                      <li class="nav-item"><a href="Dashboard/AdminDashboard.jsp" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
+                    <li class="nav-item"><a href="Dashboard/AdminDashboard.jsp" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-utensils me-2"></i>Menu Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewAccountList" class="nav-link"><i class="fas fa-users me-2"></i>Employee Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewTableList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Table Management</a></li>
@@ -651,57 +746,100 @@
 
                             </div>
                         </div>
-                        <div class="employee-grid">
-                            <table class="table table-striped table-bordered table-hover"> <%-- Added Bootstrap table classes --%>
-                                <thead>
-                                    <tr>
-                                        <th>No.</th>
-                                        <th>ID</th>
-                                        <th>Status</th>
-                                        <th>Number of Seats</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <%-- Sử dụng scriptlet để lặp qua tableList --%>
-                                    <%
-                                        List<Table> tables = (List<Table>) request.getAttribute("tableList");
-                                        if (tables != null && !tables.isEmpty()) {
-                                            int counter = 1;
-                                            for (Table table : tables) {
-                                    %>
-                                    <tr>
-                                        <td><%= counter++%></td>
-                                        <td><%= table.getTableId()%></td>
-                                        <td><%= table.getTableStatus()%></td>
-                                        <td><%= table.getNumberOfSeats()%></td>
-                                        <td>
-                                            <a href="#" class="edit-table-btn btn-edit-table"     <%-- Added btn-edit-table class --%>
-                                               data-tableid="<%=table.getTableId()%>"
-                                               data-tablestatus="<%=table.getTableStatus()%>"
-                                               data-numberofseats="<%=table.getNumberOfSeats()%>"
-                                               ><i class="fas fa-edit"></i>Edit</a> <%-- Added edit icon --%>
-                                            <a href="#" onclick="confirmDelete('<%= table.getTableId()%>', '<%= table.getTableStatus()%>')" class="btn-delete btn-delete-table"><i class="fas fa-trash-alt"></i>Delete</a> <%-- Added btn-delete-table class and delete icon --%>
-                                        </td>
-                                    </tr>
-                                    <%
+                        <div class="table-grid">
+                            <%
+                                List<Table> allTables = (List<Table>) request.getAttribute("tableList");
+                                int pageSize = 20; // Số bàn trên mỗi trang.  PHẢI LÀ BỘI SỐ CỦA 4!
+                                int totalTables = (allTables != null) ? allTables.size() : 0;
+                                int totalPages = (int) Math.ceil((double) totalTables / pageSize);
+                                int currentPage = 1; // Mặc định là trang 1
+
+                                // Lấy trang hiện tại từ tham số request
+                                String pageParam = request.getParameter("page");
+                                if (pageParam != null && !pageParam.isEmpty()) {
+                                    try {
+                                        currentPage = Integer.parseInt(pageParam);
+                                        if (currentPage < 1) {
+                                            currentPage = 1;
                                         }
-                                    } else {
-                                    %>
-                                    <tr>
-                                        <td colspan="5">
-                                            <div class="no-data">
-                                                <i class="fas fa-table"></i>
-                                                <span>Không có bàn ăn nào.<br>Nhấn <a href="#">vào đây</a> để thêm mới bàn ăn.</span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <%
+                                        if (currentPage > totalPages) {
+                                            currentPage = totalPages;
                                         }
-                                    %>
-                                </tbody>
-                            </table>
+                                    } catch (NumberFormatException e) {
+                                        currentPage = 1; // Mặc định là 1 nếu số trang không hợp lệ
+                                    }
+                                }
+
+                                if (allTables != null && !allTables.isEmpty()) {
+                                    int startIndex = (currentPage - 1) * pageSize;
+                                    int endIndex = Math.min(startIndex + pageSize, totalTables);
+                                    List<Table> tables = allTables.subList(startIndex, endIndex);
+
+                                    for (Table table : tables) {
+                                        String tableClass = "table-item";
+                                        String statusText = table.getTableStatus();
+
+                                        if (table.getTableStatus().equals("Available")) {
+                                            tableClass += " available";
+                                        } else if (table.getTableStatus().equals("Occupied")) {
+                                            tableClass += " occupied";
+                                        } else if (table.getTableStatus().equals("Reserved")) {
+                                            tableClass += " reserved";
+                                        } 
+%>
+                            <div class="<%= tableClass%>">
+                                <div class="table-info">
+                                    <div class="table-id-seats"> ID: <%= table.getTableId()%> </div>
+                                    <div> Number of seats: <%= table.getNumberOfSeats()%></div>
+                                    <div class="table-status"><%= statusText%></div>
+                                </div>
+                                <div class="table-buttons">
+                                    <a href="#" class="edit-table-btn btn-edit-table"
+                                       data-tableid="<%=table.getTableId()%>"
+                                       data-tablestatus="<%=table.getTableStatus()%>"
+                                       data-numberofseats="<%=table.getNumberOfSeats()%>">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="#" onclick="confirmDelete('<%= table.getTableId()%>', '<%= table.getTableStatus()%>')">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            <%
+                                } 
+                            } else { 
+                            %>
+                            <div class="no-data">
+                                <i class="fas fa-table"></i>
+                                <span>NO TABLE HERE.<br> CLICK <a href="#">HERE</a> TO ADD NEW TABLE.</span>
+                            </div>
+                            <%
+                                } 
+                            %>
                         </div>
+                        <% if (totalPages > 1) { %>
+                        <ul class="pagination">
+                            <%-- Nút Previous --%>
+                            <% if (currentPage > 1) {%>
+                            <li><a href="?page=<%= currentPage - 1%>">Back</a></li>
+                                <% } %>
+                            <%
+                                int startPage = Math.max(1, currentPage - 2);
+                                int endPage = Math.min(totalPages, currentPage + 2);
+                            %>
+
+                            <% for (int i = startPage; i <= endPage; i++) {%>
+                            <li>
+                                <a href="?page=<%= i%>" class="<%= (currentPage == i) ? "active" : ""%>"><%= i%></a>
+                            </li>
+                            <% } %>
+
+                            <% if (currentPage < totalPages) {%>
+                            <li><a href="?page=<%= currentPage + 1%>">Next</a></li>
+                                <% } %>
+                        </ul>
+                        <% }%>
+
                     </div>
                 </section>
             </div>
@@ -726,7 +864,7 @@
                 </div>
                 <div>
                     <label for="NumberOfSeats">Number Of Seats</label>
-                    <input type="number" id="NumberOfSeats" name="NumberOfSeats" >
+                    <input type="number" id="NumberOfSeats" name="NumberOfSeats" min="0">
                 </div>
                 <div class="modal-actions">
                     <input type="submit" class="btn btn-primary" name="btnSubmit" value="Create Table"/> <%-- Bootstrap button style --%>
@@ -752,7 +890,7 @@
                     </div>
                     <div>
                         <label for="EditNumberOfSeats">Number Of Seats</label>
-                        <input type="number" id="EditNumberOfSeats" name="NumberOfSeats" value="" />
+                        <input type="number" id="EditNumberOfSeats" name="NumberOfSeats" value="" min="0" />
                     </div>
                     <div>
                         <label for="EditTableStatus">Table Status</label>

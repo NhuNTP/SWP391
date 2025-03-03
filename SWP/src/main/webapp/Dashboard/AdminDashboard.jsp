@@ -50,6 +50,14 @@
                 position: relative;
                 height: 300px;
             }
+
+            .sidebar .nav-link {
+                font-size: 0.9rem; /* Hoặc 16px, tùy vào AdminDashboard.jsp */
+            }
+
+            .sidebar h4{
+                font-size: 1.5rem;
+            }
         </style>
     </head>
 
@@ -58,14 +66,14 @@
             <div class="sidebar col-md-2 p-3">
                 <h4 class="text-center mb-4">Admin</h4>
                 <ul class="nav flex-column">
-                    <li class="nav-item"><a href="AdminDashboard.jsp" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-utensils me-2"></i>Menu Management</a></li>
+                    <li class="nav-item"><a href="Dashboard/AdminDashboard.jsp" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-list-alt me-2"></i>Menu Management</a></li>  <!-- Hoặc fas fa-utensils -->
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewAccountList" class="nav-link"><i class="fas fa-users me-2"></i>Employee Management</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewTableList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Table Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewTableList" class="nav-link"><i class="fas fa-building me-2"></i>Table Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewOrderList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Order Management</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCustomerList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Customer Management</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCouponController" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Coupon Management</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewInventoryController" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Inventory Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCustomerList" class="nav-link"><i class="fas fa-user-friends me-2"></i>Customer Management</a></li> <!-- Hoặc fas fa-users -->
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCouponController" class="nav-link"><i class="fas fa-tag me-2"></i>Coupon Management</a></li> <!-- Hoặc fas fa-ticket-alt -->
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewInventoryController" class="nav-link"><i class="fas fa-boxes me-2"></i>Inventory Management</a></li>
                 </ul>
             </div>
 
@@ -75,7 +83,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h3>Dashboard</h3>
                     <div class="d-flex align-items-center">
-                        <span class="me-2">Xin chào, Admin</span>
+                        <span class="me-2">Hello, Admin</span>
                         <img src="https://via.placeholder.com/40" alt="Avatar" class="rounded-circle">
                     </div>
                 </div>
@@ -85,29 +93,29 @@
                     <div class="col-md-3">
                         <div class="card card-stats p-3 text-center">
                             <i class="fas fa-dollar-sign"></i>
-                            <h5 class="mt-2">Doanh thu hôm nay</h5>
+                            <h5 class="mt-2">Today's Revenue</h5>
                             <p class="mb-0">5,000,000 VNĐ</p>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="card card-stats p-3 text-center" style="background: linear-gradient(to right, #FF9800, #FFB74D);">
                             <i class="fas fa-shopping-cart"></i>
-                            <h5 class="mt-2">Số đơn hàng mới</h5>
-                            <p class="mb-0">25 đơn</p>
+                            <h5 class="mt-2">Number of new orders</h5>
+                            <p class="mb-0">25 orders</p>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="card card-stats p-3 text-center" style="background: linear-gradient(to right, #03A9F4, #4FC3F7);">
                             <i class="fas fa-utensils"></i>
-                            <h5 class="mt-2">Số món ăn đang bán</h5>
-                            <p class="mb-0">50 món</p>
+                            <h5 class="mt-2">Number of dishes for sale</h5>
+                            <p class="mb-0">50 dishes</p>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="card card-stats p-3 text-center" style="background: linear-gradient(to right, #E91E63, #F06292);">
                             <i class="fas fa-users"></i>
-                            <h5 class="mt-2">Số nhân viên làm việc</h5>
-                            <p class="mb-0">10 người</p>
+                            <h5 class="mt-2">Number of employees working</h5>
+                            <p class="mb-0">10 employees</p>
                         </div>
                     </div>
                 </div>
@@ -116,13 +124,13 @@
                 <div class="row mb-4">
                     <div class="col-md-8">
                         <div class="card p-4">
-                            <h5>Biểu đồ doanh thu</h5>
+                            <h5>Revenue chart</h5>
                             <canvas id="revenueChart" class="chart-container"></canvas>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="card p-4">
-                            <h5>Top món ăn bán chạy</h5>
+                            <h5>Top selling dishes</h5>
                             <canvas id="topItemsChart" class="chart-container"></canvas>
                         </div>
                     </div>
@@ -132,15 +140,15 @@
                 <div class="row">
                     <div class="col-md-12">
                         <div class="card p-4">
-                            <h5>Đơn hàng gần đây</h5>
+                            <h5>Recent Orders</h5>
                             <table class="table table-striped">
                                 <thead>
                                     <tr>
                                         <th>ID</th>
-                                        <th>Tên khách hàng</th>
-                                        <th>Tổng tiền</th>
-                                        <th>Trạng thái</th>
-                                        <th>Thời gian</th>
+                                        <th>Customer name</th>
+                                        <th>Total amount</th>
+                                        <th>Status</th>
+                                        <th>Time</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -148,14 +156,14 @@
                                         <td>#12345</td>
                                         <td>Nguyễn Văn A</td>
                                         <td>500,000 VNĐ</td>
-                                        <td><span class="badge bg-warning">Chờ xử lý</span></td>
+                                        <td><span class="badge bg-warning">Pending processing</span></td>
                                         <td>2023-10-01 14:30</td>
                                     </tr>
                                     <tr>
                                         <td>#12346</td>
                                         <td>Lê Thị B</td>
                                         <td>300,000 VNĐ</td>
-                                        <td><span class="badge bg-success">Đã hoàn thành</span></td>
+                                        <td><span class="badge bg-success">Completed</span></td>
                                         <td>2023-10-01 15:00</td>
                                     </tr>
                                 </tbody>
@@ -173,7 +181,7 @@
             const revenueChart = new Chart(revenueCtx, {
                 type: 'line',
                 data: {
-                    labels: ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'],
+                    labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
                     datasets: [{
                             label: 'Doanh thu (VNĐ)',
                             data: [1000000, 1500000, 2000000, 1800000, 2500000, 3000000, 2800000],

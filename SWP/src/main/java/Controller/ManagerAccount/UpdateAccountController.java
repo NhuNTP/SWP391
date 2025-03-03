@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.UUID;
 
 /**
  *
@@ -33,7 +34,8 @@ import java.nio.file.StandardCopyOption;
 )
 public class UpdateAccountController extends HttpServlet {
 
-    private static final String UPLOAD_DIRECTORY = "img"; // **Đã thêm dòng này**
+    private static final long serialVersionUID = 1L;
+    private final String UPLOAD_DIRECTORY = "ManageAccount/account_img"; // Đảm bảo đường dẫn này khớp với thư mục tải lên mong muốn của bạn
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -112,44 +114,8 @@ public class UpdateAccountController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String userImagePath = null; // Đường dẫn ảnh, ban đầu là null
+        response.setContentType("text/html;charset=UTF-8");
         try {
-            // Step 1: Handle image file upload (COPY TỪ CreateAccountController.java)
-            Part filePart = request.getPart("UserImage"); // Lấy Part từ input name="UserImage"
-            if (filePart != null && filePart.getSize() > 0) { // Kiểm tra nếu có file được upload
-                String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString(); // Lấy tên file gốc
-                String fileExtension = fileName.substring(fileName.lastIndexOf(".")); // Lấy đuôi file
-
-                // Tạo tên file duy nhất để tránh trùng lặp (ví dụ: timestamp + tên file gốc)
-                String uniqueFileName = System.currentTimeMillis() + "_" + fileName;
-
-                String uploadPath = getServletContext().getRealPath("") + UPLOAD_DIRECTORY; // Đường dẫn thư mục img
-                System.out.println("uploadPath: " + uploadPath); // **[DEBUG] In ra uploadPath**
-
-                File uploadDir = new File(uploadPath);
-                if (!uploadDir.exists()) {
-                    boolean dirCreated = uploadDir.mkdirs(); // Tạo thư mục nếu chưa tồn tại
-                    System.out.println("Thư mục img được tạo: " + dirCreated); // **[DEBUG] Kiểm tra tạo thư mục**
-                } else {
-                    System.out.println("Thư mục img đã tồn tại."); // **[DEBUG] Thư mục đã tồn tại**
-                }
-
-                String filePath = uploadPath + File.separator + uniqueFileName; // Đường dẫn đầy đủ để lưu file
-                System.out.println("filePath: " + filePath); // **[DEBUG] In ra filePath**
-
-                // Lưu file lên server
-                try (InputStream inputStream = filePart.getInputStream()) {
-                    Files.copy(inputStream, Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
-                    System.out.println("File đã được lưu thành công: " + filePath); // **[DEBUG] Lưu file thành công**
-                } catch (IOException copyException) {
-                    System.err.println("Lỗi khi lưu file: " + copyException.getMessage()); // **[DEBUG] Lỗi Lưu File**
-                    copyException.printStackTrace(); // **In stacktrace lỗi**
-                    throw copyException; // Re-throw để Servlet xử lý lỗi chung
-                }
-
-                userImagePath = "/" + UPLOAD_DIRECTORY + "/" + uniqueFileName; // Đường dẫn tương đối để lưu vào database (ví dụ: /img/...)
-                System.out.println("userImagePath (database): " + userImagePath); // **[DEBUG] Đường dẫn DB**
-            }
             // Step 1: Get all form parameters (CODE CŨ - ĐƯỢC CHUYỂN XUỐNG DƯỚI ĐỂ THỨ TỰ LOGIC HƠN)
             int UserId = Integer.parseInt(request.getParameter("UserIdHidden"));
             String UserEmail = request.getParameter("UserEmail");
@@ -158,16 +124,76 @@ public class UpdateAccountController extends HttpServlet {
             String UserRole = request.getParameter("UserRole");
             String IdentityCard = request.getParameter("IdentityCard");
             String UserAddress = request.getParameter("UserAddress");
+            String oldImagePath = request.getParameter("oldImagePath"); // Get old image path  <--  CRITICAL FIX
 
-            // Lấy tài khoản cũ từ database (CODE CŨ)
+            // 2. Image Upload Handling
+            Part filePart = request.getPart("UserImage");
+            String UserImage = null;
+
+            if (filePart != null && filePart.getSize() > 0 && filePart.getSubmittedFileName() != null && !filePart.getSubmittedFileName().isEmpty()) {
+                // 2.1 User uploaded a NEW image
+                String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+                String fileExtension = "";
+                int dotIndex = fileName.lastIndexOf('.');
+                if (dotIndex > 0 && dotIndex < fileName.length() - 1) {
+                    fileExtension = fileName.substring(dotIndex);
+                }
+                String userImageName = request.getParameter("UserImage"); //User enter image name
+                String uniqueFileName;
+
+                if (userImageName != null && !userImageName.trim().isEmpty()) {
+                    String sanitizedImageName = userImageName.replaceAll("[^a-zA-Z0-9_\\-]", "_");
+                    uniqueFileName = sanitizedImageName + fileExtension;
+                } else {
+                    uniqueFileName = UUID.randomUUID().toString() + "_" + fileName; //Sử dụng UUID + tên file gốc
+                }
+
+                // 2.2 Create Paths
+                String webAppRoot = getServletContext().getRealPath("/");
+                File webAppRootDir = new File(webAppRoot);
+                File targetDir = webAppRootDir.getParentFile();
+                File projectRootDir = targetDir.getParentFile();
+                String srcWebAppPath = new File(projectRootDir, "src/main/webapp").getAbsolutePath();
+                String relativePath = "ManageAccount/account_img";
+                String uploadPath = srcWebAppPath + File.separator + relativePath;
+
+                File uploadDir = new File(uploadPath);
+                if (!uploadDir.exists()) {
+                    uploadDir.mkdirs();
+                }
+
+                String filePath = uploadPath + File.separator + uniqueFileName;
+                UserImage = "ManageAccount/account_img/" + uniqueFileName;
+
+                // 2.3 Save the NEW file
+                try (InputStream fileContent = filePart.getInputStream()) {
+                    Files.copy(fileContent, Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
+                    System.out.println("File saved successfully to: " + filePath);
+                }
+
+                // 2.4 DELETE the OLD image (if it exists)
+                if (oldImagePath != null && !oldImagePath.isEmpty()) {
+                    String oldFilePath = srcWebAppPath + File.separator + oldImagePath; // Đường dẫn đầy đủ tới ảnh cũ
+                    File oldFile = new File(oldFilePath);
+                    if (oldFile.exists() && !oldFile.isDirectory()) {
+                        if (oldFile.delete()) {
+                            System.out.println("Old image deleted: " + oldFilePath);
+                        } else {
+                            System.err.println("Failed to delete old image: " + oldFilePath);
+                            // Handle file deletion failure (log, notify, etc.)
+                        }
+                    }
+                }
+            } else {
+                // 2.5 NO new image -> KEEP the old image
+                UserImage = oldImagePath;
+                System.out.println("No new image. Keeping old image: " + UserImage);
+            }
+
             AccountDAO dao = new AccountDAO();
             Account oldAccount = dao.getAccountId(UserId);
 
-            if (userImagePath == null || userImagePath.isEmpty()) { // **KIỂM TRA userImagePath SAU UPLOAD**
-                userImagePath = oldAccount.getUserImage(); // Nếu không có file mới, GIỮ NGUYÊN ảnh cũ
-            }
-
-            Account account = new Account(UserId, UserEmail, UserPassword, UserName, UserRole, IdentityCard, UserAddress, userImagePath);
+            Account account = new Account(UserId, UserEmail, UserPassword, UserName, UserRole, IdentityCard, UserAddress, UserImage);
             int count = dao.updateAccount(UserId, account);
 
             // Redirect based on whether the update was successful (CODE CŨ)

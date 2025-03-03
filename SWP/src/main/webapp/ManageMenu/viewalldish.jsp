@@ -14,6 +14,51 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
         <style>
             /* Custom Styles */
+               body {
+                font-family: 'Roboto', sans-serif;
+                background-color: #f8f9fa;
+            }
+
+            /* Sidebar Styles */
+            .sidebar {
+                background: linear-gradient(to bottom, #2C3E50, #34495E);
+                color: white;
+                height: 100vh;
+            }
+
+            .sidebar a {
+                color: white;
+                text-decoration: none;
+            }
+
+            .sidebar a:hover {
+                background-color: #1A252F;
+            }
+
+            /* Card Stats Styles */
+            .card-stats {
+                background: linear-gradient(to right, #4CAF50, #81C784);
+                color: white;
+            }
+
+            .card-stats i {
+                font-size: 2rem;
+            }
+
+            /* Chart Container Styles */
+            .chart-container {
+                position: relative;
+                height: 300px;
+            }
+
+            .sidebar .nav-link {
+                font-size: 0.9rem; /* Hoặc 16px, tùy vào AdminDashboard.jsp */
+            }
+
+            .sidebar h4{
+                font-size: 1.5rem;
+            }
+
                   .dish-card {
             border: 1px solid #ddd;
             border-radius: 10px;
@@ -62,17 +107,17 @@
     <body>
         <!-- Sidebar -->
         <div class="d-flex">
-            <div class="sidebar col-md-2 p-3">
+             <div class="sidebar col-md-2 p-3">
                 <h4 class="text-center mb-4">Admin</h4>
                 <ul class="nav flex-column">
                     <li class="nav-item"><a href="Dashboard/AdminDashboard.jsp" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-utensils me-2"></i>Menu Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-list-alt me-2"></i>Menu Management</a></li>  <!-- Hoặc fas fa-utensils -->
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewAccountList" class="nav-link"><i class="fas fa-users me-2"></i>Employee Management</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewTableList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Table Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewTableList" class="nav-link"><i class="fas fa-building me-2"></i>Table Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewOrderList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Order Management</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCustomerList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Customer Management</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCouponController" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Coupon Management</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewInventoryController" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Inventory Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCustomerList" class="nav-link"><i class="fas fa-user-friends me-2"></i>Customer Management</a></li> <!-- Hoặc fas fa-users -->
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCouponController" class="nav-link"><i class="fas fa-tag me-2"></i>Coupon Management</a></li> <!-- Hoặc fas fa-ticket-alt -->
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewInventoryController" class="nav-link"><i class="fas fa-boxes me-2"></i>Inventory Management</a></li>
                 </ul>
             </div>
 
@@ -103,7 +148,7 @@
                 </form>
 <a href="#" class="btn btn-primary add-dish-btn"
    data-bs-toggle="modal"
-   data-bs-target="#addDishModal">Thêm món ăn mới</a>
+   data-bs-target="#addDishModal">Add New Dish</a>
                 <!-- Danh sách món ăn dạng card -->
                 <%
                     List<Dish> dishList = (List<Dish>) request.getAttribute("dishList");
@@ -122,22 +167,22 @@
                                 <a href="#" class="btn btn-warning btn-sm edit-dish-btn"
                                    data-bs-toggle="modal"
                                    data-bs-target="#editDishModal"
-                                   data-dish-id="<%= dish.getDishId()%>">Sửa</a>
+                                   data-dish-id="<%= dish.getDishId()%>">Modify</a>
                                 <form action="deletedish" method="post" style="display:inline;">
                                     <input type="hidden" name="dishId" value="<%= dish.getDishId()%>">
-                                    <button type="submit" class="btn btn-danger btn-sm">Xóa</button>
+                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                                 </form>
                                 <a href="#" class="btn btn-info btn-sm view-dish-btn"
    data-bs-toggle="modal"
    data-bs-target="#dishDetailModal"
-   data-dish-id="<%= dish.getDishId() %>">Chi tiết</a>
+   data-dish-id="<%= dish.getDishId() %>">Detail</a>
                             </div>
                         </div>
                     </div>
                     <% } %>
                 </div>
                 <% } else { %>
-                <p class="text-muted">Không có món ăn nào.</p>
+                <p class="text-muted">No food available.</p>
                 <% }%>
 
                 <!-- Nút thêm món ăn mới -->
@@ -149,15 +194,15 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="editDishModalLabel">Chỉnh sửa món ăn</h5>
+                        <h5 class="modal-title" id="editDishModalLabel">Modify Dish</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <!-- Content will be loaded here via AJAX -->
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                        <button type="button" class="btn btn-primary" id="saveChangesBtn">Lưu thay đổi</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" id="saveChangesBtn">Save Change</button>
                     </div>
                 </div>
             </div>
@@ -218,14 +263,14 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="dishDetailModalLabel">Chi tiết món ăn</h5>
+                <h5 class="modal-title" id="dishDetailModalLabel">Dish Detail</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <!-- Content will be loaded here via AJAX -->
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -257,15 +302,15 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addDishModalLabel">Thêm món ăn mới</h5>
+                <h5 class="modal-title" id="addDishModalLabel">Add New Dish</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <!-- Content will be loaded here via AJAX -->
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                <button type="button" class="btn btn-primary" id="saveNewDishBtn">Thêm</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="saveNewDishBtn">Add</button>
             </div>
         </div>
     </div>
