@@ -183,7 +183,7 @@
                 data: {
                     labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
                     datasets: [{
-                            label: 'Doanh thu (VNĐ)',
+                            label: 'Revenue (VNĐ)',
                             data: [1000000, 1500000, 2000000, 1800000, 2500000, 3000000, 2800000],
                             borderColor: '#4CAF50',
                             backgroundColor: 'rgba(76, 175, 80, 0.2)',
