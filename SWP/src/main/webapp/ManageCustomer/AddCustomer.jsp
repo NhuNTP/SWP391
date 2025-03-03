@@ -11,10 +11,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Customer</title>
-
 </head>
 <body>
-
     <div class="navbar">
         <span class="navbar-brand">Manage Customer</span>
     </div>
@@ -22,20 +20,18 @@
     <div class="container">
         <h2>Add Customer</h2>
         <form action="AddCustomer" method="post">
-            <label for="customerName">Customer Name:</label>
-            <input type="text" id="customerName" name="customerName" required>
+            <label for="CustomerName">Customer Name:</label>
+            <input type="text" id="CustomerName" name="CustomerName" required>
 
-            <label for="customerPhone">Phone:</label>
-            <input type="text" id="customerPhone" name="customerPhone" required>
+            <label for="CustomerPhone">Phone:</label>
+            <input type="text" id="CustomerPhone" name="CustomerPhone" required>
 
-            <label for="numberOfPayment">Number of Payment:</label>
-            <input type="number" id="numberOfPayment" name="numberOfPayment" required>
+            <label for="NumberOfPayment">Number of Payment:</label>
+            <input type="number" id="NumberOfPayment" name="NumberOfPayment" required>
 
             <button type="submit" class="btn-submit">Add</button>
         </form>
         <a href="ViewCustomerList" class="btn-back">Back</a>
     </div>
-
 </body>
 </html>
-
