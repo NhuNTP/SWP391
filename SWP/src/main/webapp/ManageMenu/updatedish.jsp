@@ -36,7 +36,6 @@
         <option value="Insufficient" <%= "Insufficient".equals(dish.getIngredientStatus()) ? "selected" : "" %>>Insufficient</option>
     </select><br><br>
 
-    <input type="submit" value="Update">
 </form>
 
 <% } else { %>

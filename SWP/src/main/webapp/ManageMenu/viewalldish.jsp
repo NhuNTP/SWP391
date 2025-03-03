@@ -7,7 +7,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Quản Lý Món Ăn</title>
+        <title>List of dishes</title>
         <!-- Bootstrap 5 CSS -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
         <!-- Font Awesome Icons -->
@@ -122,7 +122,7 @@
             </div>
 
             <div class="col-md-10 p-4">
-                <h3>Danh sách món ăn</h3>
+                <h3>List of dishes</h3>
 
                 <!-- Thông báo -->
                 <% if (request.getSession().getAttribute("message") != null) {%>
@@ -142,8 +142,8 @@
                 <!-- Thanh tìm kiếm -->
                 <form class="search-bar" method="GET" action="${pageContext.request.contextPath}/viewalldish">
                     <div class="input-group">
-                        <input type="text" name="keyword" class="form-control" placeholder="Tìm kiếm món ăn...">
-                        <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+                        <input type="text" name="keyword" class="form-control" placeholder="Search Dish...">
+                        <button type="submit" class="btn btn-primary">Search</button>
                     </div>
                 </form>
 <a href="#" class="btn btn-primary add-dish-btn"
