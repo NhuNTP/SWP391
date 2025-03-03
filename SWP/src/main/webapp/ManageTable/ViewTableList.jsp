@@ -864,7 +864,7 @@
                 </div>
                 <div>
                     <label for="NumberOfSeats">Number Of Seats</label>
-                    <input type="number" id="NumberOfSeats" name="NumberOfSeats" min="0">
+                    <input type="number" id="NumberOfSeats" name="NumberOfSeats" min="1">
                 </div>
                 <div class="modal-actions">
                     <input type="submit" class="btn btn-primary" name="btnSubmit" value="Create Table"/> <%-- Bootstrap button style --%>
@@ -890,7 +890,7 @@
                     </div>
                     <div>
                         <label for="EditNumberOfSeats">Number Of Seats</label>
-                        <input type="number" id="EditNumberOfSeats" name="NumberOfSeats" value="" min="0" />
+                        <input type="number" id="EditNumberOfSeats" name="NumberOfSeats" value="" min="1" />
                     </div>
                     <div>
                         <label for="EditTableStatus">Table Status</label>
