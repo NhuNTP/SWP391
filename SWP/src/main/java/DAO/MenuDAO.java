@@ -17,8 +17,11 @@ public class MenuDAO {
 
     // Dish operations
     public int addDish(Dish dish) {
-        String sql = "INSERT INTO Dish (DishName, DishType, DishPrice, DishDescription, DishImage) VALUES (?, ?, ?, ?, ?); SELECT SCOPE_IDENTITY();";
-        try (Connection connection = DBContext.getConnection();
+        // Sửa lỗi cú pháp SQL:
+        // - Sửa tên bảng thành "Dishe" (theo tên bảng thực tế trong database)
+        // - Bỏ dấu phẩy thừa trước ")"
+        String sql = "INSERT INTO Dish (DishName, DishType, DishPrice, DishDescription, DishImage, DishStatus, IngredientStatus) VALUES (?, ?, ?, ?, ?, ?, ?); SELECT SCOPE_IDENTITY();";
+        try (Connection connection = DBContext.getConnection(); // Giả sử DBContext.getConnection() trả về một Connection
              PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             preparedStatement.setString(1, dish.getDishName());
@@ -26,18 +29,21 @@ public class MenuDAO {
             preparedStatement.setDouble(3, dish.getDishPrice());
             preparedStatement.setString(4, dish.getDishDescription());
             preparedStatement.setString(5, dish.getDishImage());
+            preparedStatement.setString(6, dish.getDishStatus());
+            preparedStatement.setString(7, dish.getIngredientStatus());
 
             int affectedRows = preparedStatement.executeUpdate();
 
             if (affectedRows == 0) {
+                LOGGER.log(Level.WARNING, "Creating dish failed, no rows affected.");
                 return -1; // Thêm thất bại
             }
 
             try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
                     return generatedKeys.getInt(1); // Trả về ID của món vừa thêm
-                }
-                else {
+                } else {
+                    LOGGER.log(Level.WARNING, "Creating dish failed, no ID obtained.");
                     return -1; // Không lấy được ID
                 }
             }
@@ -69,9 +75,9 @@ public class MenuDAO {
     }
 
     // View all dishes
-     public List<Dish> getAllDishes() {
+    public List<Dish> getAllDishes() {
         List<Dish> dishList = new ArrayList<>();
-        String sql = "SELECT DishId, DishName, DishType, DishPrice, DishDescription, DishImage FROM Dish";
+        String sql = "SELECT DishId, DishName, DishType, DishPrice, DishDescription, DishImage, DishStatus, IngredientStatus  FROM Dish";
 
         try (Connection connection = DBContext.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql);
@@ -85,6 +91,9 @@ public class MenuDAO {
                 dish.setDishPrice(resultSet.getDouble("DishPrice"));
                 dish.setDishDescription(resultSet.getString("DishDescription"));
                 dish.setDishImage(resultSet.getString("DishImage"));
+                dish.setDishStatus(resultSet.getString("DishStatus"));
+                dish.setIngredientStatus(resultSet.getString("IngredientStatus"));
+               
                 dishList.add(dish);
             }
 
@@ -94,6 +103,7 @@ public class MenuDAO {
         }
         return dishList;
     }
+
     private boolean deleteDishInventory(int dishId) {
         String sql = "DELETE FROM Dish_Inventory WHERE DishId = ?";
         try (Connection connection = DBContext.getConnection();
@@ -108,60 +118,27 @@ public class MenuDAO {
             return false;
         }
     }
+
     // Delete a dish
-    public boolean deleteDish(int dishId) {
-        Connection connection = null;
-        PreparedStatement preparedStatementDish = null;
-        try {
-            connection = DBContext.getConnection();
-            connection.setAutoCommit(false); // Start transaction
+     public boolean deleteDish(int dishId) {
+        String sql = "DELETE FROM Dish WHERE DishId = ?";
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
-            // Delete Dish_Inventory records first
-            if (!deleteDishInventory(dishId)) {
-                connection.rollback();
-                return false;
-            }
+            preparedStatement.setInt(1, dishId);
 
-            // Then, delete the Dish record
-            String sqlDish = "DELETE FROM Dish WHERE DishId = ?";
-            preparedStatementDish = connection.prepareStatement(sqlDish);
-            preparedStatementDish.setInt(1, dishId);
-            int affectedRowsDish = preparedStatementDish.executeUpdate();
-
-            if (affectedRowsDish > 0) {
-                connection.commit();
-                return true;
-            } else {
-                connection.rollback();
-                return false;
-            }
+            int affectedRows = preparedStatement.executeUpdate();
+            return affectedRows > 0;
 
         } catch (SQLException | ClassNotFoundException e) {
-            LOGGER.log(Level.SEVERE, "Error deleting dish and dish inventory", e);
-            if (connection != null) {
-                try {
-                    connection.rollback();
-                } catch (SQLException ex) {
-                    LOGGER.log(Level.SEVERE, "Error rolling back transaction", ex);
-                }
-            }
+            LOGGER.log(Level.SEVERE, "Error deleting dish with ID: " + dishId, e);
             return false;
-        } finally {
-            try {
-                if (preparedStatementDish != null) preparedStatementDish.close();
-                if (connection != null) {
-                    connection.setAutoCommit(true); // Reset auto-commit
-                    connection.close();
-                }
-            } catch (SQLException e) {
-                LOGGER.log(Level.WARNING, "Error closing resources", e);
-            }
         }
     }
 
     //Update a dish
-     public boolean updateDish(Dish dish) {
-        String sql = "UPDATE Dish SET DishName = ?, DishType = ?, DishPrice = ?, DishDescription = ?, DishImage = ? WHERE DishId = ?";
+    public boolean updateDish(Dish dish) {
+        String sql = "UPDATE Dish SET DishName = ?, DishType = ?, DishPrice = ?, DishDescription = ?, DishImage = ?, DishStatus = ?, IngredientStatus = ? WHERE DishId = ?";
         try (Connection connection = DBContext.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
@@ -170,7 +147,9 @@ public class MenuDAO {
             preparedStatement.setDouble(3, dish.getDishPrice());
             preparedStatement.setString(4, dish.getDishDescription());
             preparedStatement.setString(5, dish.getDishImage());
-            preparedStatement.setInt(6, dish.getDishId()); // Assuming DishId is set in the Dish object
+            preparedStatement.setString(6, dish.getDishStatus());
+            preparedStatement.setString(7, dish.getIngredientStatus());
+          preparedStatement.setInt(8, dish.getDishId());
 
             int affectedRows = preparedStatement.executeUpdate();
             return affectedRows > 0;
@@ -183,7 +162,7 @@ public class MenuDAO {
 
     // Method to get a specific dish by ID
     public Dish getDishById(int dishId) {
-        String sql = "SELECT DishId, DishName, DishType, DishPrice, DishDescription, DishImage FROM Dish WHERE DishId = ?";
+        String sql = "SELECT DishId, DishName, DishType, DishPrice, DishDescription, DishImage, DishStatus, IngredientStatus FROM Dish WHERE DishId = ?";
         try (Connection connection = DBContext.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
@@ -197,6 +176,9 @@ public class MenuDAO {
                     dish.setDishPrice(resultSet.getDouble("DishPrice"));
                     dish.setDishDescription(resultSet.getString("DishDescription"));
                     dish.setDishImage(resultSet.getString("DishImage"));
+                    dish.setDishStatus(resultSet.getString("DishStatus"));
+                    dish.setIngredientStatus(resultSet.getString("IngredientStatus"));
+                   
                     return dish;
                 }
             }
@@ -273,7 +255,7 @@ public class MenuDAO {
             return affectedRows > 0;
 
         } catch (SQLException | ClassNotFoundException e) {
-           LOGGER.log(Level.SEVERE, "Error adding dish inventory", e);
+            LOGGER.log(Level.SEVERE, "Error adding dish inventory", e);
             return false;
         }
     }
@@ -302,5 +284,37 @@ public class MenuDAO {
             return null;
         }
         return null;
+    }
+
+    public List<Dish> searchDishes(String keyword) {
+        List<Dish> dishList = new ArrayList<>();
+        String query = "SELECT * FROM Dish WHERE (DishName LIKE ? OR DishDescription LIKE ?)"; //
+
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            String searchKeyword = "%" + keyword + "%";
+            statement.setString(1, searchKeyword);
+            statement.setString(2, searchKeyword);
+
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Dish dish = new Dish();
+                dish.setDishId(resultSet.getInt("DishID"));
+                dish.setDishName(resultSet.getString("DishName"));
+                dish.setDishType(resultSet.getString("DishType"));
+                dish.setDishPrice(resultSet.getDouble("DishPrice"));
+                dish.setDishDescription(resultSet.getString("DishDescription"));
+                dish.setDishImage(resultSet.getString("DishImage"));
+                dish.setDishStatus(resultSet.getString("DishStatus"));
+                dish.setIngredientStatus(resultSet.getString("IngredientStatus"));
+              
+                dishList.add(dish);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return dishList;
     }
 }

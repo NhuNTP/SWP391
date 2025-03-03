@@ -158,6 +158,18 @@
         <label for="dishImage">Image:</label>
         <input type="file" id="dishImage" name="dishImage"><br><br>
 
+        <label for="dishStatus">Dish Status:</label>
+        <select id="dishStatus" name="dishStatus">
+            <option value="Available">Available</option>
+            <option value="Unavailable">Unavailable</option>
+        </select><br><br>
+
+        <label for="ingredientStatus">Ingredient Status:</label>
+        <select id="ingredientStatus" name="ingredientStatus">
+            <option value="Sufficient">Sufficient</option>
+            <option value="Insufficient">Insufficient</option>
+        </select><br><br>
+
         <h2>Ingredients</h2>
         <%
             List<Inventory> inventoryList = (List<Inventory>) request.getAttribute("inventoryList");
@@ -175,7 +187,6 @@
         %>
         <br>
 
-        <input type="submit" value="Add Dish">
     </form>
 </body>
 </html>

@@ -5,7 +5,6 @@ import Model.Dish;
 import Model.DishInventory;
 import Model.Inventory;
 import jakarta.servlet.RequestDispatcher;
-import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -13,7 +12,10 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
+
 import java.io.File;
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
@@ -21,7 +23,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
- *
  * @author LxP
  */
 @WebServlet("/addnewdish")
@@ -38,16 +39,15 @@ public class AddNewDishController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        List<Inventory> inventoryList = menuDAO.getAllInventory(); // Call without try-catch
+        response.setContentType("text/html;charset=UTF-8");
 
-        if (inventoryList != null) {
+        List<Inventory> inventoryList = menuDAO.getAllInventory();
+        if (inventoryList != null && !inventoryList.isEmpty()) {
             request.setAttribute("inventoryList", inventoryList);
             RequestDispatcher dispatcher = request.getRequestDispatcher("ManageMenu/addnewdish.jsp");
             dispatcher.forward(request, response);
         } else {
-            request.setAttribute("errorMessage", "Error retrieving inventory. See server logs.");
-            RequestDispatcher dispatcher = request.getRequestDispatcher("error.jsp");
-            dispatcher.forward(request, response);
+            response.getWriter().write("<p class='alert alert-danger'>No inventory items found or error retrieving inventory. See server logs.</p>");
         }
     }
 
@@ -55,21 +55,32 @@ public class AddNewDishController extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        response.setContentType("text/html;charset=UTF-8");
+
         String dishName = request.getParameter("dishName");
         String dishType = request.getParameter("dishType");
-        double dishPrice = Double.parseDouble(request.getParameter("dishPrice"));
+        String dishPriceStr = request.getParameter("dishPrice"); // Get as String first
         String dishDescription = request.getParameter("dishDescription");
+        String dishStatus = request.getParameter("dishStatus"); // Get dish status from form
+        String ingredientStatus = request.getParameter("ingredientStatus"); // Get ingredient status from form
+
+        double dishPrice;
+        try {
+            dishPrice = Double.parseDouble(dishPriceStr);
+        } catch (NumberFormatException e) {
+            response.getWriter().write("<p class='alert alert-danger'>Invalid dish price format. Please enter a valid number.</p>");
+            return;
+        }
 
         // Check if dish name exists
         boolean dishNameExists = menuDAO.dishNameExists(dishName);
         if (dishNameExists) {
-            request.getSession().setAttribute("errorMessage", "Dish name already exists. Please choose a different name.");  //Using seesion to pass message to avoid null atribute message
-            response.sendRedirect("addnewdish");
+            response.getWriter().write("<p class='alert alert-danger'>Dish name already exists. Please choose a different name.</p>");
             return; // Stop processing if dish name exists
         }
 
         // Xử lý upload ảnh
-        String uploadPath = getServletContext().getRealPath("") + File.separator + UPLOAD_DIRECTORY;  // Đường dẫn tuyệt đối đến thư mục
+        String uploadPath = getServletContext().getRealPath("") + File.separator + UPLOAD_DIRECTORY;
         File uploadDir = new File(uploadPath);
         if (!uploadDir.exists()) {
             uploadDir.mkdir();
@@ -84,14 +95,21 @@ public class AddNewDishController extends HttpServlet {
                 filePart.write(uploadPath + File.separator + fileName); // Lưu file lên server
             }
         } catch (Exception e) {
-            request.getSession().setAttribute("errorMessage", "Error uploading image: " + e.getMessage()); //Using seesion to pass message to avoid null atribute message
-            response.sendRedirect("addnewdish");
+            response.getWriter().write("<p class='alert alert-danger'>Error uploading image: " + e.getMessage() + "</p>");
             return;
         }
 
-        Dish dish = new Dish(dishName, dishType, dishPrice, dishDescription, dishImage);
-        int newDishId = menuDAO.addDish(dish); // Call without try-catch
+        Dish dish = new Dish(); // Use the no-argument constructor and set properties
+        dish.setDishName(dishName);
+        dish.setDishType(dishType);
+        dish.setDishPrice(dishPrice);
+        dish.setDishDescription(dishDescription);
+        dish.setDishImage(dishImage);
+        dish.setDishStatus(dishStatus);
+        dish.setIngredientStatus(ingredientStatus);
 
+        int newDishId;
+        newDishId = menuDAO.addDish(dish);
         if (newDishId > 0) {
             // Lấy danh sách các nguyên liệu đã chọn
             String[] itemIds = request.getParameterValues("itemId");
@@ -102,10 +120,10 @@ public class AddNewDishController extends HttpServlet {
 
                 // Lọc ra các itemId và quantityUsed hợp lệ
                 List<Integer> validItemIds = Arrays.stream(itemIds)
-                    .map(Integer::parseInt)
-                    .collect(Collectors.toList());
+                        .map(Integer::parseInt)
+                        .collect(Collectors.toList());
 
-                 for (Integer itemId : validItemIds) {
+                for (Integer itemId : validItemIds) {
                     try {
                         // Tìm quantity tương ứng với itemId
                         String quantityParam = request.getParameter("quantityUsed" + itemId);
@@ -122,7 +140,7 @@ public class AddNewDishController extends HttpServlet {
 
                         if (!menuDAO.addDishInventory(dishInventory)) {
                             LOGGER.log(Level.SEVERE, "Failed to add DishInventory for dishId: " + newDishId + ", itemId: " + itemId);
-                            request.getSession().setAttribute("errorMessage", "Error adding ingredient to dish. See server logs."); //Using seesion to pass message to avoid null atribute message
+                            response.getWriter().write("<p class='alert alert-danger'>Error adding ingredient to dish. See server logs.</p>");
                             hasError = true;
                             break;
                         }
@@ -130,23 +148,21 @@ public class AddNewDishController extends HttpServlet {
                     } catch (NumberFormatException e) {
                         // Xử lý lỗi nếu dữ liệu không hợp lệ
                         e.printStackTrace();
-                        request.getSession().setAttribute("errorMessage", "Invalid quantity for an ingredient."); //Using seesion to pass message to avoid null atribute message
+                        response.getWriter().write("<p class='alert alert-danger'>Invalid quantity for an ingredient.</p>");
                         hasError = true;
                         break; // Thoát khỏi vòng lặp nếu có lỗi
                     }
                 }
-                if (!hasError){
-                    request.getSession().setAttribute("message", "Dish added successfully!"); //Using seesion to pass message to avoid null atribute message
+                if (!hasError) {
+                    response.getWriter().write("<p class='alert alert-success'>Dish added successfully!</p>");
                 }
 
-            }
-            else{
-                request.getSession().setAttribute("message", "Dish added successfully but there are no ingredients added!"); //Using seesion to pass message to avoid null atribute message
+            } else {
+                response.getWriter().write("<p class='alert alert-success'>Dish added successfully but there are no ingredients added!</p>");
             }
 
         } else {
-            request.getSession().setAttribute("errorMessage", "Failed to add dish. See server logs."); //Using seesion to pass message to avoid null atribute message
+            response.getWriter().write("<p class='alert alert-danger'>Failed to add dish. See server logs.</p>");
         }
-        response.sendRedirect("viewalldish"); // Redirect to viewalldishes after processing
     }
 }

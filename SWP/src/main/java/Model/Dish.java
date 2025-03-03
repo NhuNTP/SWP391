@@ -1,77 +1,102 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package Model;
 
-/**
- *
- * @author LxP
- */
 public class Dish {
-    private int DishId;
-    private String DishName;
-    private String DishType;
-    private double DishPrice;
-    private String DishDescription;
-    private String DishImage;
+    // Các trường tương ứng với các cột trong bảng Dish
+    private int DishId; // Tương ứng với cột DishId
+    private String DishName; // Tương ứng với cột DishName
+    private String DishType; // Tương ứng với cột DishType
+    private double DishPrice; // Tương ứng với cột DishPrice
+    private String DishDescription; // Tương ứng với cột DishDescription
+    private String DishImage; // Tương ứng với cột DishImage
+    private String DishStatus; // Tương ứng với cột DishStatus
+    private String IngredientStatus; // Tương ứng với cột IngredientStatus
+    private boolean isDeleted; // Tương ứng với cột IsDeleted
 
     public Dish() {
     }
 
-    public Dish(String dishName, String dishType, double dishPrice, String dishDescription, String dishImage) {
-        this.DishName = dishName;
-        this.DishType = dishType;
-        this.DishPrice = dishPrice;
-        this.DishDescription = dishDescription;
-        this.DishImage = dishImage;
+    public Dish(int DishId, String DishName, String DishType, double DishPrice, String DishDescription, String DishImage, String DishStatus, String IngredientStatus, boolean isDeleted) {
+        this.DishId = DishId;
+        this.DishName = DishName;
+        this.DishType = DishType;
+        this.DishPrice = DishPrice;
+        this.DishDescription = DishDescription;
+        this.DishImage = DishImage;
+        this.DishStatus = DishStatus;
+        this.IngredientStatus = IngredientStatus;
+        this.isDeleted = isDeleted;
     }
+
 
     public int getDishId() {
         return DishId;
     }
 
-    public void setDishId(int dishId) {
-        this.DishId = dishId;
+    public void setDishId(int DishId) {
+        this.DishId = DishId;
     }
 
     public String getDishName() {
         return DishName;
     }
 
-    public void setDishName(String dishName) {
-        this.DishName = dishName;
+    public void setDishName(String DishName) {
+        this.DishName = DishName;
     }
 
     public String getDishType() {
         return DishType;
     }
 
-    public void setDishType(String dishType) {
-        this.DishType = dishType;
+    public void setDishType(String DishType) {
+        this.DishType = DishType;
     }
 
     public double getDishPrice() {
         return DishPrice;
     }
 
-    public void setDishPrice(double dishPrice) {
-        this.DishPrice = dishPrice;
+    public void setDishPrice(double DishPrice) {
+        this.DishPrice = DishPrice;
     }
 
     public String getDishDescription() {
         return DishDescription;
     }
 
-    public void setDishDescription(String dishDescription) {
-        this.DishDescription = dishDescription;
+    public void setDishDescription(String DishDescription) {
+        this.DishDescription = DishDescription;
     }
 
     public String getDishImage() {
         return DishImage;
     }
 
-    public void setDishImage(String dishImage) {
-        this.DishImage = dishImage;
+    public void setDishImage(String DishImage) {
+        this.DishImage = DishImage;
+    }
+
+    public String getDishStatus() {
+        return DishStatus;
+    }
+
+    public void setDishStatus(String DishStatus) {
+        this.DishStatus = DishStatus;
+    }
+
+    public String getIngredientStatus() {
+        return IngredientStatus;
+    }
+
+    public void setIngredientStatus(String IngredientStatus) {
+        this.IngredientStatus = IngredientStatus;
+    }
+
+    public boolean isDeleted() {
+        return isDeleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        isDeleted = deleted;
     }
 }

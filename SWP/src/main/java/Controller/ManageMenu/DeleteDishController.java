@@ -15,29 +15,31 @@ import java.util.logging.Logger;
 public class DeleteDishController extends HttpServlet {
 
     private final MenuDAO menuDAO = new MenuDAO();
+    private static final Logger LOGGER = Logger.getLogger(DeleteDishController.class.getName());
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        response.setContentType("text/html;charset=UTF-8");
+
         try {
-            int dishId = Integer.parseInt(request.getParameter("dishId")); // Get dish ID from the request
+            int dishId = Integer.parseInt(request.getParameter("dishId"));
+
             boolean isDeleted = menuDAO.deleteDish(dishId);
 
             if (isDeleted) {
-                // Optionally, set a success message
-                request.getSession().setAttribute("message", "Dish deleted successfully!");
+                response.getWriter().write("<p class='alert alert-success'>Dish deleted successfully!</p>");
             } else {
-                // Optionally, set an error message
-                request.getSession().setAttribute("errorMessage", "Failed to delete dish.");
+                response.getWriter().write("<p class='alert alert-danger'>Failed to delete dish. See server logs.</p>");
             }
 
         } catch (NumberFormatException e) {
-            // Handle invalid dishId (not an integer)
-            request.getSession().setAttribute("errorMessage", "Invalid Dish ID.");
-            Logger.getLogger(DeleteDishController.class.getName()).log(Level.SEVERE, null, e);
+            response.getWriter().write("<p class='alert alert-danger'>Invalid Dish ID.</p>");
+            LOGGER.log(Level.SEVERE, "Invalid dish ID format", e);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "An unexpected error occurred", e);
+            response.getWriter().write("<p class='alert alert-danger'>An unexpected error occurred.</p>");
         }
-
-        response.sendRedirect("viewalldish"); // Redirect back to the view all dishes page
     }
 }
