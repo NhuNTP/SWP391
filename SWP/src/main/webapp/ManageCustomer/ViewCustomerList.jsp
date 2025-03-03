@@ -43,6 +43,40 @@
             document.getElementById("editNumberOfPayment").value = numberOfPayments;
             openModal("editCustomerModal");
         }
+
+         function searchCustomers() {
+             let searchName = document.getElementById("searchInput").value;
+               filterTable();
+        }
+          function validateNumber(inputField, fieldName) {
+             const value = inputField.value.trim();
+             if (!/^\d+$/.test(value) || parseInt(value) <= 0) {
+                 alert("Please enter a valid positive integer for " + fieldName + ".");
+                 inputField.value = ''; // Clear the invalid input
+                 inputField.focus();
+                 return false;
+             }
+             return true;
+         }
+            function validateCreateForm() {
+                const customerPhone = document.getElementById("createCustomerPhone");
+                const numberOfPayment = document.getElementById("createNumberOfPayment");
+
+                if (!validateNumber(customerPhone, "Customer Phone") || !validateNumber(numberOfPayment, "Number of Payments")) {
+                    return false;
+                }
+                return true;
+            }
+
+            function validateEditForm() {
+                const customerPhone = document.getElementById("editCustomerPhone");
+                const numberOfPayment = document.getElementById("editNumberOfPayment");
+
+                if (!validateNumber(customerPhone, "Customer Phone") || !validateNumber(numberOfPayment, "Number of Payments")) {
+                    return false;
+                }
+                return true;
+            }
     </script>
     <style>
         /* Existing styles... */
@@ -310,7 +344,7 @@
             margin-bottom: 10px;
         }
 
-        .mobile-menu-button {
+        .mobile-menu-button span {
             display: none;
             flex-direction: column;
             justify-content: space-around;
@@ -348,12 +382,8 @@
             align-items: flex-start;
         }
 
-        .main-nav.mobile-open .main-menu, .main-nav.mobile-open .right-menu {
-            flex-direction: column;
-            width: 100%;
-        }
-
-        .main-nav.mobile-open .main-menu > li > a, .main-nav.mobile-open .right-menu li a {
+        .main-nav.mobile-open .main-menu > li > a {
+            display: block;
             padding: 15px 20px;
             border-bottom: 1px solid #eee;
             text-align: left;
@@ -425,7 +455,7 @@
 
             .content-area {
                 border: none;
-                padding: 0;
+                padding: 20px;
             }
 
             .content-header {
@@ -482,13 +512,6 @@
             cursor: pointer;
         }
 
-        .close-button:hover,
-        .close-button:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
         /* Style form labels */
         .modal-form-container label {
             display: block;
@@ -515,6 +538,7 @@
             margin-top: 20px;
         }
 
+        /* Style to make the action buttons look better */
         .modal-actions button,
         .modal-actions input[type="submit"] {
             padding: 12px 20px;
@@ -524,11 +548,11 @@
             cursor: pointer;
             font-size: 16px;
             color: white;
-            background-color: #007bff;
+            background-color: #007bff;  /* Blue color */
         }
 
         .modal-actions button.close-button {
-            background-color: #6c757d;
+            background-color: #6c757d;  /* Grey Color */
         }
 
         .modal-actions button:hover,
@@ -536,14 +560,6 @@
             opacity: 0.8;
         }
 
-        .card-stats {
-            background: linear-gradient(to right, #4CAF50, #81C784);
-            color: white;
-        }
-
-        .card-stats i {
-            font-size: 2rem;
-        }
 
         /* Custom styles for table buttons */
         .btn-edit {
@@ -558,11 +574,11 @@
         }
 
         .btn-edit:hover {
-            background-color: #0056b3;
+            background-color: #0056b3; /* Darker blue on hover */
         }
 
         .btn-delete {
-            background-color: #dc3545;
+            background-color: #dc3545; /* Red color */
             color: white;
             border: none;
             padding: 8px 12px;
@@ -570,12 +586,13 @@
             cursor: pointer;
             text-decoration: none;
             display: inline-block;
-            margin-left: 5px;
+            margin-left: 5px; /* A bit of space between buttons */
         }
 
         .btn-delete:hover {
-            background-color: #c82333;
+            background-color: #c82333;  /* Darker red on hover */
         }
+
 
         /* Basic table styling for better look */
         .employee-grid table {
@@ -596,15 +613,15 @@
         }
 
         .employee-grid tbody tr:nth-child(even) {
-            background-color: #f9f9f9;
+            background-color: #f9f9f9;  /* Optional: Even row highlight */
         }
 
         .employee-grid tbody tr:hover {
-            background-color: #f0f0f0;
+            background-color: #f0f0f0;  /* Optional: Hover effect */
         }
 
         .sidebar .nav-link {
-            font-size: 1rem;
+            font-size: 1rem; /* Hoặc 16px, tùy vào AdminDashboard.jsp */
         }
 
         .sidebar h4 {
@@ -612,7 +629,36 @@
         }
 
         .table-bordered {
-            border-radius: 20px;
+            border-radius: 20px; /* Bo tròn viền ngoài của bảng */
+        }
+
+        /* No data message when no data is found */
+        .no-data {
+            text-align: center;
+            padding: 50px 0;
+            color: #777;
+        }
+
+        .no-data i {
+            font-size: 2em;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+
+        /* search-filter section */
+        .search-filter {
+            display: flex;
+            align-items: center;
+            gap: 10px;  /* Space between search box and button */
+            flex-wrap: wrap; /* For responsiveness */
+        }
+
+        .search-bar input {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            width: 200px; /* Adjust as needed */
         }
 
     </style>
@@ -637,96 +683,75 @@
 
     <!-- Main Content -->
     <div class="col-md-10 bg-white p-3">
-        <!-- Navbar -->
+        <!-- Content Header -->
         <div class="text-left mb-4">
-            <h4>Customer Management</h4>
-        </div>
-
-        <%-- Display error message --%>
-        <%
-            String errorMessage = (String) request.getAttribute("errorMessage");
-            if (errorMessage != null) {
-        %>
-        <div class="alert alert-danger"><%= errorMessage%></div>
-        <%
-            }
-        %>
-
+                            <h4>Table Management</h4>
+                        </div>
         <div class="content-header">
             <div class="search-filter">
-                <form method="get" action="ViewCustomerList">
-                    <div class="search-bar">
-                        <input type="text" id="searchInput" name="searchName" placeholder="Search by Name">
-                    </div>
-                </form>
+                <div class="search-bar">
+                    <input type="text" id="searchInput" placeholder="Search by Name" onkeyup="filterTable()">
+                </div>
             </div>
             <div class="header-buttons">
-                <button class="btn btn-primary" onclick="openModal('createCustomerModal')"><i class="far fa-plus"></i> Customer</button>
+                <button class="btn btn-primary" onclick="openModal('createCustomerModal')"><i class="fas fa-plus"></i> Customer</button>
             </div>
         </div>
+
+        <!-- Customer Table -->
         <div class = "employee-grid">
-        <table class="table table-striped table-bordered table-hover">
-            <thead>
-                <tr>
-                    <th>No.</th>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Phone</th>
-                    <th>Payments</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <%
-                    List<Customer> customers = (List<Customer>) request.getAttribute("customerList");
-                    if (customers != null) {
-                        int counter = 1;
-                        String searchName = request.getParameter("searchName"); // Get search parameter
-                        if (searchName == null) {
-                            searchName = ""; // Default to empty string if null
-                        }
-                        searchName = searchName.toLowerCase(); // Make search case-insensitive
-                        for (Customer customer : customers) {
-                            if (customer.getCustomerName().toLowerCase().contains(searchName)) { // Perform search
-                %>
-                <tr>
-                    <td><%= counter++%></td>
-                    <td><%= customer.getCustomerId()%></td>
-                    <td><%= customer.getCustomerName()%></td>
-                    <td><%= customer.getCustomerPhone()%></td>
-                    <td><%= customer.getNumberOfPayment()%></td>
-                    <td>
-                        <button class="btn btn-primary btn-sm"
-                                data-customerid="<%= customer.getCustomerId()%>"
-                                data-customername="<%= customer.getCustomerName()%>"
-                                data-customerphone="<%= customer.getCustomerPhone()%>"
-                                data-numberofpayment="<%= customer.getNumberOfPayment()%>"
-                                onclick="openEditModal(this)">
-                            <i class="fas fa-edit"></i> Edit
-                        </button>
-                        <button class="btn btn-danger btn-sm" onclick="confirmDelete('<%= customer.getCustomerId()%>', '<%= customer.getCustomerName()%>')">
-                            <i class="fas fa-trash"></i> Delete
-                        </button>
-                    </td>
-                </tr>
-                <%
+            <table class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>No.</th>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Payments</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <%
+                        List<Customer> customers = (List<Customer>) request.getAttribute("customerList");
+                        if (customers == null || customers.isEmpty()) {
+                    %>
+                    <tr>
+                        <td colspan="6" class="no-data">
+                            <i class="fas fa-exclamation-triangle"></i>   No customers found.
+                        </td>
+                    </tr>
+                    <%
+                        } else {
+                            int counter = 1;
+                            for (Customer customer : customers) {
+                    %>
+                    <tr>
+                        <td><%= counter++%></td>
+                        <td><%= customer.getCustomerId()%></td>
+                        <td><%= customer.getCustomerName()%></td>
+                        <td><%= customer.getCustomerPhone()%></td>
+                        <td><%= customer.getNumberOfPayment()%></td>
+                        <td>
+                            <button class="btn btn-primary btn-sm"
+                                    data-customerid="<%= customer.getCustomerId()%>"
+                                    data-customername="<%= customer.getCustomerName()%>"
+                                    data-customerphone="<%= customer.getCustomerPhone()%>"
+                                    data-numberofpayment="<%= customer.getNumberOfPayment()%>"
+                                    onclick="openEditModal(this)">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="confirmDelete('<%= customer.getCustomerId()%>', '<%= customer.getCustomerName()%>')">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                    <%
                             }
                         }
-                    } else {
-                %>
-                <tr>
-                    <td colspan="5">
-                        <div class="no-data">
-                            <i class="fal fa-user"></i>
-                            <span>
-                                No customers found.
-                            </span>
-                        </div>
-                    </td>
-                </tr>
-                <% }%>
-            </tbody>
-        </table>
+                    %>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -743,11 +768,11 @@
             </div>
             <div>
                 <label>Phone</label>
-                <input type="text" name="CustomerPhone" required>
+                <input type="text" name="CustomerPhone" required min="0">
             </div>
             <div>
                 <label>Number of Payments</label>
-                <input type="number" name="NumberOfPayment" required>
+                <input type="number" name="NumberOfPayment" required min="0">
             </div>
             <div class="modal-actions">
                 <input type="submit" value="Create" class="btn btn-primary"/>
@@ -769,11 +794,11 @@
             </div>
             <div>
                 <label>Phone</label>
-                <input type="text" id="editCustomerPhone" name="CustomerPhone" required>
+                <input type="text" id="editCustomerPhone" name="CustomerPhone" required min="0">
             </div>
             <div>
                 <label>Number of Payments</label>
-                <input type="number" id="editNumberOfPayment" name="NumberOfPayment" required>
+                <input type="number" id="editNumberOfPayment" name="NumberOfPayment" required min="0">
             </div>
             <div class="modal-actions">
                  <input type="submit" value="Update" class="btn btn-primary"/>
@@ -839,9 +864,45 @@
             }
         }
     });
-    
-</script>
-        <script>
+             function validateCreateForm() {
+               const phoneInput = document.querySelector('#createCustomerModal input[name="CustomerPhone"]');
+                 const paymentInput = document.querySelector('#createCustomerModal input[name="NumberOfPayment"]');
+
+                 if (!/^\d+$/.test(phoneInput.value) || parseInt(phoneInput.value) <= 0) {
+                     alert("Phone number must be a positive integer.");
+                     phoneInput.focus();
+                     return false;
+                 }
+                 if (!/^\d+$/.test(paymentInput.value) || parseInt(paymentInput.value) <= 0) {
+                     alert("Number of Payments must be a positive integer.");
+                     paymentInput.focus();
+                     return false;
+                 }
+
+                 return true;
+             }
+
+
+             function validateEditForm() {
+                 const phoneInput = document.querySelector('#editCustomerModal input[name="CustomerPhone"]');
+                 const paymentInput = document.querySelector('#editCustomerModal input[name="NumberOfPayment"]');
+
+                 if (!/^\d+$/.test(phoneInput.value) || parseInt(phoneInput.value) <= 0) {
+                     alert("Phone number must be a positive integer.");
+                     phoneInput.focus();
+                     return false;
+                 }
+
+                 if (!/^\d+$/.test(paymentInput.value) || parseInt(paymentInput.value) <= 0) {
+                     alert("Number of Payments must be a positive integer.");
+                     paymentInput.focus();
+                     return false;
+                 }
+
+                 return true;
+             }
+        </script>
+                <script>
             document.addEventListener('DOMContentLoaded', function () {
 
 
@@ -851,33 +912,36 @@
 
             const searchInput = document.getElementById('searchInput');
 
-
-
             function filterTable() {
                 const searchText = searchInput.value.toLowerCase();
-
+                 const table = document.querySelector('.employee-grid table tbody');
+                const rows = table.querySelectorAll('tr');
+                let hasResults = false; // Flag to check if there are any matching rows
 
 
                 rows.forEach(row => {
-                    const id = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
-                    const name = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-                    const phone = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
-                    const payment = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
+                    const name = row.querySelector('td:nth-child(3)').textContent.toLowerCase(); //Correct Name column, not second one
+                    if (name.includes(searchText)) {
+                        row.style.display = '';  // Show the row
+                                            hasResults = true;
 
-                    let matchesSearch = id.includes(searchText) || name.includes(searchText) || phone.includes(searchText) || payment.includes(searchText);
-
-                    if (matchesSearch) {
-                        row.style.display = '';
                     } else {
-                        row.style.display = 'none';
+                        row.style.display = 'none'; // Hide the row
                     }
                 });
+                            const noDataRow = document.querySelector('.employee-grid table tbody .no-data-row');
+                if (noDataRow) {
+                    noDataRow.remove();
+                }
+
+               if (!hasResults) {
+                const newRow = document.createElement('tr');
+                newRow.classList.add('no-data-row');
+                newRow.innerHTML = '<td colspan="6" class="no-data"><i class="fas fa-exclamation-triangle"></i>  Type in name to search!</td>';
+                table.appendChild(newRow);
             }
-
-            searchInput.addEventListener('keyup', filterTable); // Gọi hàm filterTable khi gõ vào ô tìm kiếm
-
-
+            }
+            searchInput.addEventListener('keyup', filterTable); // Attach the filterTable function to the keyup event
         </script>
-
     </body>
 </html>
