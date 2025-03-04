@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import DB.DBContext;
+import java.sql.Connection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -45,6 +46,73 @@ public class CouponDAO extends DB.DBContext {
             e.printStackTrace(); // In stack trace để debug dễ hơn
         }
         return null; // Trả về null khi có lỗi hoặc không có Coupon nào
+    }
+
+    public String generateNextCouponId() throws SQLException, ClassNotFoundException {
+        String lastCouponId = getLastCouponIdFromDB();
+        int nextNumber = 1; // Số bắt đầu nếu chưa có coupon nào
+
+        if (lastCouponId != null && !lastCouponId.isEmpty()) {
+            try {
+                String numberPart = lastCouponId.substring(2); // Loại bỏ "CP"
+                nextNumber = Integer.parseInt(numberPart) + 1;
+            } catch (NumberFormatException e) {
+                // Xử lý lỗi nếu phần số không đúng định dạng (ví dụ: log lỗi hoặc ném exception)
+                System.err.println("Lỗi định dạng CouponId cuối cùng: " + lastCouponId);
+                // Trong trường hợp lỗi định dạng, vẫn nên tạo mã mới bắt đầu từ CP001 để đảm bảo tiếp tục hoạt động
+                return "CP001";
+            }
+        }
+
+        // Định dạng số thành chuỗi 3 chữ số (ví dụ: 1 -> "001", 10 -> "010", 100 -> "100")
+        String numberStr = String.format("%03d", nextNumber);
+        return "CO" + numberStr; // **Sửa thành "CP" thay vì "CO"**
+    }
+
+    private String getLastCouponIdFromDB() throws SQLException, ClassNotFoundException {
+        String lastCouponId = null;
+        // **Sửa câu SQL cho đúng tên bảng và cột, và dùng TOP 1 cho SQL Server**
+        String sql = "SELECT TOP 1 CouponId FROM [db1].[dbo].[Coupon] ORDER BY CouponId DESC";
+        Connection connection = null; // Khai báo connection để quản lý đóng kết nối trong finally
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+
+        try {
+            connection = getConnection(); // Gọi phương thức getConnection() để lấy Connection - **Cần đảm bảo getConnection() được implement đúng**
+            preparedStatement = connection.prepareStatement(sql);
+            resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                lastCouponId = resultSet.getString("CouponId"); // **Sửa thành "CouponId" cho đúng tên cột**
+            }
+        } catch (SQLException e) {
+            e.printStackTrace(); // In lỗi hoặc xử lý lỗi kết nối database
+            throw e; // Re-throw để servlet xử lý nếu cần
+        } finally {
+            // Đóng resources trong finally block để đảm bảo giải phóng kết nối và resources
+            if (resultSet != null) {
+                try {
+                    resultSet.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (preparedStatement != null) {
+                try {
+                    preparedStatement.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return lastCouponId;
     }
 
     public void addNewCoupon(Coupon coupon) {
