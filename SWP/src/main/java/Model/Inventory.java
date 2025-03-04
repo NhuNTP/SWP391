@@ -9,20 +9,20 @@ package Model;
  * @author LxP
  */
 public class Inventory {
-    private int ItemId;
+
+    private String ItemId;
     private String ItemName;
     private String ItemType;
     private double ItemPrice;
     private int ItemQuantity;
     private String ItemUnit;
     private String ItemDescription;
-    private String ItemImage;
     private int isDeleted;
+
     public Inventory() {
     }
 
-    
-    public Inventory(int ItemId, String ItemName, String ItemType, double ItemPrice, int ItemQuantity, String ItemUnit, String ItemDescription, String ItemImage) {
+    public Inventory(String ItemId, String ItemName, String ItemType, double ItemPrice, int ItemQuantity, String ItemUnit, String ItemDescription, int isDeleted) {
         this.ItemId = ItemId;
         this.ItemName = ItemName;
         this.ItemType = ItemType;
@@ -30,25 +30,24 @@ public class Inventory {
         this.ItemQuantity = ItemQuantity;
         this.ItemUnit = ItemUnit;
         this.ItemDescription = ItemDescription;
-        this.ItemImage = ItemImage;
+        this.isDeleted = isDeleted;
     }
 
-    public Inventory(String ItemName, String ItemType, double ItemPrice, int ItemQuantity, String ItemUnit, String ItemDescription, String ItemImage) {
+    public Inventory(String ItemId, String ItemName, String ItemType, double ItemPrice, int ItemQuantity, String ItemUnit, String ItemDescription) {
+        this.ItemId = ItemId;
         this.ItemName = ItemName;
         this.ItemType = ItemType;
         this.ItemPrice = ItemPrice;
         this.ItemQuantity = ItemQuantity;
         this.ItemUnit = ItemUnit;
         this.ItemDescription = ItemDescription;
-        this.ItemImage = ItemImage;
     }
 
-    
-    public int getItemId() {
+    public String getItemId() {
         return ItemId;
     }
 
-    public void setItemId(int ItemId) {
+    public void setItemId(String ItemId) {
         this.ItemId = ItemId;
     }
 
@@ -100,14 +99,6 @@ public class Inventory {
         this.ItemDescription = ItemDescription;
     }
 
-    public String getItemImage() {
-        return ItemImage;
-    }
-
-    public void setItemImage(String ItemImage) {
-        this.ItemImage = ItemImage;
-    }
-
     public int getIsDeleted() {
         return isDeleted;
     }
@@ -115,6 +106,5 @@ public class Inventory {
     public void setIsDeleted(int isDeleted) {
         this.isDeleted = isDeleted;
     }
-
 
 }

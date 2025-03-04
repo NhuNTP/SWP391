@@ -275,7 +275,7 @@ public class MenuDAO {
 
             while (resultSet.next()) {
                 Inventory inventory = new Inventory();
-                inventory.setItemId(resultSet.getInt("ItemId"));
+               // inventory.setItemId(resultSet.getInt("ItemId"));
                 inventory.setItemName(resultSet.getString("ItemName"));
                 inventory.setItemType(resultSet.getString("ItemType"));
                 inventory.setItemPrice(resultSet.getDouble("ItemPrice"));
@@ -320,7 +320,7 @@ public class MenuDAO {
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 if (resultSet.next()) {
                     Inventory inventory = new Inventory();
-                    inventory.setItemId(resultSet.getInt("ItemId"));
+                  //  inventory.setItemId(resultSet.getInt("ItemId"));
                     inventory.setItemName(resultSet.getString("ItemName"));
                     inventory.setItemType(resultSet.getString("ItemType"));
                     inventory.setItemPrice(resultSet.getDouble("ItemPrice"));
