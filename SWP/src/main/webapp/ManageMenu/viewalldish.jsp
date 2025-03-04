@@ -140,12 +140,44 @@
                 <% } %>
 
                 <!-- Thanh tìm kiếm -->
-                <form class="search-bar" method="GET" action="${pageContext.request.contextPath}/viewalldish">
-                    <div class="input-group">
-                        <input type="text" name="keyword" class="form-control" placeholder="Search Dish...">
-                        <button type="submit" class="btn btn-primary">Search</button>
-                    </div>
-                </form>
+                <!-- Thanh tìm kiếm -->
+<div class="search-bar">
+    <div class="input-group">
+        <input type="text" id="searchInput" class="form-control" placeholder="Search Dish..." onkeyup="searchDishes()">
+    </div>
+</div>
+
+<!-- Khu vực hiển thị kết quả tìm kiếm -->
+<div id="searchResults">
+    <%-- Kết quả tìm kiếm sẽ được chèn vào đây --%>
+</div>
+
+<script>
+    function searchDishes() {
+        var keyword = document.getElementById("searchInput").value;
+
+        // Sử dụng AJAX để gửi yêu cầu đến servlet
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "${pageContext.request.contextPath}/viewalldish?keyword=" + keyword, true);
+
+        xhr.onload = function() {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                // Cập nhật khu vực hiển thị kết quả
+                document.getElementById("searchResults").innerHTML = xhr.responseText;
+            } else {
+                console.error("Request failed with status:", xhr.status);
+                document.getElementById("searchResults").innerHTML = "<p>Error occurred during search.</p>";
+            }
+        };
+
+        xhr.onerror = function() {
+            console.error("Request failed");
+            document.getElementById("searchResults").innerHTML = "<p>Error occurred during search.</p>";
+        };
+
+        xhr.send();
+    }
+</script>
 <a href="#" class="btn btn-primary add-dish-btn"
    data-bs-toggle="modal"
    data-bs-target="#addDishModal">Add New Dish</a>

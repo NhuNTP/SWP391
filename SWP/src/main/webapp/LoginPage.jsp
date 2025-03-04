@@ -1,7 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
 <head>
-    <title>Đăng nhập</title>
+    <title>Login</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -66,13 +66,13 @@
 </head>
 <body>
     <div class="container">
-        <h2>Đăng nhập</h2>
+        <h2>Login</h2>
         <form action="login" method="post">
-            <label for="username">Tên:</label>
+            <label for="username">Name:</label>
             <input type="username" id="username" name="username" required><br>
-            <label for="password">Mật khẩu:</label>
+            <label for="password">Password:</label>
             <input type="password" id="password" name="password" required><br>
-            <button type="submit">Đăng nhập</button>
+            <button type="submit">Login</button>
         </form>
         <% if (request.getAttribute("error") != null) { %>
             <p class="error-message"><%= request.getAttribute("error") %></p>
