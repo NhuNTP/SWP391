@@ -151,8 +151,10 @@ public class AddInventoryItemController extends HttpServlet {
             }
 
             // 5. Thêm vào database
-            Inventory newItem = new Inventory(itemName, itemType, itemPrice, itemQuantity, itemUnit, itemDescription, relativeImagePath);
+            
             InventoryDAO inventoryDAO = new InventoryDAO();
+            String itemID=inventoryDAO.generateNextInventoryId();
+            Inventory newItem = new Inventory(itemID,itemName, itemType, itemPrice, itemQuantity, itemUnit, itemDescription);
             inventoryDAO.addNewInventoryItem(newItem);
 
             // 6. Chuyển hướng
