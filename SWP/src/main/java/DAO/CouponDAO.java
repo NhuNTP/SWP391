@@ -22,16 +22,17 @@ import java.util.logging.Logger;
 public class CouponDAO extends DB.DBContext {
 
     public List<Coupon> getAllCoupon() {
-        String sql = "SELECT couponId, discountAmount, expirationDate, timesUsed FROM Coupon Where isDeleted = 0"; // Liệt kê rõ ràng các cột
+        String sql = "SELECT couponId, discountAmount, expirationDate, timesUsed,description FROM Coupon Where isDeleted = 0"; // Liệt kê rõ ràng các cột
         List<Coupon> coupons = new ArrayList<>();
         try (PreparedStatement st = getConnection().prepareStatement(sql)) {
             try (ResultSet rs = st.executeQuery()) {
                 while (rs.next()) {
                     Coupon coupon = new Coupon( // Tạo đối tượng Coupon với đúng thứ tự tham số
-                            rs.getInt("couponId"),
+                            rs.getString("couponId"),
                             rs.getBigDecimal("discountAmount"),
                             rs.getDate("expirationDate"),
-                            rs.getInt("timesUsed")
+                            rs.getInt("timesUsed"),
+                            rs.getString("description")
                     );
                     coupons.add(coupon);
                 }
@@ -45,13 +46,15 @@ public class CouponDAO extends DB.DBContext {
         }
         return null; // Trả về null khi có lỗi hoặc không có Coupon nào
     }
-    
+
     public void addNewCoupon(Coupon coupon) {
-        String sql = "INSERT INTO Coupon (discountAmount, expirationDate, timesUsed) VALUES (?, ?, ?)"; // Thêm timeUsed vào INSERT và bỏ isUsed
+        String sql = "INSERT INTO Coupon (couponId,discountAmount, expirationDate,description) VALUES (?, ?, ?, ?)"; // Thêm timeUsed vào INSERT và bỏ isUsed
         try (PreparedStatement st = getConnection().prepareStatement(sql)) { // Try-with-resources để tự động đóng PreparedStatement
-            st.setBigDecimal(1, coupon.getDiscountAmount());
-            st.setDate(2, new java.sql.Date(coupon.getExpirationDate().getTime())); // Chuyển java.util.Date sang java.sql.Date
-            st.setInt(3, coupon.getTimesUsed()); // Sử dụng timeUsed
+            st.setString(1, coupon.getCouponId());
+            st.setBigDecimal(2, coupon.getDiscountAmount());
+            st.setDate(3, new java.sql.Date(coupon.getExpirationDate().getTime())); // Chuyển java.util.Date sang java.sql.Date
+
+            st.setString(4, coupon.getDescription());
             int rowsInserted = st.executeUpdate();
             if (rowsInserted > 0) {
                 System.out.println("Thêm mới Coupon thành công!");
@@ -63,13 +66,14 @@ public class CouponDAO extends DB.DBContext {
     }
 
     public void updateCoupon(Coupon coupon) { // Loại bỏ throws Exception không cần thiết, bắt và xử lý bên trong
-        String sql = "UPDATE Coupon SET discountAmount = ?, expirationDate = ?, timesUsed = ? WHERE couponId = ?"; // Sửa thành timeUsed và bỏ isUsed
+        String sql = "UPDATE Coupon SET discountAmount = ?, expirationDate = ?, timesUsed = ?,description=? WHERE couponId = ?"; // Sửa thành timeUsed và bỏ isUsed
         try (PreparedStatement st = getConnection().prepareStatement(sql)) { // Try-with-resources
 
             st.setBigDecimal(1, coupon.getDiscountAmount());
             st.setDate(2, new java.sql.Date(coupon.getExpirationDate().getTime())); // Chuyển java.util.Date sang java.sql.Date
             st.setInt(3, coupon.getTimesUsed()); // Sử dụng timeUsed
-            st.setInt(4, coupon.getCouponId());
+            st.setString(4, coupon.getDescription());
+            st.setString(5, coupon.getCouponId());
 
             int rowsUpdated = st.executeUpdate();
             if (rowsUpdated > 0) {
@@ -84,17 +88,22 @@ public class CouponDAO extends DB.DBContext {
         }
     }
 
-    public int deleteCouponById(int couponId) throws ClassNotFoundException {
-        int count = 0;
+    public void deleteCouponById(String couponId) throws ClassNotFoundException {
+
         try {
             // Modified to update IsDeleted instead of deleting
-             String sql = "UPDATE [Coupon] SET IsDeleted = 1 WHERE couponId=?";
-            PreparedStatement pst = getConnection().prepareStatement(sql);
-            pst.setInt(1, couponId);
-            count = pst.executeUpdate();
+            String sql = "UPDATE [Coupon] SET IsDeleted = 1 WHERE couponId=?";
+            PreparedStatement st = getConnection().prepareStatement(sql);
+            st.setString(1, couponId);
+            int rowsUpdated = st.executeUpdate();
+            if (rowsUpdated > 0) {
+                System.out.println("Delete Success!");
+            } else {
+                System.out.println("Delte Unsuccess.");
+            }
+
         } catch (SQLException ex) {
             Logger.getLogger(CouponDAO.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return count;
     }
 }

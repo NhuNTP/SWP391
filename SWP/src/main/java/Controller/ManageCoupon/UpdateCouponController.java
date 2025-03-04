@@ -81,33 +81,31 @@ public class UpdateCouponController extends HttpServlet {
         String discountAmount_raw = request.getParameter("discountAmount");
         String expirationDate_raw = request.getParameter("expirationDate");
         String timeUsed_raw = request.getParameter("timesUsed");
+        String description_raw = request.getParameter("description");
 
         // 1. Kiểm tra dữ liệu đầu vào (Validation)
         if (couponId_raw == null || couponId_raw.isEmpty()
                 || discountAmount_raw == null || discountAmount_raw.isEmpty()
                 || expirationDate_raw == null || expirationDate_raw.isEmpty()
-                || timeUsed_raw == null || timeUsed_raw.isEmpty()) {
+                || timeUsed_raw == null || timeUsed_raw.isEmpty()
+                || description_raw == null || description_raw.isEmpty()) {
 
             request.setAttribute("error", "Vui lòng điền đầy đủ thông tin Coupon."); // Thông báo lỗi rõ ràng hơn
-            request.getRequestDispatcher("error.jsp").forward(request, response);
             return; // Dừng xử lý tiếp nếu dữ liệu đầu vào không hợp lệ
         }
 
         try {
             // 2. Chuyển đổi kiểu dữ liệu và Parse
-            int couponId = Integer.parseInt(couponId_raw);
 
             BigDecimal discountAmount;
             try {
                 discountAmount = new BigDecimal(discountAmount_raw);
                 if (discountAmount.compareTo(BigDecimal.ZERO) < 0) { // Kiểm tra discountAmount không âm
                     request.setAttribute("error", "Giá trị giảm giá phải là số dương.");
-                    request.getRequestDispatcher("error.jsp").forward(request, response);
                     return;
                 }
             } catch (NumberFormatException e) {
                 request.setAttribute("error", "Giá trị giảm giá không hợp lệ.");
-                request.getRequestDispatcher("error.jsp").forward(request, response);
                 return;
             }
 
@@ -117,7 +115,6 @@ public class UpdateCouponController extends HttpServlet {
                 utilDate = sdf.parse(expirationDate_raw);
             } catch (ParseException e) {
                 request.setAttribute("error", "Định dạng ngày hết hạn không hợp lệ (yyyy-MM-dd).");
-                request.getRequestDispatcher("error.jsp").forward(request, response);
                 return;
             }
             Date sqlDate = new Date(utilDate.getTime()); // Chuyển đổi sang java.sql.Date
@@ -127,17 +124,17 @@ public class UpdateCouponController extends HttpServlet {
                 timeUsed = Integer.parseInt(timeUsed_raw);
                 if (timeUsed < 0) { // Kiểm tra timeUsed không âm
                     request.setAttribute("error", "Số lần sử dụng phải là số không âm.");
-                    request.getRequestDispatcher("error.jsp").forward(request, response);
+                   
                     return;
                 }
             } catch (NumberFormatException e) {
                 request.setAttribute("error", "Số lần sử dụng không hợp lệ.");
-                request.getRequestDispatcher("error.jsp").forward(request, response);
+               
                 return;
             }
 
             // 3. Tạo đối tượng Coupon
-            Coupon updateCoupon = new Coupon(couponId, discountAmount, sqlDate, timeUsed);
+            Coupon updateCoupon = new Coupon(couponId_raw, discountAmount, sqlDate, timeUsed, description_raw);
 
             // 4. Gọi CouponDAO để cập nhật
             CouponDAO upCoupon = new CouponDAO();
@@ -146,13 +143,13 @@ public class UpdateCouponController extends HttpServlet {
             // 5. Chuyển hướng sau khi cập nhật thành công
             response.sendRedirect("ViewCouponController"); // Chuyển hướng đến trang xem danh sách Coupon
 
-        } catch (ServletException | IOException e) { // Bắt lại ServletException và IOException để re-throw
+        } catch (IOException e) { // Bắt lại ServletException và IOException để re-throw
             throw e; // Re-throw để container xử lý
         } catch (Exception e) { // Bắt các Exception khác (ví dụ từ CouponDAO)
             System.err.println("Lỗi trong quá trình xử lý cập nhật Coupon: " + e.getMessage()); // In lỗi chi tiết hơn ra console server
             e.printStackTrace(); // In stack trace để debug
             request.setAttribute("error", "Có lỗi xảy ra khi cập nhật Coupon. Vui lòng kiểm tra lại dữ liệu hoặc thử lại sau."); // Thông báo lỗi chung cho người dùng
-            request.getRequestDispatcher("error.jsp").forward(request, response);
+          
         }
 
     }

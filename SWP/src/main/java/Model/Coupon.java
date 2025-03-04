@@ -13,32 +13,36 @@ import java.sql.Date;
  */
 public class Coupon {
 
-    private int couponId;
+    private String couponId;
     private BigDecimal discountAmount;
     private Date expirationDate;
     private int timesUsed;
     private int isDeleted;
+    private String description;
 
-    public Coupon(int couponId, BigDecimal discountAmount, Date expirationDate, int timeUsed) {
+    public Coupon(String couponId, BigDecimal discountAmount, Date expirationDate, int timesUsed, int isDeleted, String description) {
         this.couponId = couponId;
         this.discountAmount = discountAmount;
         this.expirationDate = expirationDate;
-        this.timesUsed = timeUsed;
+        this.timesUsed = timesUsed;
+        this.isDeleted = isDeleted;
+        this.description = description;
     }
 
-    
-    
-    public Coupon(BigDecimal discountAmount, Date expirationDate, int timeUsed) {
+    public Coupon(String couponId, BigDecimal discountAmount, Date expirationDate, int timesUsed, String description) {
+        this.couponId = couponId;
         this.discountAmount = discountAmount;
         this.expirationDate = expirationDate;
-        this.timesUsed = timeUsed;
+        this.timesUsed = timesUsed;
+        this.description = description;
     }
 
-    public int getCouponId() {
+    
+    public String getCouponId() {
         return couponId;
     }
 
-    public void setCouponId(int couponId) {
+    public void setCouponId(String couponId) {
         this.couponId = couponId;
     }
 
@@ -74,9 +78,13 @@ public class Coupon {
         this.isDeleted = isDeleted;
     }
 
-  
+    public String getDescription() {
+        return description;
+    }
 
-   
- 
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
+    
 }

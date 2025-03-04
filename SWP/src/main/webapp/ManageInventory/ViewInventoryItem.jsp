@@ -120,7 +120,8 @@
             /* CSS Reset and Font */
             body {
                 font-family: 'Roboto', sans-serif;
-                background-color: #f8f9fa;
+                /*background-color: #f8f9fa;*/
+                background-color: #fcfcf7
             }
 
             /* Sidebar Styles */

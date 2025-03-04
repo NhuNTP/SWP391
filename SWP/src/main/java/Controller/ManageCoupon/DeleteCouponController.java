@@ -82,9 +82,9 @@ public class DeleteCouponController extends HttpServlet {
         System.out.println("Giá trị couponId nhận được từ request parameter: " + couponId_raw);
 
         try {
-            int couponId = Integer.parseInt(couponId_raw);
+          
             CouponDAO delCoupon = new CouponDAO();
-            delCoupon.deleteCouponById(couponId);
+            delCoupon.deleteCouponById(couponId_raw);
             response.sendRedirect("ViewCouponController");
         } catch (NumberFormatException e) {
             System.out.println("Invalid empID: " + couponId_raw );
