@@ -1,6 +1,7 @@
 package DAO;
 
 import Model.Inventory;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -134,5 +135,70 @@ public class InventoryDAO extends DB.DBContext {
             Logger.getLogger(InventoryDAO.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
+    }
+    public String generateNextInventoryId() throws SQLException, ClassNotFoundException {
+        String lastInventoryId = getLastInventoryIdFromDB();
+        int nextNumber = 1; // Số bắt đầu nếu chưa có coupon nào
+
+        if (lastInventoryId != null && !lastInventoryId.isEmpty()) {
+            try {
+                String numberPart = lastInventoryId.substring(2); // Loại bỏ "CP"
+                nextNumber = Integer.parseInt(numberPart) + 1;
+            } catch (NumberFormatException e) {
+                // Xử lý lỗi nếu phần số không đúng định dạng (ví dụ: log lỗi hoặc ném exception)
+                System.err.println("Lỗi định dạng CouponId cuối cùng: " + lastInventoryId);
+                // Trong trường hợp lỗi định dạng, vẫn nên tạo mã mới bắt đầu từ CP001 để đảm bảo tiếp tục hoạt động
+                return "000";
+            }
+        }
+
+        // Định dạng số thành chuỗi 3 chữ số (ví dụ: 1 -> "001", 10 -> "010", 100 -> "100")
+        String numberStr = String.format("%03d", nextNumber);
+        return "IN" + numberStr; // **Sửa thành "CP" thay vì "CO"**
+    }
+private String getLastInventoryIdFromDB() throws SQLException, ClassNotFoundException {
+        String lastCouponId = null;
+        // **Sửa câu SQL cho đúng tên bảng và cột, và dùng TOP 1 cho SQL Server**
+        String sql = "SELECT TOP 1 ItemId FROM [db1].[dbo].[Inventory] ORDER BY ItemId DESC";
+        Connection connection = null; // Khai báo connection để quản lý đóng kết nối trong finally
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+
+        try {
+            connection = getConnection(); // Gọi phương thức getConnection() để lấy Connection - **Cần đảm bảo getConnection() được implement đúng**
+            preparedStatement = connection.prepareStatement(sql);
+            resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                lastCouponId = resultSet.getString("ItemId"); // **Sửa thành "CouponId" cho đúng tên cột**
+            }
+        } catch (SQLException e) {
+            e.printStackTrace(); // In lỗi hoặc xử lý lỗi kết nối database
+            throw e; // Re-throw để servlet xử lý nếu cần
+        } finally {
+            // Đóng resources trong finally block để đảm bảo giải phóng kết nối và resources
+            if (resultSet != null) {
+                try {
+                    resultSet.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (preparedStatement != null) {
+                try {
+                    preparedStatement.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return lastCouponId;
     }
 }

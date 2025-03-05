@@ -76,7 +76,9 @@
                 border-radius: 3px;
                 width: 250px;
             }
-
+            .modal-header{
+                background-color: #f7f7f0
+            }
             /* Table Styles */
             .table-responsive {
                 overflow-x: auto;
@@ -105,7 +107,9 @@
                 background-color: #dc3545;
                 margin-left: 5px;
             }
-
+            #couponIdUpdateDisplay{
+                background-color: #fcfcf7
+            }
             .btn-delete:hover {
                 background-color: #c82333;
             }
@@ -255,13 +259,10 @@
                     </div>
                     <div class="modal-body">
                         <form id="addCouponForm">
-                            <div class="mb-3">
-                                <label for="couponId" class="form-label">Coupon ID:</label>
-                                <input type="text" class="form-control" id="couponId" name="couponId" required>
-                            </div>
+                            
                             <div class="mb-3">
                                 <label for="discountAmount" class="form-label">Discount Amount:</label>
-                                <input type="number" class="form-control" id="discountAmount" name="discountAmount" required min="0" step="0.01">
+                                <input type="number" class="form-control" id="discountAmount" name="discountAmount" required min="1" step="0.01">
                                 <small class="text-muted">Enter a non-negative number.</small>
                             </div>
                             <div class="mb-3">
@@ -270,7 +271,7 @@
                             </div>
                             <div class="mb-3">
                                 <label for="description" class="form-label">Description:</label>
-                                <textarea class="form-control" id="description" name="description" rows="2"></textarea>
+                                <textarea class="form-control" id="description" name="description" rows="2" required=""></textarea>
                             </div>
                         </form>
                     </div>
@@ -294,8 +295,8 @@
                         <form id="updateCouponForm">
                             <input type="hidden" id="couponIdUpdate" name="couponId">
                             <div class="mb-3">
-                                <label for="couponIdUpdateDisplay" class="form-label">Coupon ID:</label>
-                                <input type="text" class="form-control" id="couponIdUpdateDisplay" readonly>
+                                <label for="couponIdUpdateDisplay" class="form-label">Coupon ID(Just View):</label>
+                                <input type="text" class="form-control" id="couponIdUpdateDisplay" readonly >
                                 <input type="hidden" id="couponIdUpdate" name="couponId">
                             </div>
                             <div class="mb-3">
@@ -305,7 +306,7 @@
                             </div>
                             <div class="mb-3">
                                 <label for="expirationDateUpdate" class="form-label">Expiration Date:</label>
-                                <input type="date" class="form-control" id="expirationDateUpdate" name="expirationDate" required>
+                                <input type="date" class="form-control" id="expirationDateUpdate" name="expirationDate" >
                             </div>
                             <div class="mb-3">
                                 <label for="timesUsedUpdate" class="form-label">Times Used:</label>
@@ -354,33 +355,48 @@
 
                 // **Xử lý Thêm Coupon**
                 $('#btnAddCoupon').click(function () {
-                    var couponId = $('#couponId').val();
+                    const expirationDateInput = $('#expirationDate')[0];
+                    const form = document.getElementById('addCouponForm');
+                    const expirationDateValue = expirationDateInput.value;
+                    const dateRegex = /^\d{4}-\d{2}-\d{2}$/; // Regex cho yyyy-MM-dd
+                    if (!expirationDateValue) {
+                        expirationDateInput.setCustomValidity('Vui lòng chọn ngày hết hạn.'); // Bắt buộc chọn ngày (required)
+                    } else if (!dateRegex.test(expirationDateValue)) {
+                        expirationDateInput.setCustomValidity('Định dạng ngày hết hạn không hợp lệ. Vui lòng nhập theo định dạng.');
+                    } else {
+                        const dateObj = new Date(expirationDateValue);
+                        if (isNaN(dateObj.getTime())) { // Kiểm tra ngày tháng có hợp lệ không (ví dụ: 2024-02-30 là không hợp lệ)
+                            expirationDateInput.setCustomValidity('Ngày hết hạn không hợp lệ. Vui lòng nhập ngày tháng hợp lệ.');
+                        } else {
+                            expirationDateInput.setCustomValidity(''); // Hợp lệ, xóa thông báo lỗi
+                        }
+                    }
+
+
+                    if (!form.checkValidity()) { // Kiểm tra form có hợp lệ không (bao gồm cả custom validity)
+                        event.preventDefault();
+                        form.reportValidity();
+                        return;
+                    }
+                 
                     var discountAmount = $('#discountAmount').val();
                     var expirationDate = $('#expirationDate').val();
                     var description = $('#description').val();
 
-                    if (!couponId || !discountAmount || !expirationDate) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Validation Error',
-                            text: 'Please fill in all required fields: Coupon ID, Discount Amount, and Expiration Date.'
-                        });
-                        return;
-                    }
 
                     $.ajax({
                         url: 'AddCouponController',
                         type: 'POST',
                         data: {
-                            couponId: couponId,
+                        
                             discountAmount: discountAmount,
                             expirationDate: expirationDate,
                             description: description
                         },
-                        success: function (response) {
+                        success: function () {
                             var addCouponModal = bootstrap.Modal.getInstance(document.getElementById('addCouponModal'));
                             addCouponModal.hide();
-                            reloadTable();
+                            reloadViewCoupon();
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Success!',
@@ -430,7 +446,7 @@
                         success: function (response) {
                             var updateCouponModal = bootstrap.Modal.getInstance(document.getElementById('updateCouponModal'));
                             updateCouponModal.hide();
-                            reloadTable();
+                            reloadViewCoupon();
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Success!',
@@ -439,7 +455,7 @@
                                 showConfirmButton: false
                             });
                         },
-                        error: function (xhr, status, error) {
+                        error: function (error) {
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Error!',
@@ -510,10 +526,10 @@
                 });
             }
 
-            function reloadTable() {
+            function reloadViewCoupon() {
                 $.get('ViewCouponController', function (data) {
-                    var newTableBody = $(data).find('tbody').html();
-                    $('tbody').html(newTableBody);
+                    var newBody = $(data).find('tbody').html();
+                    $('tbody').html(newBody);
                     bindEventHandlers(); // Re-bind sau khi reload
                 });
             }
