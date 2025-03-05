@@ -14,7 +14,7 @@ public class Inventory {
     private String ItemName;
     private String ItemType;
     private double ItemPrice;
-    private int ItemQuantity;
+    private double ItemQuantity;
     private String ItemUnit;
     private String ItemDescription;
     private int isDeleted;
@@ -22,7 +22,7 @@ public class Inventory {
     public Inventory() {
     }
 
-    public Inventory(String ItemId, String ItemName, String ItemType, double ItemPrice, int ItemQuantity, String ItemUnit, String ItemDescription, int isDeleted) {
+    public Inventory(String ItemId, String ItemName, String ItemType, double ItemPrice, double ItemQuantity, String ItemUnit, String ItemDescription, int isDeleted) {
         this.ItemId = ItemId;
         this.ItemName = ItemName;
         this.ItemType = ItemType;
@@ -33,7 +33,7 @@ public class Inventory {
         this.isDeleted = isDeleted;
     }
 
-    public Inventory(String ItemId, String ItemName, String ItemType, double ItemPrice, int ItemQuantity, String ItemUnit, String ItemDescription) {
+    public Inventory(String ItemId, String ItemName, String ItemType, double ItemPrice, double ItemQuantity, String ItemUnit, String ItemDescription) {
         this.ItemId = ItemId;
         this.ItemName = ItemName;
         this.ItemType = ItemType;
@@ -75,11 +75,11 @@ public class Inventory {
         this.ItemPrice = ItemPrice;
     }
 
-    public int getItemQuantity() {
+    public double getItemQuantity() {
         return ItemQuantity;
     }
 
-    public void setItemQuantity(int ItemQuantity) {
+    public void setItemQuantity(double ItemQuantity) {
         this.ItemQuantity = ItemQuantity;
     }
 
