@@ -20,19 +20,21 @@ public class OrderDAO {
     public List<Order> getAllOrders() throws SQLException, ClassNotFoundException {
         List<Order> orders = new ArrayList<>();
         String query = "SELECT * FROM [Order] ORDER BY OrderDate DESC";
-        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(query); ResultSet rs = stmt.executeQuery()) {
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query);
+             ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
                 Order order = new Order();
-                order.setOrderId(rs.getInt("OrderId"));
-                order.setUserId(rs.getInt("UserId"));
-                order.setCustomerId(rs.getInt("CustomerId"));
+                order.setOrderId(rs.getString("OrderId"));  // Changed to getString
+                order.setUserId(rs.getString("UserId"));    // Changed to getString
+                order.setCustomerId(rs.getString("CustomerId")); // Changed to getString
                 order.setOrderDate(rs.getTimestamp("OrderDate"));
                 order.setOrderStatus(rs.getString("OrderStatus"));
                 order.setOrderType(rs.getString("OrderType"));
                 order.setOrderDescription(rs.getString("OrderDescription"));
-                order.setCouponId(rs.getInt("CouponId"));
-                order.setTableId(rs.getInt("TableId"));
+                order.setCouponId(rs.getString("CouponId"));  // Changed to getString
+                order.setTableId(rs.getString("TableId"));   // Changed to getString
 
                 orders.add(order);
             }
@@ -42,25 +44,25 @@ public class OrderDAO {
         return orders;
     }
 
-    public Order getOrderById(int orderId) throws ClassNotFoundException {
+    public Order getOrderById(String orderId) throws ClassNotFoundException {  // Changed to String
         Order order = null;
         try (Connection conn = DBContext.getConnection()) {
             String sql = "SELECT * FROM [Order] WHERE OrderId = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setInt(1, orderId);
+            stmt.setString(1, orderId); // Changed to setString
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
                 order = new Order();
-                order.setOrderId(rs.getInt("OrderId"));
-                order.setUserId(rs.getInt("UserId"));
-                order.setCustomerId(rs.getInt("CustomerId"));
+                 order.setOrderId(rs.getString("OrderId"));  // Changed to getString
+                order.setUserId(rs.getString("UserId"));    // Changed to getString
+                order.setCustomerId(rs.getString("CustomerId")); // Changed to getString
                 order.setOrderDate(rs.getTimestamp("OrderDate"));
                 order.setOrderStatus(rs.getString("OrderStatus"));
                 order.setOrderType(rs.getString("OrderType"));
                 order.setOrderDescription(rs.getString("OrderDescription"));
-                order.setCouponId(rs.getInt("CouponId"));
-                order.setTableId(rs.getInt("TableId"));
+                order.setCouponId(rs.getString("CouponId"));  // Changed to getString
+                order.setTableId(rs.getString("TableId"));   // Changed to getString
                 // Lấy danh sách order details
                 order.setOrderDetails(getOrderDetailsByOrderId(orderId));
             }
@@ -97,41 +99,77 @@ public class OrderDAO {
         return types;
     }
 
-    public void CreateOrder(Order order) throws SQLException, ClassNotFoundException {
-        String sql = "INSERT INTO [Order] (UserId, CustomerId, OrderDate, OrderStatus, OrderType, OrderDescription, CouponId, TableId) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+   public void CreateOrder(Order order) throws SQLException, ClassNotFoundException {
+    String sql = "INSERT INTO [Order] (OrderId, UserId, CustomerId, OrderDate, OrderStatus, OrderType, OrderDescription, CouponId, TableId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+    try (Connection conn = DBContext.getConnection();
+         PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, order.getUserId());
-            pstmt.setInt(2, order.getCustomerId());
-            pstmt.setTimestamp(3, new Timestamp(order.getOrderDate().getTime()));
-            pstmt.setString(4, order.getOrderStatus());
-            pstmt.setString(5, order.getOrderType());
-            pstmt.setString(6, order.getOrderDescription());
-            pstmt.setInt(7, order.getCouponId());
-            pstmt.setInt(8, order.getTableId());
+        pstmt.setString(1, order.getOrderId());
+        pstmt.setString(2, order.getUserId());
 
-            pstmt.executeUpdate();
+        // Handle nullable CustomerId
+        if (order.getCustomerId() != null && !order.getCustomerId().isEmpty()) {
+            pstmt.setString(3, order.getCustomerId());
+        } else {
+            pstmt.setNull(3, java.sql.Types.NVARCHAR); // Or appropriate SQL type for NVARCHAR
+        }
+
+        pstmt.setTimestamp(4, new Timestamp(order.getOrderDate().getTime()));
+        pstmt.setString(5, order.getOrderStatus());
+        pstmt.setString(6, order.getOrderType());
+        pstmt.setString(7, order.getOrderDescription());
+
+        // Handle nullable CouponId
+        if (order.getCouponId() != null && !order.getCouponId().isEmpty()) {
+            pstmt.setString(8, order.getCouponId());
+        } else {
+            pstmt.setNull(8, java.sql.Types.NVARCHAR); // Or appropriate SQL type for NVARCHAR
+        }
+
+        // Handle nullable TableId
+        if (order.getTableId() != null && !order.getTableId().isEmpty()) {
+            pstmt.setString(9, order.getTableId());
+        } else {
+            pstmt.setNull(9, java.sql.Types.NVARCHAR); // Or appropriate SQL type for NVARCHAR
+        }
+
+        pstmt.executeUpdate();
+    }
+}
+
+public String generateNextOrderId() throws SQLException, ClassNotFoundException {
+    String lastOrderId = getLastOrderIdFromDB();
+    int nextNumber = 1;
+
+    if (lastOrderId != null && !lastOrderId.isEmpty()) {
+        try {
+            String numberPart = lastOrderId.substring(2); // Loại bỏ "OD"
+            nextNumber = Integer.parseInt(numberPart) + 1;
+        } catch (NumberFormatException e) {
+            System.err.println("Lỗi định dạng OrderId cuối cùng: " + lastOrderId);
+            return "OD001"; // Trường hợp lỗi định dạng, bắt đầu từ OD001
         }
     }
 
-    public int getLastInsertedId() throws SQLException, ClassNotFoundException {
-        String sql = "SELECT IDENT_CURRENT('Order')"; // SQL Server
-        //String sql = "SELECT last_insert_id()"; // MySQL
-        //String sql = "SELECT currval(pg_get_serial_sequence('Order', 'OrderId'))"; // PostgreSQL
-        int orderId = 0;
+    String numberStr = String.format("%03d", nextNumber);
+    return "OD" + numberStr;
+}
 
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
+    private String getLastOrderIdFromDB() throws SQLException, ClassNotFoundException {
+    String lastOrderId = null;
+    String sql = "SELECT TOP 1 OrderId FROM [Order] ORDER BY OrderId DESC";
 
-            if (rs.next()) {
-                orderId = rs.getInt(1);
-            }
+    try (Connection connection = DBContext.getConnection();
+         PreparedStatement preparedStatement = connection.prepareStatement(sql);
+         ResultSet resultSet = preparedStatement.executeQuery()) {
+
+        if (resultSet.next()) {
+            lastOrderId = resultSet.getString("OrderId");
         }
-        return orderId;
     }
+    return lastOrderId;
+}
 
     public void updateOrder(Order order) throws SQLException, ClassNotFoundException {
         String sql = "UPDATE [Order] SET UserId = ?, CustomerId = ?, OrderDate = ?, OrderStatus = ?, OrderType = ?, OrderDescription = ?, CouponId = ?, TableId = ? WHERE OrderId = ?";
@@ -139,21 +177,37 @@ public class OrderDAO {
         try (Connection conn = DBContext.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, order.getUserId());
-            pstmt.setInt(2, order.getCustomerId());
+            pstmt.setString(1, order.getUserId());
+               // Handle nullable CustomerId
+        if (order.getCustomerId() != null && !order.getCustomerId().isEmpty()) {
+            pstmt.setString(2, order.getCustomerId());
+        } else {
+            pstmt.setNull(2, java.sql.Types.NVARCHAR); // Or appropriate SQL type for NVARCHAR
+        }
             pstmt.setTimestamp(3, new Timestamp(order.getOrderDate().getTime()));
             pstmt.setString(4, order.getOrderStatus());
             pstmt.setString(5, order.getOrderType());
             pstmt.setString(6, order.getOrderDescription());
-            pstmt.setInt(7, order.getCouponId());
-            pstmt.setInt(8, order.getTableId());
-            pstmt.setInt(9, order.getOrderId()); // Điều kiện WHERE: OrderId
+               // Handle nullable CouponId
+        if (order.getCouponId() != null && !order.getCouponId().isEmpty()) {
+            pstmt.setString(7, order.getCouponId());
+        } else {
+            pstmt.setNull(7, java.sql.Types.NVARCHAR); // Or appropriate SQL type for NVARCHAR
+        }
+
+        // Handle nullable TableId
+        if (order.getTableId() != null && !order.getTableId().isEmpty()) {
+            pstmt.setString(8, order.getTableId());
+        } else {
+            pstmt.setNull(8, java.sql.Types.NVARCHAR); // Or appropriate SQL type for NVARCHAR
+        }
+            pstmt.setString(9, order.getOrderId()); // Điều kiện WHERE: OrderId
 
             pstmt.executeUpdate();
         }
     }
 
-   public List<OrderDetail> getOrderDetailsByOrderId(int orderId) throws SQLException, ClassNotFoundException {
+   public List<OrderDetail> getOrderDetailsByOrderId(String orderId) throws SQLException, ClassNotFoundException {  // Changed to String
     List<OrderDetail> orderDetails = new ArrayList<>();
     String sql = "SELECT " +
                  "    OD.OrderDetailId, " +
@@ -172,14 +226,14 @@ public class OrderDAO {
     try (Connection conn = DBContext.getConnection();
          PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-        pstmt.setInt(1, orderId);
+        pstmt.setString(1, orderId);  // Changed to setString
         ResultSet rs = pstmt.executeQuery();
 
         while (rs.next()) {
             OrderDetail orderDetail = new OrderDetail();
-            orderDetail.setOrderDetailId(rs.getInt("OrderDetailId"));
-            orderDetail.setOrderId(rs.getInt("OrderId"));
-            orderDetail.setDishId(rs.getInt("DishId"));
+            orderDetail.setOrderDetailId(rs.getString("OrderDetailId")); //change to String
+            orderDetail.setOrderId(rs.getString("OrderId"));//change to String
+            orderDetail.setDishId(rs.getString("DishId"));//change to String
             orderDetail.setQuantity(rs.getInt("Quantity"));
             orderDetail.setSubtotal(rs.getDouble("Subtotal"));
             orderDetail.setDishName(rs.getString("DishName")); // Lấy tên món ăn
@@ -189,19 +243,7 @@ public class OrderDAO {
     }
     return orderDetails;
 }
-   private String getDishName(int dishId) throws SQLException, ClassNotFoundException {
-    String sql = "SELECT DishName FROM Dish WHERE DishId = ?";
-    try (Connection conn = DBContext.getConnection();
-         PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-        pstmt.setInt(1, dishId);
-        ResultSet rs = pstmt.executeQuery();
-        if (rs.next()) {
-            return rs.getString("DishName");
-        }
-    }
-    return null; // Hoặc giá trị mặc định khác
-}
 
     public void createOrderItem(OrderDetail orderDetail) throws SQLException, ClassNotFoundException {
         String sql = "INSERT INTO OrderDetail (OrderId, DishId, Quantity, Subtotal) VALUES (?, ?, ?, ?)";
@@ -209,8 +251,8 @@ public class OrderDAO {
         try (Connection conn = DBContext.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, orderDetail.getOrderId());
-            pstmt.setInt(2, orderDetail.getDishId());
+            pstmt.setString(1, orderDetail.getOrderId());//change to String
+            pstmt.setString(2, orderDetail.getDishId());//change to String
             pstmt.setInt(3, orderDetail.getQuantity());
             pstmt.setDouble(4, orderDetail.getSubtotal());
 

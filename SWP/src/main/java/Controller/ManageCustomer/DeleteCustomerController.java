@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package Controller.ManageCustomer;
 
 import DAO.CustomerDAO;
@@ -31,7 +27,7 @@ public class DeleteCustomerController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        int customerId = Integer.parseInt(request.getParameter("customerId"));
+        String customerId = request.getParameter("customerId");
         System.out.println("Deleting customer with ID: " + customerId);
 
         boolean success = false;
