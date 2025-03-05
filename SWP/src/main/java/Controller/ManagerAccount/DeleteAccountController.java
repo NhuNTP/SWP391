@@ -59,31 +59,30 @@ public class DeleteAccountController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String idParam = request.getParameter("id");
-        if (idParam == null || idParam.isEmpty()) {
-            response.sendRedirect("ViewAccountList"); // Redirect nếu không có id
+       String UserId = request.getParameter("UserId"); // Lấy ID dưới dạng String
+
+        if (UserId == null || UserId.isEmpty()) {
+            response.sendRedirect("ViewAccountList"); // Chuyển hướng nếu không có ID
             return;
         }
 
         try {
-            int id = Integer.parseInt(idParam);
-            AccountDAO dao = new AccountDAO();
-            int count = dao.deleteAccount(id); // Gọi phương thức Delete trong DAO
-
+            AccountDAO tableDAO = new AccountDAO();
+            int count = tableDAO.deleteAccount(UserId); // Gọi deleteAccount(String)
             if (count > 0) {
-                System.out.println("Account with ID " + id + " deleted successfully."); // Log thành công
+                System.out.println("Account with ID " + UserId + " deleted successfully."); // Log success
             } else {
-                System.out.println("Failed to delete account with ID " + id + "."); // Log thất bại
+                System.out.println("Failed to delete table with ID " + UserId + " or table not found."); // Log failure
             }
 
         } catch (NumberFormatException e) {
-            System.err.println("Invalid ID format: " + idParam); // Log lỗi định dạng ID
+            System.err.println("Invalid ID format: " + UserId); // Log invalid ID format error
         } catch (Exception e) {
-            System.err.println("Error deleting account: " + e.getMessage()); // Log lỗi chung
-            e.printStackTrace(); // In stacktrace để debug (trong môi trường phát triển)
+            System.err.println("Error deleting table: " + e.getMessage()); // Log general error
+            e.printStackTrace(); // Print stack trace for debugging
         }
 
-        response.sendRedirect("ViewAccountList"); // Luôn redirect về trang ViewAccountList sau khi xử lý
+        response.sendRedirect("ViewAccountList"); // Redirect to ViewAccountList after deletion attempt
     }
 
 

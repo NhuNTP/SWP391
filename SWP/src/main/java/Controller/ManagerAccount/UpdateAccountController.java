@@ -75,31 +75,28 @@ public class UpdateAccountController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String idParam = request.getParameter("id");
-        if (idParam == null || idParam.isEmpty()) {
-            response.sendRedirect("ViewAccountList"); // Redirect nếu không có id
+        String tableId = request.getParameter("id"); // Lấy ID dưới dạng String
+
+        if (tableId == null || tableId.isEmpty()) {
+            response.sendRedirect("ViewAccountList"); // Chuyển hướng nếu không có ID
             return;
         }
 
         try {
-            int id = Integer.parseInt(idParam);
             AccountDAO dao = new AccountDAO();
-            Account account = dao.getAccountId(id);
+            Account account = dao.getAccountId(tableId); // Sử dụng getAccountById(String)
 
             if (account == null) {
-                response.sendRedirect("ViewAccountList"); // Redirect nếu không tìm thấy account
+                response.sendRedirect("ViewAccountList"); // Chuyển hướng nếu không tìm thấy bàn
                 return;
             }
 
-            request.setAttribute("account", account); // Lưu account vào request attribute
+            request.setAttribute("account", account);
             request.getRequestDispatcher("ManageAccount/UpdateAccount.jsp").forward(request, response);
 
-        } catch (NumberFormatException e) {
-            response.sendRedirect("ViewAccountList"); // Redirect nếu id không phải là số
         } catch (Exception e) {
-            // Xử lý các exception khác nếu cần thiết, ví dụ log lỗi
-            e.printStackTrace();
-            response.sendRedirect("ViewAccountList"); // Redirect nếu có lỗi database
+            e.printStackTrace(); // In ra lỗi (cho mục đích debugging)
+            response.sendRedirect("ViewAccountList"); // Chuyển hướng nếu có lỗi
         }
     }
 
@@ -116,8 +113,7 @@ public class UpdateAccountController extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         try {
-            // Step 1: Get all form parameters (CODE CŨ - ĐƯỢC CHUYỂN XUỐNG DƯỚI ĐỂ THỨ TỰ LOGIC HƠN)
-            int UserId = Integer.parseInt(request.getParameter("UserIdHidden"));
+            String UserId = request.getParameter("UserIdHidden");
             String UserEmail = request.getParameter("UserEmail");
             String UserPassword = request.getParameter("UserPassword");
             String UserName = request.getParameter("UserName");

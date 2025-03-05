@@ -91,13 +91,14 @@ public class CreateAccountController extends HttpServlet {
         response.setContentType("text/html;charset=UTF-8");
         try {
             // Step 1: Get all text form parameters (giữ nguyên)
+            String UserId = request.getParameter("UserId");
             String UserEmail = request.getParameter("UserEmail");
             String UserPassword = request.getParameter("UserPassword");
             String UserName = request.getParameter("UserName");
             String UserRole = request.getParameter("UserRole");
             String IdentityCard = request.getParameter("IdentityCard");
             String UserAddress = request.getParameter("UserAddress");
-            
+
             // 2. Xử lý upload hình ảnh
             Part filePart = request.getPart("UserImage");
             String UserImage = null; // Khởi tạo relativeImagePath là null
@@ -154,7 +155,7 @@ public class CreateAccountController extends HttpServlet {
             }
 
             // Step 3: Create Account object
-            Account account = new Account(UserEmail, UserPassword, UserName, UserRole, IdentityCard, UserAddress, UserImage);
+            Account account = new Account(UserId, UserEmail, UserPassword, UserName, UserRole, IdentityCard, UserAddress, UserImage);
             AccountDAO dao = new AccountDAO();
 
             // Step 4: Create account in database

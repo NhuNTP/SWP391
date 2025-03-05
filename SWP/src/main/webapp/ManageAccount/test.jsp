@@ -16,7 +16,7 @@
         <title>Employee Account List - Admin Dashboard</title>
         <script>
             function confirmDelete(userId, userName) {
-                if (confirm('Are you sure you want to delete the account with ID: ' + userId + ' - user name: ' + userName + '?')) {
+                if (confirm('Bạn có chắc chắn muốn xóa tài khoản ID: ' + userId + ' - Tên người dùng: ' + userName + ' không?')) {
                     window.location.href = 'DeleteAccount?id=' + userId;
                 }
             }
@@ -639,7 +639,7 @@
             }
 
             .sidebar .nav-link {
-                font-size: 0.9rem; /* Hoặc 16px, tùy vào AdminDashboard.jsp */
+                font-size: 1rem; /* Hoặc 16px, tùy vào AdminDashboard.jsp */
             }
 
             .sidebar h4{
@@ -649,39 +649,6 @@
             .table-bordered {
                 border-radius: 20px; /* Bo tròn viền ngoài của bảng */
             }
-            .rounded-image {
-                width: 100px;  /* Giữ nguyên kích thước, hoặc điều chỉnh nếu cần */
-                height: 100px;
-                border-radius: 50%; /* Làm tròn ảnh */
-                object-fit: cover; /* Đảm bảo ảnh lấp đầy khung tròn */
-                object-position: center; /* Căn giữa ảnh */
-            }
-
-            /* Style phân trang */
-            .pagination {
-                display: flex;
-                justify-content: center;
-                list-style: none;
-                padding: 0;
-                margin-top: 20px;
-            }
-
-            .pagination li {
-                margin: 0 5px;
-            }
-
-            .pagination a {
-                padding: 5px 10px;
-                border: 1px solid #ccc;
-                text-decoration: none;
-                color: black;
-                border-radius: 3px;
-            }
-
-            .pagination a.active {
-                background-color: #3498db;
-                color: white;
-            }
 
         </style>
     </head>
@@ -690,13 +657,12 @@
         <div class="d-flex">
             <!-- Sidebar -->
             <div class="sidebar col-md-2 p-3">
-                <h4 class="text-center mb-4">Admin</h4>
+                <h4 class="text-center mb-4">Quản Lý</h4>
                 <ul class="nav flex-column">
                     <li class="nav-item"><a href="Dashboard/AdminDashboard.jsp" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-utensils me-2"></i>Menu Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewAccountList" class="nav-link"><i class="fas fa-users me-2"></i>Employee Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewTableList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Table Management</a></li>
-                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewOrderList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Order Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCustomerList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Customer Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCouponController" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Coupon Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewInventoryController" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Inventory Management</a></li>
@@ -704,166 +670,106 @@
             </div>
 
             <!-- Main Content -->
-            <div class="col-md-10 bg-white p-3 main-content-area">
-                <section class="main-content">
-                    <div class="container-fluid">
-                        <div class="text-left mb-4">
-                            <h4>Employee Management</h4>
+            <div class="col-md-10 bg-white p-3">
+                <!-- Navbar -->
+                <div class="text-left mb-4">
+                    <h4>Employee Management</h4>
+                </div>
+                <div class="content-header">
+                    <div class="search-filter">
+                        <div class="search-bar">
+                            <input type="text" id="searchInput" placeholder="Search">  <!-- Thêm id="searchInput" -->
                         </div>
-                        <div class="content-header">
-                            <div class="search-filter">
-                                <div class="search-bar">
-                                    <input type="text" id="searchInput" placeholder="Search">  <!-- Thêm id="searchInput" -->
-                                </div>
-                                <div class="filter-bar">
-                                    <select id="roleFilter">
-                                        <option value="">All Roles</option>  <!-- Thêm option "All Roles" -->
-                                        <option value="Waiter">Waiter</option>
-                                        <option value="Manager">Manager</option>
-                                        <option value="Waiter">Waiter</option>
-                                        <option value="Kitchen staff">Kitchen staff</option>
-                                        <option value="Cashier">Cashier</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="header-buttons">
-                                <button class="add-employee-btn"><i class="far fa-plus"></i> Employee </button>
-                            </div>
+                        <div class="filter-bar">
+                            <select id="roleFilter">
+                                <option value="">All Roles</option>  <!-- Thêm option "All Roles" -->
+                                <option value="Waiter">Waiter</option>
+                                <option value="Manager">Manager</option>
+                                <option value="Waiter">Waiter</option>
+                                <option value="Kitchen staff">Kitchen staff</option>
+                                <option value="Cashier">Cashier</option>
+                            </select>
                         </div>
-                        <div class="employee-grid">
-                            <table class="table table-striped table-bordered table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>No.</th>
-                                        <th>ID</th>
-                                        <th>Image</th>
-                                        <th>Account Email</th>
-                                        <th>Account Password</th>
-                                        <th>Account Name</th>
-                                        <th>Account Role</th>
-                                        <th>Identity Card</th>
-                                        <th>User Address</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <%
-                                        List<Account> accounts = (List<Account>) request.getAttribute("accountList");
-                                        int pageSize = 4; // Số tài khoản trên mỗi trang
-                                        int totalAccounts = (accounts != null) ? accounts.size() : 0;
-                                        int totalPages = (int) Math.ceil((double) totalAccounts / pageSize);
-                                        int currentPage = 1; // Mặc định là trang 1
-
-                                        // Lấy trang hiện tại từ request
-                                        String pageParam = request.getParameter("page");
-                                        if (pageParam != null && !pageParam.isEmpty()) {
-                                            try {
-                                                currentPage = Integer.parseInt(pageParam);
-                                                if (currentPage < 1) {
-                                                    currentPage = 1;
-                                                }
-                                                if (currentPage > totalPages) {
-                                                    currentPage = totalPages;
-                                                }
-                                            } catch (NumberFormatException e) {
-                                                currentPage = 1;
-                                            }
-                                        }
-
-                                        // Xác định phạm vi hiển thị
-                                        int startIndex = (currentPage - 1) * pageSize;
-                                        int endIndex = Math.min(startIndex + pageSize, totalAccounts);
-                                        List<Account> paginatedAccounts = (accounts != null) ? accounts.subList(startIndex, endIndex) : null;
-
-                                        if (paginatedAccounts != null && !paginatedAccounts.isEmpty()) {
-                                            int counter = startIndex + 1;
-                                            for (Account account : paginatedAccounts) {
-                                    %>
-                                    <tr>
-                                        <td><%= counter++%></td>
-                                        <td><%= account.getUserId()%></td>
-                                        <td>
-                                            <%
-                                                String imagePath = account.getUserImage();
-                                                if (imagePath != null && !imagePath.trim().isEmpty()) {
-                                            %>
-                                            <img src="<%= imagePath%>" alt="<%= account.getUserName()%> " class="rounded-image">
-                                            <%
-                                            } else {
-                                            %>
-                                            No Image
-                                            <%
-                                                }
-                                            %>
-                                        </td>
-                                        <td><%= account.getUserEmail()%></td>
-                                        <td><%= account.getUserPassword()%></td> 
-                                        <td><%= account.getUserName()%></td>
-                                        <td><%= account.getUserRole()%></td>
-                                        <td><%= account.getIdentityCard()%></td>
-                                        <td><%= account.getUserAddress()%></td>
-                                        <td>
-                                            <a href="#" class="edit-employee-btn btn-edit"
-                                               data-userid="<%=account.getUserId()%>"
-                                               data-useremail="<%=account.getUserEmail()%>"
-                                               data-username="<%=account.getUserName()%>"
-                                               data-userpassword="<%=account.getUserPassword()%>"
-                                               data-userrole="<%=account.getUserRole()%>"
-                                               data-identitycard="<%=account.getIdentityCard()%>"
-                                               data-useraddress="<%=account.getUserAddress()%>"
-                                               data-userimage="<%=account.getUserImage()%>">
-                                                <i class="fas fa-edit"></i> Edit
-                                            </a>
-                                            <a href="#" onclick="confirmDelete('<%= account.getUserId()%>', '<%= account.getUserName()%>')" class="btn-delete">
-                                                <i class="fas fa-trash-alt"></i> Delete
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    <%
-                                        }
-                                    } else {
-                                    %>
-                                    <tr>
-                                        <td colspan="10">
-                                            <div class="no-data">
-                                                <i class="fal fa-user"></i>
-                                                <span>
-                                                    <% if (request.getParameter("search") != null) { %>
-                                                    Can not find result.
-                                                    <% } else { %>
-                                                    NOT ACCOUNT HERE. CLICK <a href="#">HERE</a> TO ADD NEW EMPLOYEE.
-                                                    <% } %>
-                                                </span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <%
-                                        }
-                                    %>
-                                </tbody>
-                            </table>
-                        </div>  
-
-                        <%-- Phân trang --%>
-                        <% if (totalPages > 1) { %>
-                        <ul class="pagination">
-                            <%-- Nút Previous --%>
-                            <% if (currentPage > 1) {%>
-                            <li><a href="?page=<%= currentPage - 1%>">Back</a></li>
-                                <% } %>
-
-                            <%-- Các số trang --%>
-                            <% for (int i = 1; i <= totalPages; i++) {%>
-                            <li><a href="?page=<%= i%>" <% if (currentPage == i) { %>class="active"<% }%>><%= i%></a></li>
-                                <% } %>
-
-                            <%-- Nút Next --%>
-                            <% if (currentPage < totalPages) {%>
-                            <li><a href="?page=<%= currentPage + 1%>">Next</a></li>
-                                <% } %>
-                        </ul>
-                        <% }%>                
-                </section>
+                    </div>
+                    <div class="header-buttons">
+                        <button class="add-employee-btn"><i class="far fa-plus"></i> Employee </button>
+                    </div>
+                </div>
+                <table class="table table-striped table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th>ID</th>
+                            <th>Image</th>
+                            <th>Account Email</th>
+                            <th>Account Password</th>
+                            <th>Account Name</th>
+                            <th>Account Role</th>
+                            <th>Identity Card</th>
+                            <th>User Address</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <%-- Sử dụng scriptlet để lặp qua accountList --%>
+                        <%
+                            List<Account> accounts = (List<Account>) request.getAttribute("accountList");
+                            if (accounts != null && !accounts.isEmpty()) {
+                                int counter = 1;
+                                for (Account account : accounts) {
+                        %>
+                        <tr>
+                            <td><%= counter++%></td>
+                            <td><%= account.getUserId()%></td>
+                            <td>
+                                <% String imagePath = request.getContextPath() + account.getUserImage();%>
+                                <%-- Đường dẫn ảnh: <%= imagePath%><br> --%>
+                                <img src="<%= imagePath%>" alt="User Image" width="80" height="80" style="border-radius: 50%; object-fit: cover;"/>
+                            </td>
+                            <td><%= account.getUserEmail()%></td>
+                            <td><%= account.getUserPassword()%></td>
+                            <td><%= account.getUserName()%></td>
+                            <td><%= account.getUserRole()%></td>
+                            <td><%= account.getIdentityCard()%></td>
+                            <td><%= account.getUserAddress()%></td>
+                            <td>
+                                <a href="#" class="edit-employee-btn btn-edit"
+                                   data-userid="<%=account.getUserId()%>"
+                                   data-useremail="<%=account.getUserEmail()%>"
+                                   data-username="<%=account.getUserName()%>"
+                                   data-userpassword="<%=account.getUserPassword()%>"
+                                   data-userrole="<%=account.getUserRole()%>"
+                                   data-identitycard="<%=account.getIdentityCard()%>"
+                                   data-useraddress="<%=account.getUserAddress()%>"
+                                   data-userimage="<%=account.getUserImage()%>"
+                                   ><i class="fas fa-edit"></i> Edit</a>
+                                <a href="#" onclick="confirmDelete('<%= account.getUserId()%>', '<%= account.getUserName()%>')" class="btn-delete"><i class="fas fa-trash-alt"></i> Delete</a>
+                            </td>
+                        </tr>
+                        <%
+                            }
+                        } else {
+                        %>
+                        <tr>
+                            <td colspan="10">
+                                <div class="no-data">
+                                    <i class="fal fa-user"></i>
+                                    <span>
+                                        <%-- Kiểm tra xem có phải là kết quả từ việc tìm kiếm không --%>
+                                        <% if (request.getParameter("search") != null) { %>
+                                        Không tìm thấy kết quả.
+                                        <% } else { %>
+                                        Gian hàng chưa có nhân viên. Nhấn <a href="#">vào đây</a> để thêm mới nhân viên.
+                                        <% } %>
+                                    </span>
+                                </div>
+                            </td>
+                        </tr>
+                        <%
+                            }
+                        %>
+                    </tbody>
+                </table>
             </div>
         </div>
 

@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package Controller.ManageTable;
 
 import DAO.TableDAO;
@@ -17,23 +13,9 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author ADMIN
- */
 @WebServlet("/CreateTable")
-
 public class CreateTableController extends HttpServlet {
 
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
@@ -51,63 +33,46 @@ public class CreateTableController extends HttpServlet {
         }
     }
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.getRequestDispatcher("ManageTable/CreateTable.jsp").forward(request, response); // Forward to CreateTable.jsp
+        request.getRequestDispatcher("ManageTable/CreateTable.jsp").forward(request, response);
     }
 
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         try {
             String TableStatus = request.getParameter("TableStatus");
-            int NumberOfSeats = Integer.parseInt(request.getParameter("NumberOfSeats")); // Get NumberOfSeats as String
-            
-            // Step 2: Create Table object
-            Table table = new Table(TableStatus, NumberOfSeats);
+            int NumberOfSeats = Integer.parseInt(request.getParameter("NumberOfSeats"));
+            int FloorNumber = Integer.parseInt(request.getParameter("FloorNumber")); // Lấy thông tin FloorNumber
+
+            // Tạo đối tượng Table, không truyền ID
+            Table table = new Table(TableStatus, NumberOfSeats, FloorNumber);
+
             TableDAO tableDAO = new TableDAO();
-            int count = tableDAO.createTable(table);
-            
-            // Step 4: Redirect based on result
+            int count = tableDAO.createTable(table); // Gọi createTable() từ DAO
+
             if (count > 0) {
-                response.sendRedirect("ViewTableList"); // Redirect to view table list on success
+                response.sendRedirect("ViewTableList"); // Chuyển hướng đến trang danh sách (thành công)
             } else {
-                response.sendRedirect("CreateTable"); // Redirect back to create table page on failure
+                request.getRequestDispatcher("ManageTable/CreateTable.jsp").forward(request, response); // Quay lại trang tạo
             }
-        } catch (ClassNotFoundException ex) {
+        } catch (NumberFormatException e) {
+            // Xử lý lỗi nếu NumberOfSeats hoặc FloorNumber không phải là số
+            request.setAttribute("errorMessage", "Invalid input for Number of Seats or Floor Number.");
+            request.getRequestDispatcher("ManageTable/CreateTable.jsp").forward(request, response);
+        } catch (ClassNotFoundException | SQLException ex) {
+            // Xử lý các exception khác (ClassNotFoundException, SQLException)
             Logger.getLogger(CreateTableController.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (SQLException ex) {
-            Logger.getLogger(CreateTableController.class.getName()).log(Level.SEVERE, null, ex);
+            request.setAttribute("errorMessage", "An error occurred: " + ex.getMessage()); // Thông báo lỗi chi tiết hơn
+            request.getRequestDispatcher("ManageTable/CreateTable.jsp").forward(request, response);
         }
     }
 
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
     @Override
     public String getServletInfo() {
         return "Short description";
-    }// </editor-fold>
-
+    }
 }

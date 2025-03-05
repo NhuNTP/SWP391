@@ -10,7 +10,7 @@ package Model;
  */
 public class Account {
 
-    private int UserId;
+    private String UserId;
     private String UserEmail;
     private String UserPassword;
     private String UserName;
@@ -18,19 +18,10 @@ public class Account {
     private String IdentityCard;
     private String UserAddress;
     private String UserImage;
+    private boolean IsDeleted;
 
+    // Constructors
     public Account() {
-    }
-
-    public Account(int UserId, String UserEmail, String UserPassword, String UserName, String UserRole, String IdentityCard, String UserAddress, String UserImage) {
-        this.UserId = UserId;
-        this.UserEmail = UserEmail;
-        this.UserPassword = UserPassword;
-        this.UserName = UserName;
-        this.UserRole = UserRole;
-        this.IdentityCard = IdentityCard;
-        this.UserAddress = UserAddress;
-        this.UserImage = UserImage;
     }
 
     public Account(String UserEmail, String UserPassword, String UserName, String UserRole, String IdentityCard, String UserAddress, String UserImage) {
@@ -43,11 +34,47 @@ public class Account {
         this.UserImage = UserImage;
     }
 
-    public int getUserId() {
+    public Account(String UserId, String UserEmail, String UserPassword, String UserName,
+            String UserRole, String IdentityCard, String UserAddress, String UserImage, boolean IsDeleted) {
+        this.UserId = UserId;
+        this.UserEmail = UserEmail;
+        this.UserPassword = UserPassword;
+        this.UserName = UserName;
+        this.UserRole = UserRole;
+        this.IdentityCard = IdentityCard;
+        this.UserAddress = UserAddress;
+        this.UserImage = UserImage;
+        this.IsDeleted = IsDeleted;
+    }
+
+    public Account(String UserId, String UserEmail, String UserPassword, String UserName, String UserRole, String IdentityCard, String UserAddress, String UserImage) {
+        this.UserId = UserId;
+        this.UserEmail = UserEmail;
+        this.UserPassword = UserPassword;
+        this.UserName = UserName;
+        this.UserRole = UserRole;
+        this.IdentityCard = IdentityCard;
+        this.UserAddress = UserAddress;
+        this.UserImage = UserImage;
+    }
+
+    public Account(String UserEmail, String UserPassword, String UserName,
+            String UserRole, String IdentityCard, String UserAddress, String UserImage, boolean IsDeleted) {
+        this.UserEmail = UserEmail;
+        this.UserPassword = UserPassword;
+        this.UserName = UserName;
+        this.UserRole = UserRole;
+        this.IdentityCard = IdentityCard;
+        this.UserAddress = UserAddress;
+        this.UserImage = UserImage;
+        this.IsDeleted = IsDeleted;
+    }
+
+    public String getUserId() {
         return UserId;
     }
 
-    public void setUserId(int UserId) {
+    public void setUserId(String UserId) {
         this.UserId = UserId;
     }
 
@@ -107,9 +134,12 @@ public class Account {
         this.UserImage = UserImage;
     }
 
-    public int getAccountId() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public boolean isIsDeleted() {
+        return IsDeleted;
     }
 
-
+    public void setIsDeleted(boolean IsDeleted) {
+        this.IsDeleted = IsDeleted;
+    }
+    // Bỏ phương thức getAccountId() không liên quan.
 }
