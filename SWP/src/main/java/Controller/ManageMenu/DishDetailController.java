@@ -29,7 +29,7 @@ public class DishDetailController extends HttpServlet {
         response.setContentType("text/html;charset=UTF-8");
 
         try {
-            int dishId = Integer.parseInt(request.getParameter("dishId"));
+            String dishId = request.getParameter("dishId");
 
             // Retrieve dish details
             Dish dish = menuDAO.getDishById(dishId);
@@ -66,11 +66,10 @@ public class DishDetailController extends HttpServlet {
             RequestDispatcher dispatcher = request.getRequestDispatcher("ManageMenu/dishdetail.jsp");
             dispatcher.forward(request, response);
 
-        } catch (NumberFormatException e) {
-            response.getWriter().write("<p class='alert alert-danger'>Invalid Dish ID.</p>");
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "An unexpected error occurred", e);
             response.getWriter().write("<p class='alert alert-danger'>An unexpected error occurred.</p>");
         }
     }
 }
+//ok

@@ -1,43 +1,41 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package Model;
 
-/**
- *
- * @author LxP
- */
 public class DishInventory {
+    private String DishId; // Tên thuộc tính khớp với tên cột trong DB
+    private String ItemId; // Tên thuộc tính khớp với tên cột trong DB
+    private double QuantityUsed;
 
-    private int DishId;
-    private int ItemId;
-    private int QuantityUsed;
+    // Constructors
+    public DishInventory() {}
 
-    public DishInventory() {
+    public DishInventory(String dishId, String itemId, double quantityUsed) {
+        DishId = dishId;
+        ItemId = itemId;
+        QuantityUsed = quantityUsed;
     }
 
-    public int getDishId() {
+    // Getters and setters
+    public String getDishId() {
         return DishId;
     }
 
-    public void setDishId(int dishId) {
-        this.DishId = dishId;
+    public void setDishId(String dishId) {
+        DishId = dishId;
     }
 
-    public int getItemId() {
+    public String getItemId() {
         return ItemId;
     }
 
-    public void setItemId(int itemId) {
-        this.ItemId = itemId;
+    public void setItemId(String itemId) {
+        ItemId = itemId;
     }
 
-    public int getQuantityUsed() {
+    public double getQuantityUsed() {
         return QuantityUsed;
     }
 
-    public void setQuantityUsed(int quantityUsed) {
-        this.QuantityUsed = quantityUsed;
+    public void setQuantityUsed(double quantityUsed) {
+        QuantityUsed = quantityUsed;
     }
 }
