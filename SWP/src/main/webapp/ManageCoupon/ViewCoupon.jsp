@@ -259,19 +259,25 @@
                     </div>
                     <div class="modal-body">
                         <form id="addCouponForm">
-                            
-                            <div class="mb-3">
-                                <label for="discountAmount" class="form-label">Discount Amount:</label>
-                                <input type="number" class="form-control" id="discountAmount" name="discountAmount" required min="1" step="0.01">
-                                <small class="text-muted">Enter a non-negative number.</small>
+
+                            <div class="mb-3 row"> 
+                                <label for="discountAmount" class="col-sm-4 col-form-label">Discount Amount:</label> <!- Thêm class 'col-sm-4' và 'col-form-label' cho label -->
+                                <div class="col-sm-8"> <!- Bọc input trong một div với class 'col-sm-8' -->
+                                    <input type="number" class="form-control" id="discountAmount" name="discountAmount" required min="1" max="100" step="0.01">
+                                    <small class="text-muted">Enter a non-negative number.</small>
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="expirationDate" class="form-label">Expiration Date:</label>
-                                <input type="date" class="form-control" id="expirationDate" name="expirationDate" required>
+                            <div class="mb-3 row"> <!- Thêm class 'row' vào div.mb-3 -->
+                                <label for="expirationDate" class="col-sm-4 col-form-label">Expiration Date:</label> <!- Thêm class 'col-sm-4' và 'col-form-label' cho label -->
+                                <div class="col-sm-8"> <!- Bọc input trong một div với class 'col-sm-8' -->
+                                    <input type="date" class="form-control" id="expirationDate" name="expirationDate" required>
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="description" class="form-label">Description:</label>
-                                <textarea class="form-control" id="description" name="description" rows="2" required=""></textarea>
+                            <div class="mb-3 row"> <!- Thêm class 'row' vào div.mb-3 -->
+                                <label for="description" class="col-sm-4 col-form-label">Description:</label> <!- Thêm class 'col-sm-4' và 'col-form-label' cho label -->
+                                <div class="col-sm-8"> <!- Bọc input trong một div với class 'col-sm-8' -->
+                                    <textarea class="form-control" id="description" name="description" rows="2" required=""></textarea>
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -282,7 +288,6 @@
                 </div>
             </div>
         </div>
-
         <!-- Update Coupon Modal -->
         <div class="modal fade" id="updateCouponModal" tabindex="-1" aria-labelledby="updateCouponModalLabel" aria-hidden="true">
             <div class="modal-dialog">
@@ -294,28 +299,38 @@
                     <div class="modal-body">
                         <form id="updateCouponForm">
                             <input type="hidden" id="couponIdUpdate" name="couponId">
-                            <div class="mb-3">
-                                <label for="couponIdUpdateDisplay" class="form-label">Coupon ID(Just View):</label>
-                                <input type="text" class="form-control" id="couponIdUpdateDisplay" readonly >
-                                <input type="hidden" id="couponIdUpdate" name="couponId">
+                            <div class="mb-3 row"> <!- Thêm class 'row' vào div.mb-3 -->
+                                <label for="couponIdUpdateDisplay" class="col-sm-4 col-form-label">Coupon ID(Just View):</label> <!- Thêm class 'col-sm-4' và 'col-form-label' cho label -->
+                                <div class="col-sm-8"> <!- Bọc input trong một div với class 'col-sm-8' -->
+                                    <input type="text" class="form-control" id="couponIdUpdateDisplay" readonly >
+                                    <input type="hidden" id="couponIdUpdate" name="couponId">
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="discountAmountUpdate" class="form-label">Discount Amount:</label>
-                                <input type="number" class="form-control" id="discountAmountUpdate" name="discountAmount" min="0" required step="0.01">
-                                <small class="text-muted">Enter a non-negative number.</small>
+                            <div class="mb-3 row"> <!- Thêm class 'row' vào div.mb-3 -->
+                                <label for="discountAmountUpdate" class="col-sm-4 col-form-label">Discount Amount:</label> <!- Thêm class 'col-sm-4' và 'col-form-label' cho label -->
+                                <div class="col-sm-8"> <!- Bọc input trong một div với class 'col-sm-8' -->
+                                    <input type="number" class="form-control" id="discountAmountUpdate" name="discountAmount" min="0" max="100" required step="0.01">
+                                    <small class="text-muted">Enter a non-negative number.</small>
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="expirationDateUpdate" class="form-label">Expiration Date:</label>
-                                <input type="date" class="form-control" id="expirationDateUpdate" name="expirationDate" >
+                            <div class="mb-3 row"> <!- Thêm class 'row' vào div.mb-3 -->
+                                <label for="expirationDateUpdate" class="col-sm-4 col-form-label">Expiration Date:</label> <!- Thêm class 'col-sm-4' và 'col-form-label' cho label -->
+                                <div class="col-sm-8"> <!- Bọc input trong một div với class 'col-sm-8' -->
+                                    <input type="date" class="form-control" id="expirationDateUpdate" name="expirationDate" required="">
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="timesUsedUpdate" class="form-label">Times Used:</label>
-                                <input type="number" class="form-control" id="timesUsedUpdate" name="timesUsed" required min="0">
-                                <small class="text-muted">Enter a non-negative integer.</small>
+                            <div class="mb-3 row"> <!- Thêm class 'row' vào div.mb-3 -->
+                                <label for="timesUsedUpdate" class="col-sm-4 col-form-label">Times Used:</label> <!- Thêm class 'col-sm-4' và 'col-form-label' cho label -->
+                                <div class="col-sm-8"> <!- Bọc input trong một div với class 'col-sm-8' -->
+                                    <input type="number" class="form-control" id="timesUsedUpdate" name="timesUsed" required min="0">
+                                    <small class="text-muted">Enter a non-negative integer.</small>
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="descriptionUpdate" class="form-label">Description:</label>
-                                <textarea class="form-control" id="descriptionUpdate" name="description" rows="2"></textarea>
+                            <div class="mb-3 row"> <!- Thêm class 'row' vào div.mb-3 -->
+                                <label for="descriptionUpdate" class="col-sm-4 col-form-label">Description:</label> <!- Thêm class 'col-sm-4' và 'col-form-label' cho label -->
+                                <div class="col-sm-8"> <!- Bọc input trong một div với class 'col-sm-8' -->
+                                    <textarea class="form-control" id="descriptionUpdate" name="description" rows="2" required=""></textarea>
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -326,7 +341,6 @@
                 </div>
             </div>
         </div>
-
         <!-- Delete Coupon Modal -->
         <div class="modal fade" id="deleteCouponModal" tabindex="-1" aria-labelledby="deleteCouponModalLabel" aria-hidden="true">
             <div class="modal-dialog">
@@ -378,7 +392,7 @@
                         form.reportValidity();
                         return;
                     }
-                 
+
                     var discountAmount = $('#discountAmount').val();
                     var expirationDate = $('#expirationDate').val();
                     var description = $('#description').val();
@@ -388,7 +402,7 @@
                         url: 'AddCouponController',
                         type: 'POST',
                         data: {
-                        
+
                             discountAmount: discountAmount,
                             expirationDate: expirationDate,
                             description: description
@@ -416,22 +430,41 @@
                     });
                 });
 
+
                 // **Xử lý Cập nhật Coupon**
                 $('#btnUpdateCoupon').click(function () {
+                    const expirationDateInputUpdate = $('#expirationDateUpdate')[0];
+                    const formUpdate = document.getElementById('updateCouponForm');
+                    const expirationDateValueUpdate = expirationDateInputUpdate.value;
+                    const dateRegex = /^\d{4}-\d{2}-\d{2}$/; // Regex cho yyyy-MM-dd
+
+                    if (expirationDateValueUpdate && !dateRegex.test(expirationDateValueUpdate)) { // Kiểm tra định dạng nếu có nhập
+                        expirationDateInputUpdate.setCustomValidity('Định dạng ngày hết hạn không hợp lệ. Vui lòng nhập theo định dạng.');
+                    } else if (expirationDateValueUpdate) { // Kiểm tra ngày hợp lệ nếu có nhập
+                        const dateObj = new Date(expirationDateValueUpdate);
+                        if (isNaN(dateObj.getTime())) {
+                            expirationDateInputUpdate.setCustomValidity('Ngày hết hạn không hợp lệ. Vui lòng nhập ngày tháng hợp lệ.');
+                        } else {
+                            expirationDateInputUpdate.setCustomValidity('');
+                        }
+                    } else {
+                        expirationDateInputUpdate.setCustomValidity(''); // Không có lỗi nếu không nhập (vì không required ở js validation này, nếu muốn required thì thêm if (!expirationDateValueUpdate) ...)
+                    }
+
+
+                    if (!formUpdate.checkValidity()) {
+                        event.preventDefault();
+                        formUpdate.reportValidity();
+                        return;
+                    }
+
+
                     var couponId = $('#couponIdUpdate').val();
                     var discountAmount = $('#discountAmountUpdate').val();
                     var expirationDate = $('#expirationDateUpdate').val();
                     var timesUsed = $('#timesUsedUpdate').val();
                     var description = $('#descriptionUpdate').val();
 
-                    if (!discountAmount || !expirationDate || !timesUsed) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Validation Error',
-                            text: 'Please fill in all required fields: Discount Amount, Expiration Date, and Times Used.'
-                        });
-                        return;
-                    }
 
                     $.ajax({
                         url: 'UpdateCouponController',
@@ -464,6 +497,7 @@
                         }
                     });
                 });
+
 
                 // **Xử lý Xóa Coupon**
                 $('#btnDeleteCouponConfirm').click(function () {

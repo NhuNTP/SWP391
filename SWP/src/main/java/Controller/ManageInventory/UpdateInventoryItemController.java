@@ -44,7 +44,7 @@ public class UpdateInventoryItemController extends HttpServlet {
 
         // 1. Kiểm tra dữ liệu đầu vào (Validation)
         double itemPrice = Double.parseDouble(itemPrice_raw);
-        int itemQuantity = Integer.parseInt(itemQuantity_raw);
+        double itemQuantity = Integer.parseInt(itemQuantity_raw);
 
         Inventory upInventory = new Inventory(itemId_raw, itemName_raw, itemType_raw, itemPrice, itemQuantity, itemUnit_raw, itemDescription_raw);
         InventoryDAO updateItem = new InventoryDAO();

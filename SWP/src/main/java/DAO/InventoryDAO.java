@@ -33,7 +33,7 @@ public class InventoryDAO extends DB.DBContext {
                             rs.getString("ItemName"),
                             rs.getString("ItemType"),
                             rs.getDouble("ItemPrice"),
-                            rs.getInt("ItemQuantity"),
+                            rs.getDouble("ItemQuantity"),
                             rs.getString("ItemUnit"),
                             rs.getString("ItemDescription")
                     );
@@ -126,24 +126,33 @@ public class InventoryDAO extends DB.DBContext {
 
     public void addNewInventoryItem(Inventory inventory) { // Changed parameter type to Model.InventoryItem
         String sql = "INSERT INTO [dbo].[Inventory] (ItemId,ItemName, ItemType, ItemPrice, ItemQuantity, ItemUnit, ItemDescription) " // Updated column names to InventoryItem properties
-                + "VALUES ( ?, ?, ?, ?, ?, ?,?"; // Updated number of placeholders to match the number of columns
-        try {
-            PreparedStatement st = getConnection().prepareStatement(sql);
+                + "VALUES ( ?, ?, ?, ?, ?, ?,?)"; // Updated number of placeholders to match the number of columns
+        try (PreparedStatement st = getConnection().prepareStatement(sql)) { // Try-with-resources để tự động đóng PreparedStatement
+            st.setString(1, inventory.getItemId());
+            st.setString(2, inventory.getItemName());
+            st.setString(3, inventory.getItemType());
+            st.setDouble(4, inventory.getItemPrice());
+            st.setDouble(5, inventory.getItemQuantity());
+            st.setString(6, inventory.getItemUnit());
+            st.setString(7, inventory.getItemDescription());
 
-            
-            st.setString(1, inventory.getItemId());         // Set ItemName
-            st.setString(2, inventory.getItemName());         // Set ItemName
-            st.setString(3, inventory.getItemType());         // Set ItemType
-            st.setDouble(4, inventory.getItemPrice());         // Set ItemPrice (assuming ItemPrice is double)
-            st.setInt(5, inventory.getItemQuantity());          // Set ItemQuantity (assuming ItemQuantity is int)
-            st.setString(6, inventory.getItemUnit());          // Set ItemUnit
-            st.setString(7, inventory.getItemDescription());    // Set ItemDescription
-               
-
-            st.executeUpdate();
-        } catch (Exception e) {
-            System.out.println("Error adding new inventory item: " + e); // More descriptive error message
-            e.printStackTrace(); // Print the full stack trace for debugging
+            System.out.println("Câu truy vấn SQL đang thực thi:");
+            System.out.println(sql);
+            System.out.println("Tham số:");
+            System.out.println("  @P1 (ItemId): " + inventory.getItemId());
+            System.out.println("  @P2 (ItemName): " + inventory.getItemName());
+            System.out.println("  @P3 (ItemType): " + inventory.getItemType());
+            System.out.println("  @P4 (ItemPrice): " + inventory.getItemPrice());
+            System.out.println("  @P5 (ItemQuantity): " + inventory.getItemQuantity());
+            System.out.println("  @P6 (ItemUnit): " + inventory.getItemUnit());
+            System.out.println("  @P7 (ItemDescription): " + inventory.getItemDescription());
+            int rowsInserted = st.executeUpdate();
+            if (rowsInserted > 0) {
+                System.out.println("Thêm mới Item thành công!");
+            }
+        } catch (SQLException | ClassNotFoundException e) {
+            System.err.println("Lỗi khi thêm mới Item: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -154,7 +163,7 @@ public class InventoryDAO extends DB.DBContext {
             st.setString(1, updatedItem.getItemName());
             st.setString(2, updatedItem.getItemType());
             st.setDouble(3, updatedItem.getItemPrice());
-            st.setInt(4, updatedItem.getItemQuantity());
+            st.setDouble(4, updatedItem.getItemQuantity());
             st.setString(5, updatedItem.getItemUnit());
             st.setString(6, updatedItem.getItemDescription());
             st.setString(7, updatedItem.getItemId());
