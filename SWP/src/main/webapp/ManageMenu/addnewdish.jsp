@@ -91,40 +91,39 @@
         }
     </style>
     <script>
-        function showQuantityInput(itemId) {
-            var quantityInput = document.getElementById("quantityUsed" + itemId);
-            if (document.getElementById("itemId" + itemId).checked) {
-                quantityInput.style.display = "inline"; // Hiển thị input số lượng
-            } else {
-                quantityInput.style.display = "none"; // Ẩn input số lượng
-                quantityInput.value = ""; // Xóa giá trị khi checkbox không được chọn
-            }
-        }
+       function showQuantityInput(itemId) {
+    var quantityInput = document.getElementById("quantityUsed" + itemId);
+    console.log("Item ID: " + itemId + ", Quantity Input: ", quantityInput); // Debug
+    if (document.getElementById("itemId" + itemId).checked) {
+        quantityInput.style.display = "inline";
+    } else {
+        quantityInput.style.display = "none";
+        quantityInput.value = "";
+    }
+}
 
         function validateForm() {
             var checkboxes = document.getElementsByName("itemId");
             var isChecked = false;
-            var hasQuantityError = false;
 
             for (var i = 0; i < checkboxes.length; i++) {
                 if (checkboxes[i].checked) {
                     isChecked = true;
                     var itemId = checkboxes[i].value;
                     var quantityInput = document.getElementById("quantityUsed" + itemId);
-                    if (quantityInput.value.trim() === "") {
-                        alert("Please enter the quantity for the selected ingredient: " + document.querySelector('label[for="itemId' + itemId + '"]').textContent);
+                    if (quantityInput.value.trim() === "" || quantityInput.value <= 0) {
+                        alert("Please enter a valid quantity for the selected ingredient: " + document.querySelector('label[for="itemId' + itemId + '"]').textContent);
                         quantityInput.focus();
-                        return false; // Prevent form submission
+                        return false;
                     }
                 }
             }
 
             if (!isChecked) {
                 alert("Please select at least one ingredient.");
-                return false; // Prevent form submission
+                return false;
             }
-
-            return true; // Allow form submission
+            return true;
         }
     </script>
 </head>
@@ -139,54 +138,44 @@
         <p class="error"><%= request.getAttribute("errorMessage") %></p>
     <% } %>
 
-    <form action="${pageContext.request.contextPath}/addnewdish" method="post" enctype="multipart/form-data" onsubmit="return validateForm()">
-        <label for="dishName">Dish Name:</label>
-        <input type="text" id="dishName" name="dishName" required><br><br>
+    <!-- ... (Phần đầu giữ nguyên) -->
+<form action="${pageContext.request.contextPath}/addnewdish" method="post" enctype="multipart/form-data" onsubmit="return validateForm()">
+    <label for="dishName">Dish Name:</label>
+    <input type="text" id="dishName" name="dishName" required><br><br>
 
-        <label for="dishType">Dish Type:</label>
-        <select id="dishType" name="dishType">
-            <option value="Food">Food</option>
-            <option value="Drink">Drink</option>
-        </select><br><br>
+    <label for="dishType">Dish Type:</label>
+    <select id="dishType" name="dishType">
+        <option value="Food">Food</option>
+        <option value="Drink">Drink</option>
+    </select><br><br>
 
-        <label for="dishPrice">Price:</label>
-        <input type="number" id="dishPrice" name="dishPrice" step="0.01" required><br><br>
+    <label for="dishPrice">Price:</label>
+    <input type="number" id="dishPrice" name="dishPrice" step="0.01" required><br><br>
 
-        <label for="dishDescription">Description:</label>
-        <textarea id="dishDescription" name="dishDescription"></textarea><br><br>
+    <label for="dishDescription">Description:</label>
+    <textarea id="dishDescription" name="dishDescription"></textarea><br><br>
 
-        <label for="dishImage">Image:</label>
-        <input type="file" id="dishImage" name="dishImage"><br><br>
+    <label for="dishImage">Image:</label>
+    <input type="file" id="dishImage" name="dishImage"><br><br>
 
-        <label for="dishStatus">Dish Status:</label>
-        <select id="dishStatus" name="dishStatus">
-            <option value="Available">Available</option>
-            <option value="Unavailable">Unavailable</option>
-        </select><br><br>
-
-        <label for="ingredientStatus">Ingredient Status:</label>
-        <select id="ingredientStatus" name="ingredientStatus">
-            <option value="Sufficient">Sufficient</option>
-            <option value="Insufficient">Insufficient</option>
-        </select><br><br>
-
-        <h2>Ingredients</h2>
-        <%
-            List<Inventory> inventoryList = (List<Inventory>) request.getAttribute("inventoryList");
-            if (inventoryList != null && !inventoryList.isEmpty()) {
-                for (Inventory inventory : inventoryList) {
-        %>
-            <div>
-                <label for="itemId<%= inventory.getItemId() %>"><%= inventory.getItemName() %> (<%= inventory.getItemUnit() %>) - Quantity: <%= inventory.getItemQuantity() %></label>
-                <input type="checkbox" id="itemId<%= inventory.getItemId() %>" name="itemId" value="<%= inventory.getItemId() %>" onclick="showQuantityInput(<%= inventory.getItemId() %>)">
-                <input type="number" id="quantityUsed<%= inventory.getItemId() %>" name="quantityUsed<%= inventory.getItemId() %>" placeholder="Quantity Used" style="display:none;">
-            </div>
-        <%
-                }
+    <h2>Ingredients</h2>
+    <%
+        List<Inventory> inventoryList = (List<Inventory>) request.getAttribute("inventoryList");
+        if (inventoryList != null && !inventoryList.isEmpty()) {
+            for (Inventory inventory : inventoryList) {
+    %>
+    <div>
+        <label for="itemId<%= inventory.getItemId() %>"><%= inventory.getItemName() %> (<%= inventory.getItemUnit() %>) - Quantity: <%= inventory.getItemQuantity() %></label>
+        <input type="checkbox" id="itemId<%= inventory.getItemId() %>" name="itemId" value="<%= inventory.getItemId() %>" onclick="showQuantityInput('<%= inventory.getItemId() %>')">
+        <input type="number" id="quantityUsed<%= inventory.getItemId() %>" name="quantityUsed<%= inventory.getItemId() %>" placeholder="Quantity Used" step="0.01" style="display:none;">
+    </div>
+    <%
             }
-        %>
-        <br>
-
-    </form>
+        }
+    %>
+    <br>
+    <input type="submit" value="Add Dish">
+</form>
 </body>
 </html>
+<!-- ok -->

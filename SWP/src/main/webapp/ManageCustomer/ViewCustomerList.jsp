@@ -442,7 +442,7 @@
                         <div class="mb-3">
                             <label for="numberOfPaymentUpdate" class="form-label">Number of Payments:</label>
                             <input type="number" class="form-control" id="numberOfPaymentUpdate"
-                                name="NumberOfPayment"  required>
+                                name="NumberOfPayment"  required min="0">
                             <span id="numberOfPaymentUpdateError" class="text-danger"></span>
                         </div>
                         <div class="modal-footer">

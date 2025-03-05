@@ -5,122 +5,30 @@
 --%>
 
 <%@page import="java.util.List"%>
-<%@page import="Model.Inventory"%> <%-- Assuming Model.Inventory exists, adjust if needed --%>
+<%@page import="Model.Inventory"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html lang="vi">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Inventory Management - Admin Dashboard</title> <%-- Updated title --%>
+        <title>Inventory Management - Admin Dashboard</title>
 
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
         <!-- Font Awesome Icons -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
         <!-- Chart.js -->
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <!-- jQuery -->
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <!-- SweetAlert2 for enhanced alerts -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-        <script>
-
-
-            $(document).ready(function () {
-                const searchInput = $("#searchInput");
-                const columnFilter = $("#columnFilter");
-                const inventoryTableBody = $("#inventoryTableBody");
-            <%-- Updated table body ID --%>
-                const noDataRow = $("#noDataRow");
-
-                function filterTable() {
-                    const searchText = searchInput.val().toLowerCase();
-                    const selectedColumn = columnFilter.val();
-                    let rowVisible = false;
-
-                    inventoryTableBody.find("tr").each(function () {
-                        const row = $(this);
-                        let shouldShowRow = false;
-
-                        row.find("td").each(function (index) {
-                            if (index > 0) {
-                                const cell = $(this);
-                                const cellText = cell.text().toLowerCase();
-                                cell.html(cell.text());
-
-                                let columnMatch = true;
-
-                                if (selectedColumn && selectedColumn !== "") {
-                                    if (selectedColumn === "itemId" && index !== 1)
-                                        columnMatch = false;
-                                    else if (selectedColumn === "itemName" && index !== 2)
-                                        columnMatch = false;
-                                    else if (selectedColumn === "itemType" && index !== 3)
-                                        columnMatch = false;
-                                    else if (selectedColumn === "itemPrice" && index !== 4)
-                                        columnMatch = false;
-                                    else if (selectedColumn === "itemQuantity" && index !== 5)
-                                        columnMatch = false;
-                                    else if (selectedColumn === "itemUnit" && index !== 6)
-                                        columnMatch = false;
-                                    else if (selectedColumn === "itemDescription" && index !== 7)
-                                        columnMatch = false;
-                                }
-
-                                if (columnMatch) {
-                                    if (searchText && cellText.includes(searchText)) {
-                                        const highlightedText = cell.text().replace(new RegExp(searchText, 'gi'), '<span class="highlight">$&</span>');
-                                        cell.html(highlightedText);
-                                        shouldShowRow = true;
-                                    }
-                                }
-                            }
-                        });
-
-                        if (searchText === "" || shouldShowRow) {
-                            row.show();
-                            rowVisible = true;
-                        } else {
-                            row.hide();
-                        }
-                    });
-
-                    if (rowVisible) {
-                        noDataRow.hide();
-                    } else {
-                        noDataRow.show();
-                    }
-                }
-
-                searchInput.on("keyup", filterTable);
-                columnFilter.on("change", filterTable);
-
-
-                // **Xử lý Xóa Inventory Item (EVENT DELEGATION)**
-                $('#inventoryTableBody').on('click', '.btn-delete-inventory', function () {
-                    var itemId = $(this).data('item-id');
-                    if (confirm("Bạn có chắc chắn muốn XÓA mục kho này?")) {
-            <%-- Updated confirmation message --%>
-                        $.ajax({
-                            url: "DeleteInventoryItemController",
-                            type: "POST",
-                            data: {itemID: itemId},
-                            success: function (data) {
-                                alert("Xóa mục kho thành công!");
-            <%-- Updated alert message --%>
-                                window.location.reload();
-                            },
-                            error: function (jqXHR, textStatus, errorThrown) {
-                                alert("Lỗi khi xóa mục kho: " + textStatus + ", " + errorThrown);
-            <%-- Updated error message --%>
-                            }
-                        });
-                    }
-                });
-            });
-        </script>
         <style>
             /* CSS Reset and Font */
             body {
                 font-family: 'Roboto', sans-serif;
-                background-color: #f8f9fa;
+                background-color: #fcfcf7
             }
 
             /* Sidebar Styles */
@@ -241,20 +149,32 @@
                 cursor: pointer;
                 margin: 2px;
             }
-
-            .employee-grid .btn-warning {
-                background-color: #ffc107;
+            .btn-edit, .btn-delete {
+                padding: 5px 10px;
+                border-radius: 5px;
+                color: white;
+                text-decoration: none;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
             }
 
-            .employee-grid .btn-warning:hover {
-                background-color: #e0a800;
+            .btn-edit {
+                background-color: #007bff;
+                border: none;
             }
 
-            .employee-grid .btn-danger {
+            .btn-edit:hover {
+                background-color: #0056b3;
+            }
+
+            .btn-delete {
                 background-color: #dc3545;
+                border: none;
+                margin-left: 5px;
             }
 
-            .employee-grid .btn-danger:hover {
+            .btn-delete:hover {
                 background-color: #c82333;
             }
 
@@ -285,6 +205,7 @@
             .sidebar h4{
                 font-size: 1.5rem;
             }
+
         </style>
     </head>
 
@@ -327,7 +248,7 @@
                                 </div>
 
                                 <div class="header-buttons">
-                                    <a href="ManageInventory/AddInventoryItem.jsp" class="btn btn-info" id="btnCreate">Add New</a> <%-- Updated button text --%>
+                                    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#addInventoryModal">Add New</button>
                                 </div>
                             </div>
                             <div class="employee-grid"> <%-- Reusing employee-grid class for layout consistency --%>
@@ -342,8 +263,7 @@
                                             <th>Quantity</th>
                                             <th>Unit</th>
                                             <th>Description</th>
-                                            <th>Image</th>
-                                            <th>Edit</th> <%-- Action column title --%>
+                                            <th>Actions</th> <%-- Action column title --%>
                                         </tr>
                                     </thead>
                                     <tbody id="inventoryTableBody"> <%-- Added ID for table body --%>
@@ -353,7 +273,7 @@
                                                 int displayIndex = 1;
                                                 for (Inventory listItem : inventoryItemList) {
                                         %>
-                                        <tr>
+                                        <tr id="inventoryRow<%=listItem.getItemId()%>">
                                             <Td valign="middle"><% out.print(displayIndex++); %></td>
                                             <Td valign="middle"><% out.print(listItem.getItemId()); %></td>
                                             <Td valign="middle"><% out.print(listItem.getItemName()); %></td>
@@ -361,41 +281,32 @@
                                             <Td valign="middle"><% out.print(listItem.getItemPrice()); %></td>
                                             <Td valign="middle"><% out.print(listItem.getItemQuantity()); %></td>
                                             <Td valign="middle"><% out.print(listItem.getItemUnit()); %></td>
-                                            <Td valign="middle"><% out.print(listItem.getItemDescription()); %></td>
+                                            <Td valign="middle"><% out.print(listItem.getItemDescription());%></td>
                                             <Td valign="middle">
-                                                <%
-                                                    String imagePath = listItem.getItemImage();
-                                                    if (imagePath != null && !imagePath.isEmpty()) {
-                                                %>
-                                                <img src="<%= imagePath%>" alt="<%= listItem.getItemName()%>">
-                                                <%
-                                                    } else {
-                                                        out.print("No Image");
-                                                    }
-                                                %>
-                                            </td>
-                                            <Td valign="middle">
-                                                <form action="ManageInventory/UpdateInventoryItem.jsp" method="post" style="display:inline;">
-                                                    <input type="hidden" name="itemId" value="<% out.print(listItem.getItemId()); %>">
-                                                    <input type="hidden" name="itemName" value="<% out.print(listItem.getItemName()); %>">
-                                                    <input type="hidden" name="itemType" value="<% out.print(listItem.getItemType()); %>">
-                                                    <input type="hidden" name="itemPrice" value="<% out.print(listItem.getItemPrice()); %>">
-                                                    <input type="hidden" name="itemQuantity" value="<% out.print(listItem.getItemQuantity()); %>">
-                                                    <input type="hidden" name="itemUnit" value="<% out.print(listItem.getItemUnit()); %>">
-                                                    <input type="hidden" name="itemDescription" value="<% out.print(listItem.getItemDescription());%>">
-                                                    <input type="hidden" name="itemImage" value="<%= listItem.getItemImage() != null ? listItem.getItemImage() : ""%>">
-
-                                                    <button type="submit" class="btn btn-warning">Update</button> <%-- Updated button text --%>
-                                                </form>
-                                                <button type="button" class="btn btn-danger btn-delete-inventory" data-item-id="<%= listItem.getItemId()%>">Delete</button> <%-- Updated button text and class, removed onclick --%>
+                                                <button type="button" class="btn btn-edit btn-update-inventory"
+                                                        data-bs-toggle="modal" data-bs-target="#updateInventoryModal"
+                                                        data-item-id="<%= listItem.getItemId()%>"
+                                                        data-item-name="<%= listItem.getItemName()%>"
+                                                        data-item-type="<%= listItem.getItemType()%>"
+                                                        data-item-price="<%= listItem.getItemPrice()%>"
+                                                        data-item-quantity="<%= listItem.getItemQuantity()%>"
+                                                        data-item-unit="<%= listItem.getItemUnit()%>"
+                                                        data-item-description="<%= listItem.getItemDescription()%>">
+                                                    <i class="fas fa-edit"></i> Update
+                                                </button>
+                                                <button type="button" class="btn btn-delete btn-delete-inventory"
+                                                        data-bs-toggle="modal" data-bs-target="#deleteInventoryModal"
+                                                        data-item-id="<%= listItem.getItemId()%>">
+                                                    <i class="fas fa-trash-alt"></i> Delete
+                                                </button>
                                             </td>
                                         </tr>
                                         <%
                                             }
                                         } else {
                                         %>
-                                        <tr id="noDataRow" style="display: none;"> <%-- Added ID and style for no data row --%>
-                                            <td colspan="10">
+                                        <tr id="noDataRow" > <%-- Added ID and style for no data row --%>
+                                            <td colspan="9">
                                                 <div class="no-data">
                                                     No inventory items found.
                                                 </div>
@@ -412,5 +323,474 @@
                 </section>
             </div>
         </div>
+
+        <!-- Add Inventory Modal -->
+        <div class="modal fade" id="addInventoryModal" tabindex="-1" aria-labelledby="addInventoryModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addInventoryModalLabel">Add New Inventory Item</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="addInventoryForm">
+                            <div class="row mb-3">
+                                <label for="itemName" class="col-sm-4 col-form-label">Name:</label>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" id="itemName" name="itemName" required>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label for="itemType" class="col-sm-4 col-form-label">Type:</label>
+                                <div class="col-sm-8">
+                                    <select class="form-control" id="itemType" name="itemType" required >
+                                        <option value="">Select type...</option>
+                                        <option value="food">Food</option>
+                                        <option value="drink">Drink</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label for="itemPrice" class="col-sm-4 col-form-label">Price:</label>
+                                <div class="col-sm-8">
+                                    <input type="number" class="form-control" id="itemPrice" name="itemPrice" required min="0" step="0.01">
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label for="itemQuantity" class="col-sm-4 col-form-label">Quantity:</label>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" id="itemQuantity" name="itemQuantity" required min="0">
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label for="itemUnit" class="col-sm-4 col-form-label">Unit:</label>
+                                <div class="col-sm-8">
+                                    <select class="form-control" id="itemUnit" name="itemUnit" required>
+                                        <option value="">Select unit...</option> <!-- Tùy chọn mặc định -->
+                                        <option value="piece">Piece</option>
+                                        <option value="kg">Kg</option>
+                                        <option value="gram">Gram</option>
+                                        <option value="liter">Liter</option>
+                                        <option value="ml">ml</option>
+                                        <option value="box">Box</option>
+                                        <option value="pack">Pack</option>
+                                        <option value="bottle">Bottle</option>
+                                        <option value="set">Set</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label for="itemDescription" class="col-sm-4 col-form-label">Description:</label>
+                                <div class="col-sm-8">
+                                    <textarea class="form-control" id="itemDescription" name="itemDescription" rows="2"></textarea>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="btnAddInventory">Add Item</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Update Inventory Modal -->
+        <div class="modal fade" id="updateInventoryModal" tabindex="-1" aria-labelledby="updateInventoryModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="updateInventoryModalLabel">Update Inventory Item</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="updateInventoryForm">
+                            <div class="row mb-3">
+                                <label for="itemIdUpdate" class="col-sm-4 col-form-label">Item ID (View Only):</label>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" id="itemIdUpdateDisplay" readonly>
+                                    <input type="hidden" class="form-control" id="itemIdUpdate" name="itemId">
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label for="itemNameUpdate" class="col-sm-4 col-form-label">Name:</label>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" id="itemNameUpdate" name="itemName">
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label for="itemTypeUpdate" class="col-sm-4 col-form-label">Type:</label>
+                                <div class="col-sm-8">
+                                    <select class="form-control" id="itemTypeUpdate" name="itemType">
+                                        <option value="food">Food</option>
+                                        <option value="drink">Drink</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label for="itemPriceUpdate" class="col-sm-4 col-form-label">Price:</label>
+                                <div class="col-sm-8">
+                                    <input type="number" class="form-control" id="itemPriceUpdate" name="itemPrice" min="0" step="0.01">
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label for="itemQuantityUpdate" class="col-sm-4 col-form-label">Quantity:</label>
+                                <div class="col-sm-8">
+                                    <input type="number" class="form-control" id="itemQuantityUpdate" name="itemQuantity" min="0">
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label for="itemUnitUpdate" class="col-sm-4 col-form-label">Unit:</label>
+                                <div class="col-sm-8">
+                                    <select class="form-control" id="itemUnitUpdate" name="itemUnit">
+                                        <option value="">Select unit...</option> <!-- Tùy chọn mặc định -->
+                                        <option value="piece">Piece</option>
+                                        <option value="kg">Kg</option>
+                                        <option value="gram">Gram</option>
+                                        <option value="liter">Liter</option>
+                                        <option value="ml">ml</option>
+                                        <option value="box">Box</option>
+                                        <option value="pack">Pack</option>
+                                        <option value="bottle">Bottle</option>
+                                        <option value="set">Set</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label for="itemDescriptionUpdate" class="col-sm-4 col-form-label">Description:</label>
+                                <div class="col-sm-8">
+                                    <textarea class="form-control" id="itemDescriptionUpdate" name="itemDescription" rows="2"></textarea>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="btnUpdateInventory">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Inventory Modal -->
+        <div class="modal fade" id="deleteInventoryModal" tabindex="-1" aria-labelledby="deleteInventoryModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteInventoryModalLabel">Confirm Delete</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to DELETE this inventory item?</p>
+                        <input type="hidden" id="inventoryItemIdDelete">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" id="btnDeleteInventoryConfirm">Delete Item</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            $(document).ready(function () {
+                bindEventHandlers();
+                setupSearchFilter();
+
+                // **Xử lý Thêm Inventory Item**
+                $('#btnAddInventory').click(function () {
+                    // Xóa các thông báo lỗi cũ (nếu có)
+                    $('.error-message').remove();
+                    $('.is-invalid').removeClass('is-invalid');
+
+                    var itemName = $('#itemName').val().trim(); // trim() để loại bỏ khoảng trắng đầu cuối
+                    var itemType = $('#itemType').val();
+                    var itemPrice = $('#itemPrice').val();
+                    var itemQuantity = $('#itemQuantity').val();
+                    var itemUnit = $('#itemUnit').val();
+                    var itemDescription = $('#itemDescription').val();
+
+                    var isValid = true; // Biến cờ để theo dõi trạng thái hợp lệ của form
+
+                    // Kiểm tra trường Name
+                    if (itemName === '') {
+                        isValid = false;
+                        displayError('itemName', 'Name cannot be empty.');
+                    }
+
+                    // Kiểm tra trường Type
+                    if (itemType === '') {
+                        isValid = false;
+                        displayError('itemType', 'Please select item type.');
+                    }
+
+                    // Kiểm tra trường Price
+                    if (itemPrice === '' || isNaN(itemPrice) || parseFloat(itemPrice) < 0) {
+                        isValid = false;
+                        displayError('itemPrice', 'Price must be a valid number and cannot be negative.');
+                    }
+
+                    // Kiểm tra trường Quantity
+                    if (itemQuantity === '' || isNaN(itemQuantity) || parseDouble(itemQuantity) < 0 || !Number.isInteger(Number(itemQuantity))) {
+                        isValid = false;
+                        displayError('itemQuantity', 'Quantity must be a non-negative integer.');
+                    }
+
+                    // Kiểm tra trường Unit
+                    if (itemUnit === '') {
+                        isValid = false;
+                        displayError('itemUnit', 'Please select item unit.');
+                    }
+
+                    if (isValid) {
+                        // Nếu tất cả các trường hợp lệ, gửi AJAX request
+                        $.ajax({
+                            url: 'AddInventoryItemController',
+                            type: 'POST',
+                            data: {
+                                itemName: itemName,
+                                itemType: itemType,
+                                itemPrice: itemPrice,
+                                itemQuantity: itemQuantity,
+                                itemUnit: itemUnit,
+                                itemDescription: itemDescription
+                            },
+                            success: function () {
+                                var addInventoryModal = bootstrap.Modal.getInstance(document.getElementById('addInventoryModal'));
+                                addInventoryModal.hide();
+                                reloadViewInventory(); // Giả sử hàm này reload lại bảng dữ liệu
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success!',
+                                    text: 'Inventory item added successfully.',
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
+                                $('#addInventoryForm')[0].reset();
+                            },
+                            error: function (xhr, status, error) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error!',
+                                    text: 'Error adding inventory item: ' + error
+                                });
+                            }
+                        });
+                    }
+                });
+
+// Hàm hiển thị thông báo lỗi bên dưới trường nhập liệu
+                function displayError(fieldId, message) {
+                    var field = $('#' + fieldId);
+                    var errorElement = $('<div class="error-message text-danger mt-1"></div>').text(message); // Tạo element div thông báo lỗi
+                    field.addClass('is-invalid'); // Thêm class 'is-invalid' để highlight input lỗi (Bootstrap)
+                    field.parent().append(errorElement); // Thêm thông báo lỗi vào sau input field
+                }
+
+                // **Xử lý Cập nhật Inventory Item**
+                $('#btnUpdateInventory').click(function () {
+                    var itemId = $('#itemIdUpdate').val();
+                    var itemName = $('#itemNameUpdate').val();
+                    var itemType = $('#itemTypeUpdate').val();
+                    var itemPrice = $('#itemPriceUpdate').val();
+                    var itemQuantity = $('#itemQuantityUpdate').val();
+                    var itemUnit = $('#itemUnitUpdate').val();
+                    var itemDescription = $('#itemDescriptionUpdate').val();
+
+
+                    $.ajax({
+                        url: 'UpdateInventoryItemController',
+                        type: 'POST',
+                        data: {
+                            itemId: itemId,
+                            itemName: itemName,
+                            itemType: itemType,
+                            itemPrice: itemPrice,
+                            itemQuantity: itemQuantity,
+                            itemUnit: itemUnit,
+                            itemDescription: itemDescription
+                        },
+                        success: function () {
+                            var updateInventoryModal = bootstrap.Modal.getInstance(document.getElementById('updateInventoryModal'));
+                            updateInventoryModal.hide();
+                            reloadViewInventory();
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: 'Inventory item updated successfully.',
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                        },
+                        error: function (error) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: 'Error updating inventory item: ' + error
+                            });
+                        }
+                    });
+                });
+
+                // **Xử lý Xóa Inventory Item**
+                $('#btnDeleteInventoryConfirm').click(function () {
+                    var itemId = $('#inventoryItemIdDelete').val();
+                    $.ajax({
+                        url: 'DeleteInventoryItemController',
+                        type: 'POST',
+                        data: {
+                            itemID: itemId
+                        },
+                        success: function (response) {
+                            var deleteInventoryModal = bootstrap.Modal.getInstance(document.getElementById('deleteInventoryModal'));
+                            deleteInventoryModal.hide();
+                            $('#inventoryRow' + itemId).remove();
+                            if ($('#inventoryTableBody tr').length === 0) {
+                                $('#inventoryTableBody').html('<tr><td colspan="9"><div class="no-data">No inventory items found.</div></td></tr>');
+                            }
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: 'Inventory item deleted successfully.',
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                        },
+                        error: function (xhr, status, error) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: 'Error deleting inventory item: ' + error
+                            });
+                        }
+                    });
+                });
+            });
+
+            function bindEventHandlers() {
+                $(document).on('click', '.btn-update-inventory', function () {
+                    var itemId = $(this).data('item-id');
+                    var itemName = $(this).data('item-name');
+                    var itemType = $(this).data('item-type');
+                    var itemPrice = $(this).data('item-price');
+                    var itemQuantity = $(this).data('item-quantity');
+                    var itemUnit = $(this).data('item-unit');
+                    var itemDescription = $(this).data('item-description');
+
+
+                    $('#itemIdUpdate').val(itemId);
+                    $('#itemIdUpdateDisplay').val(itemId);
+                    $('#itemNameUpdate').val(itemName);
+                    $('#itemTypeUpdate').val(itemType);
+                    $('#itemPriceUpdate').val(itemPrice);
+                    $('#itemQuantityUpdate').val(itemQuantity);
+                    $('#itemUnitUpdate').val(itemUnit);
+                    $('#itemDescriptionUpdate').val(itemDescription);
+
+                });
+
+                $(document).on('click', '.btn-delete-inventory', function () {
+                    var itemId = $(this).data('item-id');
+                    $('#inventoryItemIdDelete').val(itemId);
+                });
+            }
+
+            function reloadViewInventory() {
+                $.get('ViewInventoryController', function (data) {
+                    var newBody = $(data).find('tbody').html();
+                    $('tbody').html(newBody);
+                    bindEventHandlers();
+                });
+            }
+
+            function setupSearchFilter() {
+                const searchInput = $("#searchInput");
+                const columnFilter = $("#columnFilter");
+                const inventoryTableBody = $("#inventoryTableBody");
+                const noDataRow = $("#noDataRow");
+                const rows = inventoryTableBody.find("tr"); // Select all rows initially
+
+                function filterTable() {
+                    const searchText = searchInput.val().toLowerCase();
+                    const selectedColumn = columnFilter.val();
+                    let rowVisible = false;
+
+                    rows.each(function () { // Use the initially selected rows
+                        const row = $(this);
+                        if (row.attr('id') && row.attr('id') === 'noDataRow')
+                            return true; // Skip noDataRow
+
+                        let shouldShowRow = false;
+
+                        row.find("td").each(function (index) {
+                            if (index > 0) { // Skip the first column (No.)
+                                const cell = $(this);
+                                const cellText = cell.text().toLowerCase();
+                                cell.html(cell.text()); // Reset highlight
+
+                                let columnMatch = true;
+
+                                if (selectedColumn && selectedColumn !== "") {
+                                    let columnIndex;
+                                    switch (selectedColumn) {
+                                        case 'itemId':
+                                            columnIndex = 1;
+                                            break;
+                                        case 'itemName':
+                                            columnIndex = 2;
+                                            break;
+                                        case 'itemType':
+                                            columnIndex = 3;
+                                            break;
+                                        case 'itemPrice':
+                                            columnIndex = 4;
+                                            break;
+                                        case 'itemQuantity':
+                                            columnIndex = 5;
+                                            break;
+                                        case 'itemUnit':
+                                            columnIndex = 6;
+                                            break;
+                                        case 'itemDescription':
+                                            columnIndex = 7;
+                                            break;
+                                        default:
+                                            columnIndex = -1; // Should not happen, but for safety
+                                    }
+                                    if (index !== columnIndex) {
+                                        columnMatch = false;
+                                    }
+                                }
+
+                                if (columnMatch) {
+                                    if (searchText && cellText.includes(searchText)) {
+                                        const highlightedText = cell.text().replace(new RegExp(searchText, 'gi'), '<span class="highlight">$&</span>');
+                                        cell.html(highlightedText);
+                                        shouldShowRow = true;
+                                    }
+                                }
+                            }
+                        });
+
+                        if (searchText === "" || shouldShowRow) {
+                            row.show();
+                            rowVisible = true;
+                        } else {
+                            row.hide();
+                        }
+                    });
+
+                    if (rowVisible) {
+                        noDataRow.hide();
+                    } else {
+                        noDataRow.show();
+                    }
+                }
+
+                searchInput.on("keyup", filterTable);
+                columnFilter.on("change", filterTable);
+            }
+
+        </script>
     </body>
 </html>

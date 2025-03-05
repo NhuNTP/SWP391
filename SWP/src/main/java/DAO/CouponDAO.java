@@ -1,177 +1,190 @@
-    /*
-     * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
-     * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
-     */
-    package DAO;
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package DAO;
 
-    import Model.Coupon;
-    import java.sql.Date;
-    import java.sql.PreparedStatement;
-    import java.sql.ResultSet;
-    import java.sql.SQLException;
-    import java.util.ArrayList;
-    import java.util.List;
-    import DB.DBContext;
-    import java.sql.Connection;
-    import java.util.logging.Level;
-    import java.util.logging.Logger;
+import Model.Coupon;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import DB.DBContext;
+import java.sql.Connection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-    /**
-     *
-     * @author DELL-Laptop
-     */
-    public class CouponDAO extends DB.DBContext {
+/**
+ *
+ * @author DELL-Laptop
+ */
+public class CouponDAO extends DB.DBContext {
 
-        public List<Coupon> getAllCoupon() {
-            String sql = "SELECT couponId, discountAmount, expirationDate, timesUsed,description FROM Coupon Where isDeleted = 0"; // Liệt kê rõ ràng các cột
-            List<Coupon> coupons = new ArrayList<>();
-            try (PreparedStatement st = getConnection().prepareStatement(sql)) {
-                try (ResultSet rs = st.executeQuery()) {
-                    while (rs.next()) {
-                        Coupon coupon = new Coupon( // Tạo đối tượng Coupon với đúng thứ tự tham số
-                                rs.getString("couponId"),
-                                rs.getBigDecimal("discountAmount"),
-                                rs.getDate("expirationDate"),
-                                rs.getInt("timesUsed"),
-                                rs.getString("description")
-                        );
-                        coupons.add(coupon);
-                    }
-                    System.out.print("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk");
-                    return coupons;
+    public List<Coupon> getAllCoupon() {
+        String sql = "SELECT couponId, discountAmount, expirationDate, timesUsed,description FROM Coupon Where isDeleted = 0"; // Liệt kê rõ ràng các cột
+        List<Coupon> coupons = new ArrayList<>();
+        try (PreparedStatement st = getConnection().prepareStatement(sql)) {
+            try (ResultSet rs = st.executeQuery()) {
+                while (rs.next()) {
+                    Coupon coupon = new Coupon( // Tạo đối tượng Coupon với đúng thứ tự tham số
+                            rs.getString("couponId"),
+                            rs.getBigDecimal("discountAmount"),
+                            rs.getDate("expirationDate"),
+                            rs.getInt("timesUsed"),
+                            rs.getString("description")
+                    );
+                    coupons.add(coupon);
                 }
-
-            } catch (SQLException | ClassNotFoundException e) { // Bắt cả 2 loại Exception có thể xảy ra
-                System.err.println("Lỗi khi truy vấn tất cả Coupon: " + e.getMessage()); // Sử dụng System.err cho lỗi
-                e.printStackTrace(); // In stack trace để debug dễ hơn
+                System.out.print("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk");
+                return coupons;
             }
-            return null; // Trả về null khi có lỗi hoặc không có Coupon nào
+
+        } catch (SQLException | ClassNotFoundException e) { // Bắt cả 2 loại Exception có thể xảy ra
+            System.err.println("Lỗi khi truy vấn tất cả Coupon: " + e.getMessage()); // Sử dụng System.err cho lỗi
+            e.printStackTrace(); // In stack trace để debug dễ hơn
+        }
+        return null; // Trả về null khi có lỗi hoặc không có Coupon nào
+    }
+
+    public String generateNextCouponId() throws SQLException, ClassNotFoundException {
+        String lastCouponId = getLastCouponIdFromDB();
+        int nextNumber = 1; // Số bắt đầu nếu chưa có coupon nào
+
+        if (lastCouponId != null && !lastCouponId.isEmpty()) {
+            try {
+                String numberPart = lastCouponId.substring(2); // Loại bỏ "CP"
+                nextNumber = Integer.parseInt(numberPart) + 1;
+            } catch (NumberFormatException e) {
+                // Xử lý lỗi nếu phần số không đúng định dạng (ví dụ: log lỗi hoặc ném exception)
+                System.err.println("Lỗi định dạng CouponId cuối cùng: " + lastCouponId);
+                // Trong trường hợp lỗi định dạng, vẫn nên tạo mã mới bắt đầu từ CP001 để đảm bảo tiếp tục hoạt động
+                return "CP001";
+            }
         }
 
-        public String generateNextCouponId() throws SQLException, ClassNotFoundException {
-            String lastCouponId = getLastCouponIdFromDB();
-            int nextNumber = 1; // Số bắt đầu nếu chưa có coupon nào
+        // Định dạng số thành chuỗi 3 chữ số (ví dụ: 1 -> "001", 10 -> "010", 100 -> "100")
+        String numberStr = String.format("%03d", nextNumber);
+        return "CO" + numberStr; // **Sửa thành "CP" thay vì "CO"**
+    }
 
-            if (lastCouponId != null && !lastCouponId.isEmpty()) {
+    private String getLastCouponIdFromDB() throws SQLException, ClassNotFoundException {
+        String lastCouponId = null;
+        // **Sửa câu SQL cho đúng tên bảng và cột, và dùng TOP 1 cho SQL Server**
+        String sql = "SELECT TOP 1 CouponId FROM [db1].[dbo].[Coupon] ORDER BY CouponId DESC";
+        Connection connection = null; // Khai báo connection để quản lý đóng kết nối trong finally
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+
+        try {
+            connection = getConnection(); // Gọi phương thức getConnection() để lấy Connection - **Cần đảm bảo getConnection() được implement đúng**
+            preparedStatement = connection.prepareStatement(sql);
+            resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                lastCouponId = resultSet.getString("CouponId"); // **Sửa thành "CouponId" cho đúng tên cột**
+            }
+        } catch (SQLException e) {
+            e.printStackTrace(); // In lỗi hoặc xử lý lỗi kết nối database
+            throw e; // Re-throw để servlet xử lý nếu cần
+        } finally {
+            // Đóng resources trong finally block để đảm bảo giải phóng kết nối và resources
+            if (resultSet != null) {
                 try {
-                    String numberPart = lastCouponId.substring(2); // Loại bỏ "CP"
-                    nextNumber = Integer.parseInt(numberPart) + 1;
-                } catch (NumberFormatException e) {
-                    // Xử lý lỗi nếu phần số không đúng định dạng (ví dụ: log lỗi hoặc ném exception)
-                    System.err.println("Lỗi định dạng CouponId cuối cùng: " + lastCouponId);
-                    // Trong trường hợp lỗi định dạng, vẫn nên tạo mã mới bắt đầu từ CP001 để đảm bảo tiếp tục hoạt động
-                    return "CP001";
+                    resultSet.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
                 }
             }
-
-            // Định dạng số thành chuỗi 3 chữ số (ví dụ: 1 -> "001", 10 -> "010", 100 -> "100")
-            String numberStr = String.format("%03d", nextNumber);
-            return "CO" + numberStr; // **Sửa thành "CP" thay vì "CO"**
-        }
-
-        private String getLastCouponIdFromDB() throws SQLException, ClassNotFoundException {
-            String lastCouponId = null;
-            // **Sửa câu SQL cho đúng tên bảng và cột, và dùng TOP 1 cho SQL Server**
-            String sql = "SELECT TOP 1 CouponId FROM [db1].[dbo].[Coupon] ORDER BY CouponId DESC";
-            Connection connection = null; // Khai báo connection để quản lý đóng kết nối trong finally
-            PreparedStatement preparedStatement = null;
-            ResultSet resultSet = null;
-
-            try {
-                connection = getConnection(); // Gọi phương thức getConnection() để lấy Connection - **Cần đảm bảo getConnection() được implement đúng**
-                preparedStatement = connection.prepareStatement(sql);
-                resultSet = preparedStatement.executeQuery();
-
-                if (resultSet.next()) {
-                    lastCouponId = resultSet.getString("CouponId"); // **Sửa thành "CouponId" cho đúng tên cột**
-                }
-            } catch (SQLException e) {
-                e.printStackTrace(); // In lỗi hoặc xử lý lỗi kết nối database
-                throw e; // Re-throw để servlet xử lý nếu cần
-            } finally {
-                // Đóng resources trong finally block để đảm bảo giải phóng kết nối và resources
-                if (resultSet != null) {
-                    try {
-                        resultSet.close();
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                }
-                if (preparedStatement != null) {
-                    try {
-                        preparedStatement.close();
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                }
-                if (connection != null) {
-                    try {
-                        connection.close();
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
+            if (preparedStatement != null) {
+                try {
+                    preparedStatement.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
                 }
             }
-            return lastCouponId;
-        }
-
-        public void addNewCoupon(Coupon coupon) {
-            String sql = "INSERT INTO Coupon (couponId,discountAmount, expirationDate,description) VALUES (?, ?, ?, ?)"; // Thêm timeUsed vào INSERT và bỏ isUsed
-            try (PreparedStatement st = getConnection().prepareStatement(sql)) { // Try-with-resources để tự động đóng PreparedStatement
-                st.setString(1, coupon.getCouponId());
-                st.setBigDecimal(2, coupon.getDiscountAmount());
-                st.setDate(3, new java.sql.Date(coupon.getExpirationDate().getTime())); // Chuyển java.util.Date sang java.sql.Date
-
-                st.setString(4, coupon.getDescription());
-                int rowsInserted = st.executeUpdate();
-                if (rowsInserted > 0) {
-                    System.out.println("Thêm mới Coupon thành công!");
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
                 }
-            } catch (SQLException | ClassNotFoundException e) {
-                System.err.println("Lỗi khi thêm mới Coupon: " + e.getMessage());
-                e.printStackTrace();
             }
         }
+        return lastCouponId;
+    }
 
-        public void updateCoupon(Coupon coupon) { // Loại bỏ throws Exception không cần thiết, bắt và xử lý bên trong
-            String sql = "UPDATE Coupon SET discountAmount = ?, expirationDate = ?, timesUsed = ?,description=? WHERE couponId = ?"; // Sửa thành timeUsed và bỏ isUsed
-            try (PreparedStatement st = getConnection().prepareStatement(sql)) { // Try-with-resources
+    public void addNewCoupon(Coupon coupon) {
+        String sql = "INSERT INTO Coupon (couponId, discountAmount, expirationDate, description) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement st = getConnection().prepareStatement(sql)) {
+            // In giá trị trước khi set vào PreparedStatement
+            System.out.println("Giá trị trước khi thêm vào database:");
+            System.out.println("couponId: " + coupon.getCouponId());
+            System.out.println("discountAmount: " + coupon.getDiscountAmount());
+            System.out.println("expirationDate: " + coupon.getExpirationDate());
+            System.out.println("description: " + coupon.getDescription());
 
-                st.setBigDecimal(1, coupon.getDiscountAmount());
-                st.setDate(2, new java.sql.Date(coupon.getExpirationDate().getTime())); // Chuyển java.util.Date sang java.sql.Date
-                st.setInt(3, coupon.getTimesUsed()); // Sử dụng timeUsed
-                st.setString(4, coupon.getDescription());
-                st.setString(5, coupon.getCouponId());
+            st.setString(1, coupon.getCouponId());
+            st.setBigDecimal(2, coupon.getDiscountAmount());
+            st.setDate(3, new java.sql.Date(coupon.getExpirationDate().getTime())); // Chuyển java.util.Date sang java.sql.Date
+            st.setString(4, coupon.getDescription());
 
-                int rowsUpdated = st.executeUpdate();
-                if (rowsUpdated > 0) {
-                    System.out.println("Cập nhật Coupon ID = " + coupon.getCouponId() + " thành công!");
-                } else {
-                    System.out.println("Không tìm thấy Coupon ID = " + coupon.getCouponId() + " để cập nhật.");
-                }
-
-            } catch (SQLException | ClassNotFoundException e) {
-                System.err.println("Lỗi cập nhật Coupon: " + e.getMessage());
-                e.printStackTrace();
+            int rowsInserted = st.executeUpdate();
+            if (rowsInserted > 0) {
+                System.out.println("Thêm mới Coupon thành công!");
             }
-        }
-
-        public void deleteCouponById(String couponId) throws ClassNotFoundException {
-
-            try {
-                // Modified to update IsDeleted instead of deleting
-                String sql = "UPDATE [Coupon] SET IsDeleted = 1 WHERE couponId=?";
-                PreparedStatement st = getConnection().prepareStatement(sql);
-                st.setString(1, couponId);
-                int rowsUpdated = st.executeUpdate();
-                if (rowsUpdated > 0) {
-                    System.out.println("Delete Success!");
-                } else {
-                    System.out.println("Delte Unsuccess.");
-                }
-
-            } catch (SQLException ex) {
-                Logger.getLogger(CouponDAO.class.getName()).log(Level.SEVERE, null, ex);
-            }
+        } catch (SQLException | ClassNotFoundException e) {
+            System.err.println("Lỗi khi thêm mới Coupon: " + e.getMessage());
+            e.printStackTrace();
         }
     }
+
+    public void updateCoupon(Coupon coupon) { // Loại bỏ throws Exception không cần thiết, bắt và xử lý bên trong
+        String sql = "UPDATE Coupon SET discountAmount = ?, expirationDate = ?, timesUsed = ?,description=? WHERE couponId = ?"; // Sửa thành timeUsed và bỏ isUsed
+        try (PreparedStatement st = getConnection().prepareStatement(sql)) { // Try-with-resources
+
+            st.setBigDecimal(1, coupon.getDiscountAmount());
+            st.setDate(2, new java.sql.Date(coupon.getExpirationDate().getTime())); // Chuyển java.util.Date sang java.sql.Date
+            st.setInt(3, coupon.getTimesUsed()); // Sử dụng timeUsed
+            st.setString(4, coupon.getDescription());
+            st.setString(5, coupon.getCouponId());
+
+            System.out.println("Giá trị trước khi thêm vào database:");
+            System.out.println("couponId: " + coupon.getCouponId());
+            System.out.println("discountAmount: " + coupon.getDiscountAmount());
+            System.out.println("expirationDate: " + coupon.getExpirationDate());
+            System.out.println("description: " + coupon.getDescription());
+
+            int rowsUpdated = st.executeUpdate();
+            if (rowsUpdated > 0) {
+                System.out.println("Cập nhật Coupon ID = " + coupon.getCouponId() + " thành công!");
+            } else {
+                System.out.println("Không tìm thấy Coupon ID = " + coupon.getCouponId() + " để cập nhật.");
+            }
+
+        } catch (SQLException | ClassNotFoundException e) {
+            System.err.println("Lỗi cập nhật Coupon: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public void deleteCouponById(String couponId) throws ClassNotFoundException {
+
+        try {
+            // Modified to update IsDeleted instead of deleting
+            String sql = "UPDATE [Coupon] SET IsDeleted = 1 WHERE couponId=?";
+            PreparedStatement st = getConnection().prepareStatement(sql);
+            st.setString(1, couponId);
+            int rowsUpdated = st.executeUpdate();
+            if (rowsUpdated > 0) {
+                System.out.println("Delete Success!");
+            } else {
+                System.out.println("Delte Unsuccess.");
+            }
+
+        } catch (SQLException ex) {
+            Logger.getLogger(CouponDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+}
