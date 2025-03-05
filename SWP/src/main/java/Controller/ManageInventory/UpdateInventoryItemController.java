@@ -38,6 +38,10 @@ public class UpdateInventoryItemController extends HttpServlet {
         String itemUnit = request.getParameter("itemUnit");
         String itemDescription = request.getParameter("itemDescription");
 
+        // 1. Kiểm tra dữ liệu đầu vào (Validation)
+        double itemPrice = Double.parseDouble(itemPrice_raw);
+        double itemQuantity = Integer.parseInt(itemQuantity_raw);
+      
         // 2. Tạo đối tượng Inventory để cập nhật
         Inventory updatedItem = new Inventory();
         updatedItem.setItemId(itemId);

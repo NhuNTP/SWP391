@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package Model;
 
 /**
@@ -10,9 +6,9 @@ package Model;
  */
 public class OrderDetail {
 
-    private int orderDetailId;
-    private int orderId;
-    private int dishId;
+    private String orderDetailId;
+    private String orderId;
+    private String dishId;
     private int quantity;
     private double subtotal;
     private String dishName;
@@ -22,7 +18,7 @@ public class OrderDetail {
 
     }
 
-    public OrderDetail(int orderDetailId, int orderId, int dishId, int quantity, double subtotal, String dishName, Integer quantityUsed) {
+    public OrderDetail(String orderDetailId, String orderId, String dishId, int quantity, double subtotal, String dishName, Integer quantityUsed) {
         this.orderDetailId = orderDetailId;
         this.orderId = orderId;
         this.dishId = dishId;
@@ -32,29 +28,27 @@ public class OrderDetail {
         this.quantityUsed = quantityUsed;
     }
 
-
-
-    public int getOrderDetailId() {
+    public String getOrderDetailId() {
         return orderDetailId;
     }
 
-    public void setOrderDetailId(int orderDetailId) {
+    public void setOrderDetailId(String orderDetailId) {
         this.orderDetailId = orderDetailId;
     }
 
-    public int getOrderId() {
+    public String getOrderId() {
         return orderId;
     }
 
-    public void setOrderId(int orderId) {
+    public void setOrderId(String orderId) {
         this.orderId = orderId;
     }
 
-    public int getDishId() {
+    public String getDishId() {
         return dishId;
     }
 
-    public void setDishId(int dishId) {
+    public void setDishId(String dishId) {
         this.dishId = dishId;
     }
 

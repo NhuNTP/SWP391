@@ -45,7 +45,6 @@ public class CreateNotificationController extends HttpServlet {
         String target = request.getParameter("target"); // "all", "role", or "user"
         String notificationContent = request.getParameter("notificationContent");
         String userIdStr;
-        Integer userId = null;
 
         boolean isCreated = false;
 
@@ -59,21 +58,21 @@ public class CreateNotificationController extends HttpServlet {
                     // Create notification for a specific role
                     String role = request.getParameter("role");
 
-                List<Integer> userIdsForRole = accountDAO.getUserIdsByRole(role);
+                List<String> userIdsForRole = accountDAO.getUserIdsByRole(role);
                     if (userIdsForRole != null) {
-                       for (Integer id : userIdsForRole) {
+                       for (String id : userIdsForRole) {
                             isCreated = notificationDAO.createNotification(id, notificationContent);
                        }
                     }
 
                     break;
+
                 case "user":
                     // Create notification for a specific user
                     userIdStr = request.getParameter("userId");
                     if (userIdStr != null && !userIdStr.isEmpty()) {
                         try {
-                            userId = Integer.parseInt(userIdStr);
-                            isCreated = notificationDAO.createNotification(userId, notificationContent);
+                            isCreated = notificationDAO.createNotification(userIdStr, notificationContent);
                         } catch (NumberFormatException e) {
                             request.setAttribute("errorMessage", "Invalid User ID.");
                         }

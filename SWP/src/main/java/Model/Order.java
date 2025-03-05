@@ -13,39 +13,56 @@ import java.util.Date;
 import java.util.List;
 
 public class Order {
-    private int orderId;
-    private int userId;
-    private int customerId;
+    private String orderId;  // Changed to String to match NVARCHAR(50) in DB
+    private String userId;   // Changed to String to match NVARCHAR(50) in DB
+    private String customerId; // Changed to String to match NVARCHAR(50) in DB, nullable
     private Date orderDate;
     private String orderStatus;
     private String orderType;
     private String orderDescription;
-    private int couponId;
-    private int tableId;
-    private List<OrderDetail> orderDetails; // Thêm thuộc tính này
+    private String couponId;  // Changed to String to match NVARCHAR(50) in DB, nullable
+    private String tableId;   // Changed to String to match NVARCHAR(50) in DB, nullable
+    private List<OrderDetail> orderDetails; // Keep this
 
+    // Constructors (Optional, but good practice)
+    public Order() {
+    }
+
+    public Order(String orderId, String userId, String customerId, Date orderDate, String orderStatus, String orderType, String orderDescription, String couponId, String tableId, List<OrderDetail> orderDetails) {
+        this.orderId = orderId;
+        this.userId = userId;
+        this.customerId = customerId;
+        this.orderDate = orderDate;
+        this.orderStatus = orderStatus;
+        this.orderType = orderType;
+        this.orderDescription = orderDescription;
+        this.couponId = couponId;
+        this.tableId = tableId;
+        this.orderDetails = orderDetails;
+    }
     // Getters and setters
-    public int getOrderId() {
+
+    public String getOrderId() {
         return orderId;
     }
 
-    public void setOrderId(int orderId) {
+    public void setOrderId(String orderId) {
         this.orderId = orderId;
     }
 
-    public int getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-    public void setUserId(int userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 
-    public int getCustomerId() {
+    public String getCustomerId() {
         return customerId;
     }
 
-    public void setCustomerId(int customerId) {
+    public void setCustomerId(String customerId) {
         this.customerId = customerId;
     }
 
@@ -81,19 +98,19 @@ public class Order {
         this.orderDescription = orderDescription;
     }
 
-    public int getCouponId() {
+    public String getCouponId() {
         return couponId;
     }
 
-    public void setCouponId(int couponId) {
+    public void setCouponId(String couponId) {
         this.couponId = couponId;
     }
 
-    public int getTableId() {
+    public String getTableId() {
         return tableId;
     }
 
-    public void setTableId(int tableId) {
+    public void setTableId(String tableId) {
         this.tableId = tableId;
     }
 

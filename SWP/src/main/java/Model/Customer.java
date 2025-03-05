@@ -1,61 +1,61 @@
 package Model;
+
 /**
  *
  * @author HuynhPhuBinh
  */
 public class Customer {
 
-    private int CustomerId;
-    private String CustomerName;
-    private String CustomerPhone;
-    private int NumberOfPayment;
+    private String customerId; // Changed to String
+    private String customerName;
+    private String customerPhone;
+    private int numberOfPayment;
 
     public Customer() {
     }
 
-    public Customer(String CustomerName, String CustomerPhone, int NumberOfPayment) {
-        this.CustomerName = CustomerName;
-        this.CustomerPhone = CustomerPhone;
-        this.NumberOfPayment = NumberOfPayment;
+    public Customer(String customerName, String customerPhone, int numberOfPayment) {
+        this.customerName = customerName;
+        this.customerPhone = customerPhone;
+        this.numberOfPayment = numberOfPayment;
     }
 
-    public Customer(int CustomerId, String CustomerName, String CustomerPhone, int NumberOfPayment) {
-        this.CustomerId = CustomerId;
-        this.CustomerName = CustomerName;
-        this.CustomerPhone = CustomerPhone;
-        this.NumberOfPayment = NumberOfPayment;
+    public Customer(String customerId, String customerName, String customerPhone, int numberOfPayment) { // Changed to String
+        this.customerId = customerId;
+        this.customerName = customerName;
+        this.customerPhone = customerPhone;
+        this.numberOfPayment = numberOfPayment;
     }
 
-    public int getCustomerId() {
-        return CustomerId;
+    public String getCustomerId() { // Changed to String
+        return customerId;
     }
 
-    public void setCustomerId(int CustomerId) {
-        this.CustomerId = CustomerId;
+    public void setCustomerId(String customerId) { // Changed to String
+        this.customerId = customerId;
     }
 
     public String getCustomerName() {
-        return CustomerName;
+        return customerName;
     }
 
-    public void setCustomerName(String CustomerName) {
-        this.CustomerName = CustomerName;
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
     }
 
     public String getCustomerPhone() {
-        return CustomerPhone;
+        return customerPhone;
     }
 
-    public void setCustomerPhone(String CustomerPhone) {
-        this.CustomerPhone = CustomerPhone;
+    public void setCustomerPhone(String customerPhone) {
+        this.customerPhone = customerPhone;
     }
 
     public int getNumberOfPayment() {
-        return NumberOfPayment;
+        return numberOfPayment;
     }
 
-    public void setNumberOfPayment(int NumberOfPayment) {
-        this.NumberOfPayment = NumberOfPayment;
+    public void setNumberOfPayment(int numberOfPayment) {
+        this.numberOfPayment = numberOfPayment;
     }
-
 }

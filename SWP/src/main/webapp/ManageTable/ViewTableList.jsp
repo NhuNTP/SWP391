@@ -17,7 +17,7 @@
         <script>
             function confirmDelete(tableId, tableStatus) {
                 if (confirm('Are you sure you want to delete the table with ID: ' + tableId + ' - Status: ' + tableStatus + '?')) {
-                    window.location.href = 'DeleteTable?id=' + tableId;
+                    window.location.href = 'DeleteTable?TableId=' + tableId;
                 }
             }
         </script>
@@ -59,16 +59,6 @@
                 position: relative;
                 height: 300px;
             }
-            /* CSS giữ nguyên từ code trước - bao gồm CSS cho modal */
-            /* Bắt đầu nội dung CSS từ tệp style.css */
-            /*            body, h1, h2, h3, h4, h5, h6, p, ul, li {
-                            margin: 0;
-                            padding: 0;
-                            list-style: none;
-                            text-decoration: none;
-                            color: #333;
-                            font-family: sans-serif;
-                        }*/
 
             body {
                 font-size: 14px;
@@ -84,7 +74,6 @@
             .header-container, .nav-container, .container {
                 max-width: 1200px;
                 margin: 0 auto;
-                /*                padding: 0 20px;*/
                 display: flex;
                 align-items: center;
             }
@@ -261,7 +250,6 @@
                 padding-right: 30px;
             }
 
-            /* Đặt search, filter và button cạnh nhau */
             .search-filter {
                 display: flex;         /* Bật Flexbox */
                 align-items: center;    /* Căn giữa theo chiều dọc */
@@ -319,10 +307,6 @@
                 width: 100%;
                 background-color: #333;
                 border-radius: 2px;
-            }
-
-            .main-nav {
-                /* ... (styles desktop) ... */
             }
 
             .main-nav.mobile-open {
@@ -533,7 +517,7 @@
             .card-stats i {
                 font-size: 2rem;
             }
-            /* Custom styles for table buttons */
+
             .btn-edit-table {
                 background-color: #007bff; /* Blue color for edit */
                 color: white;
@@ -730,14 +714,27 @@
                         <div class="content-header">
                             <div class="search-filter">
                                 <div class="search-bar">
-                                    <input type="text" id="searchInput" placeholder="Search"> 
+                                    <input type="text" id="searchInput" placeholder="Search" onkeyup="filterTables()">
                                 </div>
                                 <div class="filter-bar">
-                                    <select id="statusFilter">
+                                    <select id="statusFilter" onchange="filterTables()">
                                         <option value="">All Status</option>
-                                        <option value="Available">Available</option> <!-- Sửa value -->
-                                        <option value="Occupied">Occupied</option> <!-- Sửa value -->
-                                        <option value="Reserved">Reserved</option>  <!-- Sửa value -->
+                                        <option value="Available">Available</option>
+                                        <option value="Occupied">Occupied</option>
+                                        <option value="Reserved">Reserved</option>
+                                    </select>
+                                    <select id="floorFilter" style="margin-left: 10px;" onchange="filterTables()">
+                                        <option value="all">All Floors</option>
+                                        <%
+                                            List<Integer> floorNumbers = (List<Integer>) request.getAttribute("floorNumberList");
+                                            if (floorNumbers != null) {
+                                                for (Integer floor : floorNumbers) {
+                                        %>
+                                        <option value="<%= floor%>">Floor <%= floor%></option>
+                                        <%
+                                                }
+                                            }
+                                        %>
                                     </select>
                                 </div>
                             </div>
@@ -746,7 +743,7 @@
 
                             </div>
                         </div>
-                        <div class="table-grid">
+                        <div class="table-grid" id="tableGrid"> <%-- Thêm ID cho table grid --%>
                             <%
                                 List<Table> allTables = (List<Table>) request.getAttribute("tableList");
                                 int pageSize = 20; // Số bàn trên mỗi trang.  PHẢI LÀ BỘI SỐ CỦA 4!
@@ -789,15 +786,17 @@
                             %>
                             <div class="<%= tableClass%>">
                                 <div class="table-info">
-                                    <div class="table-id"> ID: <%= table.getTableId()%> </div>
-                                    <div class="table-seats"> Number of seats <%= table.getNumberOfSeats()%></div>
-                                    <div class="table-status"><%= statusText%></div>
+                                    <div class="table-id">ID: <%= table.getTableId()%></div>
+                                    <div class="table-floor">Floor: <%= table.getFloorNumber()%></div>
+                                    <div class="table-seats">Seats: <%= table.getNumberOfSeats()%></div>
+                                    <div class="table-status">Status: <%= statusText%></div>
                                 </div>
                                 <div class="table-buttons">
                                     <a href="#" class="edit-table-btn btn-edit-table"
-                                       data-tableid="<%=table.getTableId()%>"
-                                       data-tablestatus="<%=table.getTableStatus()%>"
-                                       data-numberofseats="<%=table.getNumberOfSeats()%>">
+                                       data-tableid="<%= table.getTableId()%>"
+                                       data-floornumber="<%= table.getFloorNumber()%>"
+                                       data-numberofseats="<%= table.getNumberOfSeats()%>"
+                                       data-tablestatus="<%= table.getTableStatus()%>">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <a href="#" onclick="confirmDelete('<%= table.getTableId()%>', '<%= table.getTableStatus()%>')">
@@ -843,164 +842,165 @@
                     </div>
                 </section>
             </div>
-        </section>
-    </div>
-</div>
-
-<!-- Modal Create Table -->
-<div id="createTableModal" class="modal">
-    <div class="modal-content">
-        <span class="close-button">×</span>
-        <h2>Create New Table</h2>
-        <div class="modal-form-container">
-            <form method="post" action="CreateTable">
-                <div>
-                    <label for="TableStatus">Table Status</label>
-                    <select id="TableStatus" name="TableStatus">
-                        <option value="Available">Available</option>
-                        <option value="Occupied">Occupied</option>
-                        <option value="Reserved">Reserved</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="NumberOfSeats">Number Of Seats</label>
-                    <input type="number" id="NumberOfSeats" name="NumberOfSeats" min="1">
-                </div>
-                <div class="modal-actions">
-                    <input type="submit" class="btn btn-primary" name="btnSubmit" value="Create Table"/> <%-- Bootstrap button style --%>
-                    <button type="button" class="btn btn-secondary close-button">Cancel</button> <%-- Bootstrap button style --%>
-                </div>
-            </form>
         </div>
-    </div>
-</div>
 
-<!-- Modal Edit Table Status -->
-<div id="editTableModal" class="modal">
-    <div class="modal-content">
-        <span class="close-button">×</span>
-        <h2>Edit Table Status</h2>
-        <div class="modal-form-container">
-            <form method="post" action="UpdateTable">
-                <input type="hidden" id="EditTableIdHidden" name="TableIdHidden" value=""/>
-                <div>
+        <!-- Modal Create Table -->
+        <div id="createTableModal" class="modal">
+            <div class="modal-content">
+                <span class="close-button">×</span>
+                <h2>Create New Table</h2>
+                <form method="post" action="CreateTable"> <%-- Thêm method="post" --%>
                     <div>
-                        <label for="EditTableId">Table ID</label>
-                        <input type="text" id="EditTableId" name="TableId" value="" readonly/>
-                    </div>
-                    <div>
-                        <label for="EditNumberOfSeats">Number Of Seats</label>
-                        <input type="number" id="EditNumberOfSeats" name="NumberOfSeats" value="" min="1" />
-                    </div>
-                    <div>
-                        <label for="EditTableStatus">Table Status</label>
-                        <select id="EditTableStatus" name="TableStatus">
+                        <label for="TableStatus">Table Status</label>
+                        <select id="TableStatus" name="TableStatus" required> <%-- Thêm name --%>
                             <option value="Available">Available</option>
                             <option value="Occupied">Occupied</option>
                             <option value="Reserved">Reserved</option>
                         </select>
                     </div>
-                </div>
-
-                <!-- Save and Back to List Buttons -->
-                <div class="modal-actions">
-                    <input type="submit" class="btn btn-primary" name="btnSubmit" value="Save Changes"/> <%-- Bootstrap button style --%>
-                    <button type="button" class="btn btn-secondary close-button">Cancel</button> <%-- Bootstrap button style --%>
-                </div>
-            </form>
+                    <div>
+                        <label for="FloorNumber">Number Of Floors</label>
+                        <input type="number" id="FloorNumber" name="FloorNumber" min="1" required> <%-- Thêm name --%>
+                    </div>
+                    <div>
+                        <label for="NumberOfSeats">Number Of Seats</label>
+                        <input type="number" id="NumberOfSeats" name="NumberOfSeats" min="1" required> <%-- Thêm name --%>
+                    </div>
+                    <div class="modal-actions">
+                        <input type="submit" class="btn btn-primary" value="Create Table"/>
+                        <button type="button" class="btn btn-secondary close-button">Cancel</button>
+                    </div>
+                </form>
+            </div>
         </div>
-    </div>
-</div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Modal Create Table
-        var createTableModel = document.getElementById("createTableModal");
-        var createTableBtn = document.querySelector(".add-table-btn");
-        var closeCreateTableButtons = document.querySelectorAll("#createTableModal .close-button");
+        <!-- Modal Edit Table Status -->
+        <div id="editTableModal" class="modal">
+            <div class="modal-content">
+                <span class="close-button">×</span>
+                <h2>Edit Table Status</h2>
+                <div class="modal-form-container">
+                    <form method="post" action="UpdateTable">
+                        <input type="hidden" id="EditTableIdHidden" name="TableIdHidden" value=""/>
+                        <div>
+                            <div>
+                                <label for="EditTableId">Table ID</label>
+                                <input type="text" id="EditTableId" name="TableId" value="" readonly/>
+                            </div>
+                            <div>
+                                <label for="EditFloorNumber">Number Of Floors</label>
+                                <input type="number" id="EditFloorNumber" name="FloorNumber" value="" min="1" required>
+                            </div>
+                            <div>
+                                <label for="EditNumberOfSeats">Number Of Seats</label>
+                                <input type="number" id="EditNumberOfSeats" name="NumberOfSeats" value="" min="1" required/>
+                            </div>
+                            <div>
+                                <label for="EditTableStatus">Table Status</label>
+                                <select id="EditTableStatus" name="TableStatus" required>
+                                    <option value="Available">Available</option>
+                                    <option value="Occupied">Occupied</option>
+                                    <option value="Reserved">Reserved</option>
+                                </select>
+                            </div>
+                        </div>
 
-        if (createTableBtn && createTableModel) {
-            createTableBtn.onclick = function () {
-                createTableModel.style.display = "block";
-            }
-        }
+                        <!-- Save and Back to List Buttons -->
+                        <div class="modal-actions">
+                            <input type="submit" class="btn btn-primary" name="btnSubmit" value="Save Changes"/> <%-- Bootstrap button style --%>
+                            <button type="button" class="btn btn-secondary close-button">Cancel</button> <%-- Bootstrap button style --%>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
 
-        if (closeCreateTableButtons) {
-            closeCreateTableButtons.forEach(function (btnClose) {
-                btnClose.onclick = function () {
-                    createTableModel.style.display = "none";
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                // Modal Create Table
+                var createTableModel = document.getElementById("createTableModal");
+                var createTableBtn = document.querySelector(".add-table-btn");
+                var closeCreateTableButtons = document.querySelectorAll("#createTableModal .close-button");
+                if (createTableBtn && createTableModel) {
+                    createTableBtn.onclick = function () {
+                        createTableModel.style.display = "block";
+                    }
+                }
+
+                if (closeCreateTableButtons) {
+                    closeCreateTableButtons.forEach(function (btnClose) {
+                        btnClose.onclick = function () {
+                            createTableModel.style.display = "none";
+                        }
+                    });
+                }
+
+                // Modal Edit Table
+                var editTableModel = document.getElementById("editTableModal");
+                var editTableButtons = document.querySelectorAll(".edit-table-btn");
+                var closeEditTableButtons = document.querySelectorAll("#editTableModal .close-button");
+                if (editTableButtons) {
+                    editTableButtons.forEach(function (btnEdit) {
+                        btnEdit.onclick = function (e) {
+                            e.preventDefault();
+                            document.getElementById('EditTableIdHidden').value = btnEdit.dataset.tableid;
+                            document.getElementById('EditTableId').value = btnEdit.dataset.tableid;
+                            document.getElementById('EditTableStatus').value = btnEdit.dataset.tablestatus;
+                            document.getElementById('EditNumberOfSeats').value = btnEdit.dataset.numberofseats;
+                            document.getElementById('EditFloorNumber').value = btnEdit.dataset.floornumber;
+                            editTableModel.style.display = "block";
+                        }
+                    });
+                }
+
+                if (closeEditTableButtons) {
+                    closeEditTableButtons.forEach(function (btnClose) {
+                        btnClose.onclick = function () {
+                            editTableModel.style.display = "none";
+                        }
+                    });
+                }
+
+
+                window.onclick = function (event) {
+                    if (event.target == createTableModel) {
+                        createTableModel.style.display = "none";
+                    }
+                    if (event.target == editTableModel) {
+                        editTableModel.style.display = "none";
+                    }
                 }
             });
-        }
 
-        // Modal Edit Table
-        var editTableModel = document.getElementById("editTableModal");
-        var editTableButtons = document.querySelectorAll(".edit-table-btn");
-        var closeEditTableButtons = document.querySelectorAll("#editTableModal .close-button");
+            function filterTables() {
+                const searchText = document.getElementById('searchInput').value.toLowerCase();
+                const selectedStatus = document.getElementById('statusFilter').value;
+                const selectedFloor = document.getElementById('floorFilter').value;
+                const tableGrid = document.getElementById('tableGrid'); // Lấy container của table grid
+                const tables = tableGrid.querySelectorAll('.table-item'); // Lấy tất cả table items bên trong grid
 
-        if (editTableButtons) {
-            editTableButtons.forEach(function (btnEdit) {
-                btnEdit.onclick = function (e) {
-                    e.preventDefault();
-                    document.getElementById('EditTableIdHidden').value = btnEdit.dataset.tableid;
-                    document.getElementById('EditTableId').value = btnEdit.dataset.tableid;
-                    document.getElementById('EditTableStatus').value = btnEdit.dataset.tablestatus;
-                    document.getElementById('EditNumberOfSeats').value = btnEdit.dataset.numberofseats;
+                tables.forEach(table => {
+                    const tableIdText = table.querySelector('.table-id').textContent.toLowerCase();
+                    const seatsText = table.querySelector('.table-seats').textContent.toLowerCase();
+                    const statusText = table.querySelector('.table-status').textContent.replace('Status:', '').trim(); // Loại bỏ "Status:" và trim
+                    const floorText = table.querySelector('.table-floor').textContent.replace('Floor:', '').trim(); // Loại bỏ "Floor:" và trim
 
-                    editTableModel.style.display = "block";
-                }
-            });
-        }
+                    // Kiểm tra tìm kiếm
+                    const matchesSearch = searchText === "" || tableIdText.includes(searchText) || seatsText.includes(searchText);
 
-        if (closeEditTableButtons) {
-            closeEditTableButtons.forEach(function (btnClose) {
-                btnClose.onclick = function () {
-                    editTableModel.style.display = "none";
-                }
-            });
-        }
+                    // Kiểm tra trạng thái
+                    const matchesStatus = selectedStatus === "" || statusText === selectedStatus;
 
+                    // Kiểm tra tầng
+                    const matchesFloor = selectedFloor === "all" || floorText === selectedFloor;
 
-        window.onclick = function (event) {
-            if (event.target == createTableModel) {
-                createTableModel.style.display = "none";
+                    if (matchesSearch && matchesStatus && matchesFloor) {
+                        table.style.display = ''; // Hiển thị nếu phù hợp tất cả tiêu chí
+                    } else {
+                        table.style.display = 'none'; // Ẩn nếu không phù hợp
+                    }
+                });
             }
-            if (event.target == editTableModel) {
-                editTableModel.style.display = "none";
-            }
-        }
-    });
-
-    const searchInput = document.getElementById('searchInput');
-    const statusFilter = document.getElementById('statusFilter');
-    const tables = document.querySelectorAll('.table-item');
-
-    function filterTables() {
-        const searchText = searchInput.value.toLowerCase();
-        const selectedStatus = statusFilter.value;
-
-        tables.forEach(table => {
-            const seatsText = table.querySelector('.table-seats').textContent.toLowerCase(); // Lấy số ghế
-            const statusText = table.querySelector('.table-status').textContent.trim(); // Lấy trạng thái bàn
-
-            // Kiểm tra tìm kiếm số ghế
-            let matchesSearch = seatsText.includes(searchText);
-
-            // Kiểm tra bộ lọc trạng thái
-            let matchesStatus = selectedStatus === '' || statusText === selectedStatus;
-
-            // Hiển thị hoặc ẩn bàn tùy theo kết quả lọc
-            if (matchesSearch && matchesStatus) {
-                table.style.display = '';
-            } else {
-                table.style.display = 'none';
-            }
-        });
-    }
-
-// Gán sự kiện cho input tìm kiếm và filter
-    searchInput.addEventListener('keyup', filterTables);
-    statusFilter.addEventListener('change', filterTables);
-</script>
-</body>
+        </script>
+    </body>
 </html>

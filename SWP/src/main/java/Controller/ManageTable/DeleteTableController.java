@@ -59,25 +59,24 @@ public class DeleteTableController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String idParam = request.getParameter("id"); // Get id parameter from request
-        if (idParam == null || idParam.isEmpty()) {
-            response.sendRedirect("ViewTableList"); // Redirect if no id is provided
+        String TableId = request.getParameter("TableId"); // Lấy ID dưới dạng String
+
+        if (TableId == null || TableId.isEmpty()) {
+            response.sendRedirect("ViewTableList"); // Chuyển hướng nếu không có ID
             return;
         }
 
         try {
-            int id = Integer.parseInt(idParam); // Parse id to integer
-            TableDAO tableDAO = new TableDAO(); // Create TableDAO instance
-            int count = tableDAO.deleteTable(id); // Call Delete method in TableDAO
-
+            TableDAO tableDAO = new TableDAO();
+            int count = tableDAO.deleteTable(TableId); // Gọi deleteTable(String)
             if (count > 0) {
-                System.out.println("Table with ID " + id + " deleted successfully."); // Log success
+                System.out.println("Table with ID " + TableId + " deleted successfully."); // Log success
             } else {
-                System.out.println("Failed to delete table with ID " + id + " or table not found."); // Log failure
+                System.out.println("Failed to delete table with ID " + TableId + " or table not found."); // Log failure
             }
 
         } catch (NumberFormatException e) {
-            System.err.println("Invalid ID format: " + idParam); // Log invalid ID format error
+            System.err.println("Invalid ID format: " + TableId); // Log invalid ID format error
         } catch (Exception e) {
             System.err.println("Error deleting table: " + e.getMessage()); // Log general error
             e.printStackTrace(); // Print stack trace for debugging

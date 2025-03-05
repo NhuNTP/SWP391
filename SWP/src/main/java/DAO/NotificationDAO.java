@@ -13,16 +13,16 @@ public class NotificationDAO {
 
     private static final Logger LOGGER = Logger.getLogger(NotificationDAO.class.getName());
 
-    public boolean createNotification(Integer userId, String notificationContent) {
+    public boolean createNotification(String userId, String notificationContent) {
         String sql = "INSERT INTO Notification (UserId, NotificationContent, UserRole, UserName) " +
                      "VALUES (?, ?, (SELECT UserRole FROM Account WHERE UserId = ?), (SELECT UserName FROM Account WHERE UserId = ?))";
         try (Connection connection = DBContext.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
             if (userId != null) {
-                preparedStatement.setInt(1, userId);
-                preparedStatement.setInt(3, userId); // For UserRole subquery
-                preparedStatement.setInt(4, userId); // For UserName subquery
+                preparedStatement.setString(1, userId);
+                preparedStatement.setString(3, userId); // For UserRole subquery
+                preparedStatement.setString(4, userId); // For UserName subquery
             } else {
                 preparedStatement.setNull(1, Types.INTEGER);
                 preparedStatement.setNull(3, Types.INTEGER);

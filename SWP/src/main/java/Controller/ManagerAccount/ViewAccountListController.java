@@ -75,7 +75,7 @@ public class ViewAccountListController extends HttpServlet {
             try {
                 while (rs.next()) {
                     Account account = new Account();
-                    account.setUserId(rs.getInt("UserId"));
+                    account.setUserId(rs.getString("UserId"));
                     account.setUserEmail(rs.getString("UserEmail"));
                     account.setUserPassword(rs.getString("UserPassword"));
                     account.setUserName(rs.getString("UserName"));

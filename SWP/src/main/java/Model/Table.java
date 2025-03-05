@@ -10,42 +10,47 @@ package Model;
  */
 public class Table {
 
-    private int TableId;
+    private String TableId; // Sửa thành String
     private String TableStatus;
     private int NumberOfSeats;
-    private boolean IsDeleted; // Add IsDeleted field as boolean
+    private int FloorNumber; // Sửa thành int (cho phép null)
+    private boolean IsDeleted;
 
     // Constructor không tham số (default constructor)
     public Table() {
-        this.IsDeleted = false; // Initialize IsDeleted to false by default in Java model as well
+        this.IsDeleted = false; // Giá trị mặc định
     }
 
-    // Constructor có tham số
-    public Table(int TableId, String TableStatus, int NumberOfSeats, boolean IsDeleted) {
+    // Constructor đầy đủ
+    public Table(String TableId, String TableStatus, int NumberOfSeats, int FloorNumber, boolean IsDeleted) {
         this.TableId = TableId;
         this.TableStatus = TableStatus;
         this.NumberOfSeats = NumberOfSeats;
+        this.FloorNumber = FloorNumber;
         this.IsDeleted = IsDeleted;
     }
 
-    public Table(String TableStatus, int NumberOfSeats) {
+    // Constructor không có TableId (cho trường hợp insert)
+    public Table(String TableStatus, int NumberOfSeats, int FloorNumber) {
         this.TableStatus = TableStatus;
         this.NumberOfSeats = NumberOfSeats;
-        this.IsDeleted = false; // Initialize IsDeleted to false when creating new table
+        this.FloorNumber = FloorNumber;
     }
 
-    public Table(int TableId, String TableStatus, int NumberOfSeats) {
+    public Table(String TableId, String TableStatus, int NumberOfSeats, int FloorNumber) {
         this.TableId = TableId;
         this.TableStatus = TableStatus;
         this.NumberOfSeats = NumberOfSeats;
+        this.FloorNumber = FloorNumber;
     }
     
-
-    public int getTableId() {
+    // Các constructor khác có thể không cần thiết, tùy vào cách bạn sử dụng
+    // Getters and Setters
+    public String getTableId() {
         return TableId;
     }
 
-    public void setTableId(int TableId) {
+    public void setTableId(String TableId) {
         this.TableId = TableId;
     }
 
@@ -65,6 +70,14 @@ public class Table {
         this.NumberOfSeats = NumberOfSeats;
     }
 
+    public int getFloorNumber() {
+        return FloorNumber;
+    }
+
+    public void setFloorNumber(int FloorNumber) {
+        this.FloorNumber = FloorNumber;
+    }
+
     public boolean isIsDeleted() {
         return IsDeleted;
     }
@@ -72,6 +85,4 @@ public class Table {
     public void setIsDeleted(boolean IsDeleted) {
         this.IsDeleted = IsDeleted;
     }
-
-
 }

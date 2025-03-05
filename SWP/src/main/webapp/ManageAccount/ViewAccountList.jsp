@@ -17,7 +17,7 @@
         <script>
             function confirmDelete(userId, userName) {
                 if (confirm('Are you sure you want to delete the account with ID: ' + userId + ' - user name: ' + userName + '?')) {
-                    window.location.href = 'DeleteAccount?id=' + userId;
+                    window.location.href = 'DeleteAccount?UserId=' + userId; // **Đổi 'id' thành 'UserId'**
                 }
             }
             function validateForm() {
@@ -490,11 +490,15 @@
                 height: 100%;
                 overflow: auto;
                 background-color: rgba(0,0,0,0.4);
+                justify-content: center;
+                align-items: center;
             }
 
             .modal-content {
                 background-color: #fefefe;
-                margin: 15% auto;
+                margin-top: 4%;
+                margin-left: auto; /* Giữ margin-left và margin-right là auto để căn giữa ngang */
+                margin-right: auto;
                 padding: 20px;
                 border: 1px solid #888;
                 width: 60%;
@@ -573,7 +577,6 @@
             .card-stats i {
                 font-size: 2rem;
             }
-            /* Custom styles for table buttons */
             .btn-edit {
                 background-color: #007bff; /* Blue color for edit */
                 color: white;
@@ -612,6 +615,15 @@
             .btn-edit i, .btn-delete i {
                 margin-right: 5px; /* Spacing between icon and text */
             }
+
+            .button-container {
+                display: flex; /* Kích hoạt Flexbox cho container */
+                flex-direction: row; /* Sắp xếp các nút theo hàng ngang */
+                align-items: center; /* Căn chỉnh các nút theo chiều dọc (tùy chọn) */
+                gap: 5px; /* Khoảng cách giữa các nút (tùy chỉnh) */
+            }
+
+
             /* Basic table styling for better look */
             .employee-grid table {
                 width: 100%;
@@ -686,7 +698,6 @@
         </style>
     </head>
     <body>
-
         <div class="d-flex">
             <!-- Sidebar -->
             <div class="sidebar col-md-2 p-3">
@@ -718,9 +729,9 @@
                                 <div class="filter-bar">
                                     <select id="roleFilter">
                                         <option value="">All Roles</option>  <!-- Thêm option "All Roles" -->
+                                        <option value="Admin">Admin</option>
                                         <option value="Waiter">Waiter</option>
                                         <option value="Manager">Manager</option>
-                                        <option value="Waiter">Waiter</option>
                                         <option value="Kitchen staff">Kitchen staff</option>
                                         <option value="Cashier">Cashier</option>
                                     </select>
@@ -802,21 +813,25 @@
                                         <td><%= account.getUserRole()%></td>
                                         <td><%= account.getIdentityCard()%></td>
                                         <td><%= account.getUserAddress()%></td>
-                                        <td>
-                                            <a href="#" class="edit-employee-btn btn-edit"
-                                               data-userid="<%=account.getUserId()%>"
-                                               data-useremail="<%=account.getUserEmail()%>"
-                                               data-username="<%=account.getUserName()%>"
-                                               data-userpassword="<%=account.getUserPassword()%>"
-                                               data-userrole="<%=account.getUserRole()%>"
-                                               data-identitycard="<%=account.getIdentityCard()%>"
-                                               data-useraddress="<%=account.getUserAddress()%>"
-                                               data-userimage="<%=account.getUserImage()%>">
-                                                <i class="fas fa-edit"></i> Edit
-                                            </a>
-                                            <a href="#" onclick="confirmDelete('<%= account.getUserId()%>', '<%= account.getUserName()%>')" class="btn-delete">
-                                                <i class="fas fa-trash-alt"></i> Delete
-                                            </a>
+                                        <td >
+                                            <% if (!account.getUserRole().equalsIgnoreCase("admin")) {%>
+                                            <div class="button-container"> <%-- Thêm div container với class="button-container" --%>
+                                                <a href="#" class="edit-employee-btn btn-edit"
+                                                   data-userid="<%=account.getUserId()%>"
+                                                   data-useremail="<%=account.getUserEmail()%>"
+                                                   data-username="<%=account.getUserName()%>"
+                                                   data-userpassword="<%=account.getUserPassword()%>"
+                                                   data-userrole="<%=account.getUserRole()%>"
+                                                   data-identitycard="<%=account.getIdentityCard()%>"
+                                                   data-useraddress="<%=account.getUserAddress()%>"
+                                                   data-userimage="<%=account.getUserImage()%>">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </a>
+                                                <a href="#" onclick="confirmDelete('<%= account.getUserId()%>', '<%= account.getUserName()%>')" class="btn-delete">
+                                                    <i class="fas fa-trash-alt"></i> Delete
+                                                </a>
+                                            </div> <%-- Đóng div container --%>
+                                            <% } %>
                                         </td>
                                     </tr>
                                     <%
@@ -876,19 +891,19 @@
                     <form method="post" action="CreateAccount" enctype="multipart/form-data" onsubmit="return validateForm()">
                         <div>
                             <label for="UserEmail">Email Address</label>
-                            <input type="email" id="UserEmail" name="UserEmail" placeholder="Enter email">
+                            <input type="email" id="UserEmail" name="UserEmail" placeholder="Enter email" required="Please fill in this field">
                         </div>
                         <div>
                             <label for="UserPassword">Password</label>
-                            <input type="password" id="UserPassword" name="UserPassword" placeholder="Password">
+                            <input type="password" id="UserPassword" name="UserPassword" placeholder="Password" required="Please fill in this field">
                         </div>
                         <div>
                             <label for="UserName">Full Name</label>
-                            <input type="text" id="UserName" name="UserName" placeholder="Enter full name">
+                            <input type="text" id="UserName" name="UserName" placeholder="Enter full name" required="Please fill in this field">
                         </div>
                         <div>
                             <label for="UserRole">Role</label>
-                            <select id="UserRole" name="UserRole">
+                            <select id="UserRole" name="UserRole" required="Please select in this field">
                                 <option value="Manager">Manager</option>
                                 <option value="Cashier">Cashier</option>
                                 <option value="Waiter">Waiter</option>
@@ -897,15 +912,15 @@
                         </div>
                         <div>
                             <label for="IdentityCard">Identity Card (12 digits)</label>
-                            <input type="text" id="IdentityCard" name="IdentityCard" placeholder="Enter 12-digit ID Card number">
+                            <input type="text" id="IdentityCard" name="IdentityCard" placeholder="Enter 12-digit ID Card number" required="Please fill in this field">
                         </div>
                         <div>
                             <label for="UserAddress">Address</label>
-                            <input type="text" id="UserAddress" name="UserAddress" placeholder="Enter address">
+                            <input type="text" id="UserAddress" name="UserAddress" placeholder="Enter address" required="Please fill in this field">
                         </div>
                         <div>
                             <label for="UserImage">Profile Image</label>
-                            <input type="file" id="UserImage" name="UserImage">
+                            <input type="file" id="UserImage" name="UserImage" required="Please fill in this field">
                         </div>
                         <div class="modal-actions">
                             <input type="submit" class="btn btn-primary" name="btnSubmit" value="Create Account"/>
@@ -939,19 +954,19 @@
                                 </div>
                                 <div>
                                     <label for="EditUserEmail">Email Address</label>
-                                    <input type="email" id="EditUserEmail" name="UserEmail" value=""/>
+                                    <input type="email" id="EditUserEmail" name="UserEmail" value="" required="Please fill in this field"/>
                                 </div>
                                 <div>
                                     <label for="EditUserPassword">Password</label>
-                                    <input type="password" id="EditUserPassword" name="UserPassword" value=""/>
+                                    <input type="password" id="EditUserPassword" name="UserPassword" value="" required="Please fill in this field"/>
                                 </div>
                                 <div>
                                     <label for="EditUserName">Full Name</label>
-                                    <input type="text" id="EditUserName" name="UserName" value=""/>
+                                    <input type="text" id="EditUserName" name="UserName" value="" required="Please fill in this field"/>
                                 </div>
                                 <div>
                                     <label for="EditUserRole">Role</label>
-                                    <select id="EditUserRole" name="UserRole">
+                                    <select id="EditUserRole" name="UserRole" required="Please select in this field">
                                         <option value="Manager">Manager</option>
                                         <option value="Cashier">Cashier</option>
                                         <option value="Waiter">Waiter</option>
@@ -960,11 +975,11 @@
                                 </div>
                                 <div>
                                     <label for="EditIdentityCard">Identity Card (12 digits)</label>
-                                    <input type="text" id="EditIdentityCard" name="IdentityCard" value=""/>
+                                    <input type="text" id="EditIdentityCard" name="IdentityCard" value="" required="Please fill in this field"/>
                                 </div>
                                 <div>
                                     <label for="EditUserAddress">Address</label>
-                                    <input type="text" id="EditUserAddress" name="UserAddress" value=""/>
+                                    <input type="text" id="EditUserAddress" name="UserAddress" value="" required="Please fill in this field"/>
                                 </div>
                             </div>
                         </div>
@@ -1042,8 +1057,6 @@
                     }
                 }
             });
-
-
             const searchInput = document.getElementById('searchInput');
             const roleFilter = document.getElementById('roleFilter'); // Lấy phần tử select
             const table = document.querySelector('.table');
@@ -1069,7 +1082,6 @@
                     }
                 });
             }
-
             searchInput.addEventListener('keyup', filterTable); // Gọi hàm filterTable khi gõ vào ô tìm kiếm
             roleFilter.addEventListener('change', filterTable); // Gọi hàm filterTable khi thay đổi lựa chọn trong dropdown
 

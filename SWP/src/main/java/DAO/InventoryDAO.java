@@ -23,7 +23,7 @@ public class InventoryDAO extends DB.DBContext {
                             rs.getString("ItemName"),
                             rs.getString("ItemType"),
                             rs.getDouble("ItemPrice"),
-                            rs.getInt("ItemQuantity"),
+                            rs.getDouble("ItemQuantity"),
                             rs.getString("ItemUnit"),
                             rs.getString("ItemDescription")
                     );
@@ -47,69 +47,8 @@ public class InventoryDAO extends DB.DBContext {
         return null;
     }
 
-    public void addNewInventoryItem(Inventory inventory) { // Changed parameter type to Model.Inventory
-        String sql = "INSERT INTO [dbo].[Inventory] (ItemName, ItemType, ItemPrice, ItemQuantity, ItemUnit, ItemDescription) " // Updated column names to Inventory properties
-                + "VALUES ( ?, ?, ?, ?, ?, ?)"; // Updated number of placeholders to match the number of columns
-        try {
-            PreparedStatement st = getConnection().prepareStatement(sql);
-
-            st.setString(1, inventory.getItemName());         // Set ItemName
-            st.setString(2, inventory.getItemType());         // Set ItemType
-            st.setDouble(3, inventory.getItemPrice());         // Set ItemPrice (assuming ItemPrice is double)
-            st.setInt(4, inventory.getItemQuantity());          // Set ItemQuantity (assuming ItemQuantity is int)
-            st.setString(5, inventory.getItemUnit());          // Set ItemUnit
-            st.setString(6, inventory.getItemDescription());    // Set ItemDescription
-
-            st.executeUpdate();
-        } catch (Exception e) {
-            System.out.println("Error adding new inventory item: " + e); // More descriptive error message
-            e.printStackTrace(); // Print the full stack trace for debugging
-        }
-    }
-
-    public void updateInventoryItem(Inventory updatedItem) {
-        String sql = "UPDATE Inventory SET ItemName = ?, ItemType = ?, ItemPrice = ?, ItemQuantity = ?, ItemUnit = ?, ItemDescription = ? WHERE ItemId = ?";
-        try (PreparedStatement st = getConnection().prepareStatement(sql)) {
-
-            st.setString(1, updatedItem.getItemName());
-            st.setString(2, updatedItem.getItemType());
-            st.setDouble(3, updatedItem.getItemPrice());
-            st.setInt(4, updatedItem.getItemQuantity());
-            st.setString(5, updatedItem.getItemUnit());
-            st.setString(6, updatedItem.getItemDescription());
-            st.setString(7, updatedItem.getItemId());
-
-            int rowsUpdated = st.executeUpdate();
-            if (rowsUpdated > 0) {
-                System.out.println("Cập nhật Inventory Item ID = " + updatedItem.getItemId() + " thành công!");
-            } else {
-                System.out.println("Không tìm thấy Inventory Item ID = " + updatedItem.getItemId() + " để cập nhật.");
-            }
-
-        } catch (SQLException e) {
-            System.err.println("Lỗi cập nhật Inventory Item: " + e.getMessage());
-            e.printStackTrace();
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(InventoryDAO.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    public int deleteInventoryItemById(String itemId) {
-        int count = 0;
-        try {
-            // Modified to update IsDeleted instead of deleting
-            String sql = "UPDATE [Inventory] SET IsDeleted = 1 WHERE ItemId=?";
-            PreparedStatement pst = getConnection().prepareStatement(sql);
-            pst.setString(1, itemId);
-            count = pst.executeUpdate();
-        } catch (SQLException ex) {
-            Logger.getLogger(InventoryDAO.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(InventoryDAO.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return count;
-    }
-
+  
+    
     public Inventory getInventoryItemById(String itemId) {
         String sql = "SELECT * FROM Inventory WHERE ItemId = ?";
         try (PreparedStatement st = getConnection().prepareStatement(sql)) {
@@ -136,6 +75,7 @@ public class InventoryDAO extends DB.DBContext {
         }
         return null;
     }
+  
     public String generateNextInventoryId() throws SQLException, ClassNotFoundException {
         String lastInventoryId = getLastInventoryIdFromDB();
         int nextNumber = 1; // Số bắt đầu nếu chưa có coupon nào
@@ -156,6 +96,7 @@ public class InventoryDAO extends DB.DBContext {
         String numberStr = String.format("%03d", nextNumber);
         return "IN" + numberStr; // **Sửa thành "CP" thay vì "CO"**
     }
+  
 private String getLastInventoryIdFromDB() throws SQLException, ClassNotFoundException {
         String lastCouponId = null;
         // **Sửa câu SQL cho đúng tên bảng và cột, và dùng TOP 1 cho SQL Server**
@@ -201,4 +142,79 @@ private String getLastInventoryIdFromDB() throws SQLException, ClassNotFoundExce
         }
         return lastCouponId;
     }
+
+  
+  
+    public void addNewInventoryItem(Inventory inventory) { // Changed parameter type to Model.InventoryItem
+        String sql = "INSERT INTO [dbo].[Inventory] (ItemId,ItemName, ItemType, ItemPrice, ItemQuantity, ItemUnit, ItemDescription) " // Updated column names to InventoryItem properties
+                + "VALUES ( ?, ?, ?, ?, ?, ?,?)"; // Updated number of placeholders to match the number of columns
+        try (PreparedStatement st = getConnection().prepareStatement(sql)) { // Try-with-resources để tự động đóng PreparedStatement
+            st.setString(1, inventory.getItemId());
+            st.setString(2, inventory.getItemName());
+            st.setString(3, inventory.getItemType());
+            st.setDouble(4, inventory.getItemPrice());
+            st.setDouble(5, inventory.getItemQuantity());
+            st.setString(6, inventory.getItemUnit());
+            st.setString(7, inventory.getItemDescription());
+
+            System.out.println("Câu truy vấn SQL đang thực thi:");
+            System.out.println(sql);
+            System.out.println("Tham số:");
+            System.out.println("  @P1 (ItemId): " + inventory.getItemId());
+            System.out.println("  @P2 (ItemName): " + inventory.getItemName());
+            System.out.println("  @P3 (ItemType): " + inventory.getItemType());
+            System.out.println("  @P4 (ItemPrice): " + inventory.getItemPrice());
+            System.out.println("  @P5 (ItemQuantity): " + inventory.getItemQuantity());
+            System.out.println("  @P6 (ItemUnit): " + inventory.getItemUnit());
+            System.out.println("  @P7 (ItemDescription): " + inventory.getItemDescription());
+            int rowsInserted = st.executeUpdate();
+            if (rowsInserted > 0) {
+                System.out.println("Thêm mới Item thành công!");
+            }
+        } catch (SQLException | ClassNotFoundException e) {
+            System.err.println("Lỗi khi thêm mới Item: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public void updateInventoryItem(Inventory updatedItem) {
+        String sql = "UPDATE Inventory SET itemName = ?, itemType = ?, itemPrice = ?, itemQuantity = ?, itemUnit = ?, itemDescription = ? WHERE itemId = ?";
+        try (PreparedStatement st = getConnection().prepareStatement(sql)) {
+
+            st.setString(1, updatedItem.getItemName());
+            st.setString(2, updatedItem.getItemType());
+            st.setDouble(3, updatedItem.getItemPrice());
+            st.setDouble(4, updatedItem.getItemQuantity());
+            st.setString(5, updatedItem.getItemUnit());
+            st.setString(6, updatedItem.getItemDescription());
+            st.setString(7, updatedItem.getItemId());
+
+            int rowsUpdated = st.executeUpdate();
+            if (rowsUpdated > 0) {
+                System.out.println("Cập nhật Inventory Item ID = " + updatedItem.getItemId() + " thành công!");
+            } else {
+                System.out.println("Không tìm thấy Inventory Item ID = " + updatedItem.getItemId() + " để cập nhật.");
+            }
+
+        } catch (SQLException | ClassNotFoundException e) {
+            System.err.println("Lỗi cập nhật Inventory Item: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public int deleteInventoryItemById(int itemId) throws ClassNotFoundException {
+        int count = 0;
+        try {
+            // Modified to update IsDeleted instead of deleting
+            String sql = "UPDATE [Inventory] SET IsDeleted = 1 WHERE itemId=?";
+            PreparedStatement pst = getConnection().prepareStatement(sql);
+            pst.setInt(1, itemId);
+            count = pst.executeUpdate();
+        } catch (SQLException ex) {
+            Logger.getLogger(CouponDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return count;
+    }
+}
+
 }

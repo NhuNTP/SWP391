@@ -116,13 +116,20 @@ public class CouponDAO extends DB.DBContext {
     }
 
     public void addNewCoupon(Coupon coupon) {
-        String sql = "INSERT INTO Coupon (couponId,discountAmount, expirationDate,description) VALUES (?, ?, ?, ?)"; // Thêm timeUsed vào INSERT và bỏ isUsed
-        try (PreparedStatement st = getConnection().prepareStatement(sql)) { // Try-with-resources để tự động đóng PreparedStatement
+        String sql = "INSERT INTO Coupon (couponId, discountAmount, expirationDate, description) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement st = getConnection().prepareStatement(sql)) {
+            // In giá trị trước khi set vào PreparedStatement
+            System.out.println("Giá trị trước khi thêm vào database:");
+            System.out.println("couponId: " + coupon.getCouponId());
+            System.out.println("discountAmount: " + coupon.getDiscountAmount());
+            System.out.println("expirationDate: " + coupon.getExpirationDate());
+            System.out.println("description: " + coupon.getDescription());
+
             st.setString(1, coupon.getCouponId());
             st.setBigDecimal(2, coupon.getDiscountAmount());
             st.setDate(3, new java.sql.Date(coupon.getExpirationDate().getTime())); // Chuyển java.util.Date sang java.sql.Date
-
             st.setString(4, coupon.getDescription());
+
             int rowsInserted = st.executeUpdate();
             if (rowsInserted > 0) {
                 System.out.println("Thêm mới Coupon thành công!");
@@ -142,6 +149,12 @@ public class CouponDAO extends DB.DBContext {
             st.setInt(3, coupon.getTimesUsed()); // Sử dụng timeUsed
             st.setString(4, coupon.getDescription());
             st.setString(5, coupon.getCouponId());
+
+            System.out.println("Giá trị trước khi thêm vào database:");
+            System.out.println("couponId: " + coupon.getCouponId());
+            System.out.println("discountAmount: " + coupon.getDiscountAmount());
+            System.out.println("expirationDate: " + coupon.getExpirationDate());
+            System.out.println("description: " + coupon.getDescription());
 
             int rowsUpdated = st.executeUpdate();
             if (rowsUpdated > 0) {

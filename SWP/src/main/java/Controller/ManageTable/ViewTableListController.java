@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package Controller.ManageTable;
 
 import DAO.TableDAO;
@@ -20,23 +16,9 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author ADMIN
- */
 @WebServlet("/ViewTableList")
-
 public class ViewTableListController extends HttpServlet {
 
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
@@ -54,67 +36,46 @@ public class ViewTableListController extends HttpServlet {
         }
     }
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         try {
-            TableDAO tableDAO = new TableDAO(); // Use TableDAO
-            ResultSet rs = tableDAO.getAllTable(); // Get all tables using TableDAO
-            List<Table> tableList = new ArrayList<>(); // Create List of Table objects
-            
-            try {
-                while (rs.next()) {
-                    Table table = new Table(); // Create Table object
-                    table.setTableId(rs.getInt("TableId"));
-                    table.setTableStatus(rs.getString("TableStatus"));
-                    table.setNumberOfSeats(rs.getInt("NumberOfSeats"));
-                    tableList.add(table); // Add Table object to tableList
-                }
-            } catch (SQLException e) {
-                e.printStackTrace(); // Log exception, in real app use a logger
+            TableDAO tableDAO = new TableDAO();
+            ResultSet rs = tableDAO.getAllTable(); // Giữ nguyên việc lấy danh sách bàn
+            List<Table> tableList = new ArrayList<>();
+            List<Integer> floorNumberList = tableDAO.getFloorNumbers(); // **Thêm dòng này: Lấy danh sách tầng**
+
+            while (rs.next()) {
+                // Tạo đối tượng Table và lấy đầy đủ thông tin
+                Table table = new Table();
+                table.setTableId(rs.getString("TableId"));
+                table.setTableStatus(rs.getString("TableStatus"));
+                table.setNumberOfSeats(rs.getInt("NumberOfSeats"));
+                table.setFloorNumber(rs.getInt("FloorNumber")); // Lấy FloorNumber
+                tableList.add(table);
             }
-            
-            request.setAttribute("tableList", tableList); // Set tableList to request attribute
-            request.getRequestDispatcher("ManageTable/ViewTableList.jsp").forward(request, response); // Forward to ViewTableList.jsp    }
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(ViewTableListController.class.getName()).log(Level.SEVERE, null, ex); 
-        } catch (SQLException ex) {
+
+            request.setAttribute("tableList", tableList);
+            request.setAttribute("floorNumberList", floorNumberList); // **Thêm dòng này: Truyền danh sách tầng vào request**
+            request.getRequestDispatcher("ManageTable/ViewTableList.jsp").forward(request, response);
+
+        } catch (ClassNotFoundException | SQLException ex) {
             Logger.getLogger(ViewTableListController.class.getName()).log(Level.SEVERE, null, ex);
+            // Xử lý lỗi tốt hơn: hiển thị trang lỗi, hoặc log lỗi vào file...
+            request.setAttribute("errorMessage", "An error occurred: " + ex.getMessage());
+            request.getRequestDispatcher("error.jsp").forward(request, response); // Ví dụ chuyển đến trang error.jsp
         }
     }
 
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         processRequest(request, response);
     }
 
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
     @Override
     public String getServletInfo() {
         return "Short description";
-    }// </editor-fold>
-
+    }
 }
