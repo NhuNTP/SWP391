@@ -1,3 +1,7 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
+ */
 package Controller.ManageInventory;
 
 import DAO.InventoryDAO;
@@ -68,19 +72,23 @@ public class DeleteInventoryItemController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String itemId = request.getParameter("itemID");
+        String itemId_raw = request.getParameter("itemID");
 
-        if (itemId == null || itemId.isEmpty()) {
+        if (itemId_raw == null || itemId_raw.isEmpty()) {
             System.out.println("ItemID is missing from the request.");
             response.sendRedirect("error.jsp");
             return;
         }
-        System.out.println("Giá trị ItemId nhận được từ request parameter: " + itemId);
+        System.out.println("Giá trị ItemId nhận được từ request parameter: " + itemId_raw);
 
         try {
+            int itemId = Integer.parseInt(itemId_raw);
             InventoryDAO delItem = new InventoryDAO();
             delItem.deleteInventoryItemById(itemId);
             response.sendRedirect("ViewCouponController");
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid empID: " + itemId_raw);
+            response.sendRedirect("error.jsp");
         } catch (Exception e) {
             e.printStackTrace(); // In ra lỗi
             response.sendRedirect("error.jsp");

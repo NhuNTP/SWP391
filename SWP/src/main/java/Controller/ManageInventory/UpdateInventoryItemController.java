@@ -1,59 +1,55 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
+ */
 package Controller.ManageInventory;
 
 import DAO.InventoryDAO;
-import Model.Inventory;
+import Model.Inventory; // Giả định bạn có lớp model Inventory
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
+/**
+ *
+ * @author DELL-Laptop
+ */
 @WebServlet(name = "UpdateInventoryItemController", urlPatterns = {"/UpdateInventoryItemController"})
+@MultipartConfig(fileSizeThreshold = 1024 * 1024, // 1MB
+        maxFileSize = 1024 * 1024 * 10, // 10MB
+        maxRequestSize = 1024 * 1024 * 100)    // 100MB
 public class UpdateInventoryItemController extends HttpServlet {
 
-    private static final long serialVersionUID = 1L;
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
 
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // 1. Lấy tất cả các tham số từ request
-        String itemId = request.getParameter("itemId");
-        String itemName = request.getParameter("itemName");
-        String itemType = request.getParameter("itemType");
-        String itemPriceStr = request.getParameter("itemPrice");
-        double itemPrice = 0.0;
-        try {
-            itemPrice = Double.parseDouble(itemPriceStr);
-        } catch (NumberFormatException e) {
-            e.printStackTrace();
-            itemPrice = 0.0;
-        }
-        String itemQuantityStr = request.getParameter("itemQuantity");
-        int itemQuantity = 0;
-        try {
-            itemQuantity = Integer.parseInt(itemQuantityStr);
-        } catch (NumberFormatException e) {
-            e.printStackTrace();
-            itemQuantity = 0;
-        }
-        String itemUnit = request.getParameter("itemUnit");
-        String itemDescription = request.getParameter("itemDescription");
+        String itemId_raw = request.getParameter("itemId");
+        String itemName_raw = request.getParameter("itemName");
+        String itemType_raw = request.getParameter("itemType");
+        String itemPrice_raw = request.getParameter("itemPrice");
+        String itemQuantity_raw = request.getParameter("itemQuantity");
+        String itemUnit_raw = request.getParameter("itemUnit");
+        String itemDescription_raw = request.getParameter("itemDescription");
 
-        // 2. Tạo đối tượng Inventory để cập nhật
-        Inventory updatedItem = new Inventory();
-        updatedItem.setItemId(itemId);
-        updatedItem.setItemName(itemName);
-        updatedItem.setItemType(itemType);
-        updatedItem.setItemPrice(itemPrice);
-        updatedItem.setItemQuantity(itemQuantity);
-        updatedItem.setItemUnit(itemUnit);
-        updatedItem.setItemDescription(itemDescription);
+        // 1. Kiểm tra dữ liệu đầu vào (Validation)
+        double itemPrice = Double.parseDouble(itemPrice_raw);
+        double itemQuantity = Integer.parseInt(itemQuantity_raw);
 
-        // 3. Cập nhật sản phẩm trong kho hàng trong database
-        InventoryDAO updateDao = new InventoryDAO();
-        updateDao.updateInventoryItem(updatedItem);
+        Inventory upInventory = new Inventory(itemId_raw, itemName_raw, itemType_raw, itemPrice, itemQuantity, itemUnit_raw, itemDescription_raw);
+        InventoryDAO updateItem = new InventoryDAO();
+        updateItem.updateInventoryItem(upInventory);
 
-        // 4. Chuyển hướng đến trang danh sách sản phẩm
-        response.sendRedirect("ViewInventoryController");
     }
 
     /**
@@ -63,7 +59,7 @@ public class UpdateInventoryItemController extends HttpServlet {
      */
     @Override
     public String getServletInfo() {
-        return "Xử lý cập nhật sản phẩm trong kho hàng.";
+        return "Xử lý cập nhật Sản phẩm trong kho hàng, bao gồm tải lên hình ảnh.";
     } // </editor-fold>
 
 }
