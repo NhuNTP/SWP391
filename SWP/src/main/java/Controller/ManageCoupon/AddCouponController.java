@@ -77,38 +77,17 @@ public class AddCouponController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String couponId_raw = request.getParameter("couponId");
+
         String discountAmount_str = request.getParameter("discountAmount");
         String expirationDate_raw = request.getParameter("expirationDate");
         String description = request.getParameter("description"); // Lấy description từ request
-
-        // 1. Validation dữ liệu đầu vào
-        if (discountAmount_str == null || discountAmount_str.isEmpty()
-                || expirationDate_raw == null || expirationDate_raw.isEmpty()
-                || description == null || description.isEmpty()) {
-
-            request.setAttribute("error", "Vui lòng nhập đầy đủ thông tin giảm giá và ngày hết hạn.");
-            request.getRequestDispatcher("AddCoupon.jsp").forward(request, response); // Quay lại trang thêm coupon
-            return;
-        }
 
         BigDecimal discountAmount = null;
         Date sqlDate = null;
 
         try {
             // 2. Parse discountAmount
-            try {
-                discountAmount = new BigDecimal(discountAmount_str);
-                if (discountAmount.compareTo(BigDecimal.ZERO) < 0) {
-                    request.setAttribute("error", "Giá trị giảm giá phải là số dương.");
-                    request.getRequestDispatcher("addCoupon.jsp").forward(request, response);
-                    return;
-                }
-            } catch (NumberFormatException e) {
-                request.setAttribute("error", "Giá trị giảm giá không hợp lệ.");
-                request.getRequestDispatcher("addCoupon.jsp").forward(request, response);
-                return;
-            }
+            discountAmount = new BigDecimal(discountAmount_str);
 
             // 3. Parse expirationDate
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -117,16 +96,15 @@ public class AddCouponController extends HttpServlet {
                 utilDate = sdf.parse(expirationDate_raw);
                 sqlDate = new Date(utilDate.getTime()); // Chuyển sang java.sql.Date
             } catch (ParseException e) {
-                request.setAttribute("error", "Định dạng ngày hết hạn không hợp lệ (yyyy-MM-dd).");
-                request.getRequestDispatcher("addCoupon.jsp").forward(request, response);
+                request.getRequestDispatcher("ViewCouponController").forward(request, response);
                 return;
             }
 
-            // 4. Tạo đối tượng Coupon (chú ý: couponId có thể auto-increment trong DB)
-            Coupon newCoupon = new Coupon(couponId_raw, discountAmount, sqlDate, 0, 0, description); // Giả sử constructor Coupon phù hợp
-
             // 5. Gọi CouponDAO để thêm mới
             CouponDAO couponDAO = new CouponDAO();
+            String couponId = couponDAO.generateNextCouponId();
+            System.out.println("couponId");
+            Coupon newCoupon = new Coupon(couponId, discountAmount, sqlDate, 0, 0, description); // Giả sử constructor Coupon phù hợp
             couponDAO.addNewCoupon(newCoupon);
 
             // 6. Chuyển hướng sau khi thêm thành công
@@ -137,7 +115,7 @@ public class AddCouponController extends HttpServlet {
         } catch (Exception e) { // Bắt các Exception khác (ví dụ từ CouponDAO)
 
             request.setAttribute("error", "Có lỗi xảy ra khi thêm mới Coupon. Vui lòng thử lại sau.");
-            request.getRequestDispatcher("error.jsp").forward(request, response); // Chuyển đến trang lỗi
+            request.getRequestDispatcher("ViewCouponController").forward(request, response); // Chuyển đến trang lỗi
         }
     }
 
