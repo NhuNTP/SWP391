@@ -1,13 +1,5 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package Model;
 
-/**
- *
- * @author LxP
- */
 public class Inventory {
 
     private String ItemId;
@@ -55,24 +47,24 @@ public class Inventory {
         return ItemName;
     }
 
-    public void setItemName(String ItemName) {
-        this.ItemName = ItemName;
+    public void setItemName(String itemName) {
+        ItemName = itemName;
     }
 
     public String getItemType() {
         return ItemType;
     }
 
-    public void setItemType(String ItemType) {
-        this.ItemType = ItemType;
+    public void setItemType(String itemType) {
+        ItemType = itemType;
     }
 
     public double getItemPrice() {
         return ItemPrice;
     }
 
-    public void setItemPrice(double ItemPrice) {
-        this.ItemPrice = ItemPrice;
+    public void setItemPrice(double itemPrice) {
+        ItemPrice = itemPrice;
     }
 
     public double getItemQuantity() {
@@ -87,16 +79,16 @@ public class Inventory {
         return ItemUnit;
     }
 
-    public void setItemUnit(String ItemUnit) {
-        this.ItemUnit = ItemUnit;
+    public void setItemUnit(String itemUnit) {
+        ItemUnit = itemUnit;
     }
 
     public String getItemDescription() {
         return ItemDescription;
     }
 
-    public void setItemDescription(String ItemDescription) {
-        this.ItemDescription = ItemDescription;
+    public void setItemDescription(String itemDescription) {
+        ItemDescription = itemDescription;
     }
 
     public int getIsDeleted() {
