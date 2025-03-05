@@ -1,8 +1,4 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
-// ViewOrderDetailController.java
+
 package Controller.ManageOrder;
 
 import DAO.OrderDAO;
@@ -27,7 +23,7 @@ public class ViewOrderDetailController extends HttpServlet {
             throws ServletException, IOException {
 
         // 1. Lấy orderId từ request
-        int orderId = Integer.parseInt(request.getParameter("orderId"));
+        String orderId = request.getParameter("orderId");  // Changed to String
 
         // 2. Gọi DAO để lấy Order
         OrderDAO orderDAO = new OrderDAO();
@@ -52,8 +48,5 @@ public class ViewOrderDetailController extends HttpServlet {
         request.setAttribute("order", order);
         request.setAttribute("orderDetails", orderDetails);
         request.getRequestDispatcher("ManageOrder/ViewOrderDetail.jsp").forward(request, response);
-        
-        
     }
-    
 }

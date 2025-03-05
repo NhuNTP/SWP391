@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.text.DecimalFormat;
 
 @WebServlet("/AddCustomer")
 public class AddCustomerController extends HttpServlet {
@@ -43,14 +44,16 @@ public class AddCustomerController extends HttpServlet {
             return; // Stop further processing
         }
 
-        Customer customer = new Customer();
-        customer.setCustomerName(customerName);
-        customer.setCustomerPhone(customerPhone);
-        customer.setNumberOfPayment(numberOfPayment);
-
         CustomerDAO customerDAO = new CustomerDAO();
+
         try {
+
+           String customerId  = customerDAO.generateNextCouponId();
+
+            Customer customer = new Customer(customerId, customerName, customerPhone, numberOfPayment);
+
             customerDAO.addCustomer(customer);
+
         } catch (SQLException ex) {
             Logger.getLogger(AddCustomerController.class.getName()).log(Level.SEVERE, null, ex);
             request.setAttribute("errorMessage", "Database error: " + ex.getMessage());
@@ -62,7 +65,6 @@ public class AddCustomerController extends HttpServlet {
             request.getRequestDispatcher("ViewCustomerList").forward(request, response);
             return;
         }
-
         response.sendRedirect("ViewCustomerList"); // Redirect to ViewCustomerList after adding
     }
 }

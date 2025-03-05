@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package Controller.ManageCustomer;
 
 import DAO.CustomerDAO;
@@ -32,7 +28,7 @@ public class UpdateCustomerProfileController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        int customerId = Integer.parseInt(request.getParameter("customerId"));
+        String customerId = request.getParameter("customerId");
         Customer customer = null;
         try {
             customer = customerDAO.getCustomerById(customerId);
@@ -47,21 +43,12 @@ public class UpdateCustomerProfileController extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String customerIdStr = request.getParameter("customerId");
+        String customerId = request.getParameter("customerId");
         String customerName = request.getParameter("CustomerName"); // Corrected parameter name
         String customerPhone = request.getParameter("CustomerPhone"); // Corrected parameter name
         String numberOfPaymentStr = request.getParameter("NumberOfPayment"); // Corrected parameter name
 
-        int customerId;
         int numberOfPayment;
-
-        try {
-            customerId = Integer.parseInt(customerIdStr);
-        } catch (NumberFormatException e) {
-            request.setAttribute("errorMessage", "Invalid Customer ID.");
-            request.getRequestDispatcher("ViewCustomerList").forward(request, response);
-            return;
-        }
 
         if (numberOfPaymentStr == null || numberOfPaymentStr.isEmpty()) {
             numberOfPayment = 0; // Default value
