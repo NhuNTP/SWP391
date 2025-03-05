@@ -1,11 +1,5 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package DAO;
 
-import static DB.DBContext.getConnection;
-import Model.Coupon;
 import Model.Inventory;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -16,14 +10,10 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author DELL-Laptop
- */
 public class InventoryDAO extends DB.DBContext {
 
     public List<Inventory> getAllInventoryItem() {
-        String sql = "SELECT * FROM Inventory Where isDeleted = 0";
+        String sql = "SELECT * FROM Inventory WHERE isDeleted = 0";
         List<Inventory> inventoryItemList = new ArrayList<>();
         try (PreparedStatement st = getConnection().prepareStatement(sql)) {
             try (ResultSet rs = st.executeQuery()) {
@@ -57,6 +47,35 @@ public class InventoryDAO extends DB.DBContext {
         return null;
     }
 
+  
+    
+    public Inventory getInventoryItemById(String itemId) {
+        String sql = "SELECT * FROM Inventory WHERE ItemId = ?";
+        try (PreparedStatement st = getConnection().prepareStatement(sql)) {
+            st.setString(1, itemId);
+            try (ResultSet rs = st.executeQuery()) {
+                if (rs.next()) {
+                    Inventory inventoryItem = new Inventory(
+                            rs.getString("ItemId"),
+                            rs.getString("ItemName"),
+                            rs.getString("ItemType"),
+                            rs.getDouble("ItemPrice"),
+                            rs.getInt("ItemQuantity"),
+                            rs.getString("ItemUnit"),
+                            rs.getString("ItemDescription")
+                    );
+                    return inventoryItem;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi lấy Inventory Item theo ID: " + e.getMessage());
+            e.printStackTrace();
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(InventoryDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
+  
     public String generateNextInventoryId() throws SQLException, ClassNotFoundException {
         String lastInventoryId = getLastInventoryIdFromDB();
         int nextNumber = 1; // Số bắt đầu nếu chưa có coupon nào
@@ -77,8 +96,8 @@ public class InventoryDAO extends DB.DBContext {
         String numberStr = String.format("%03d", nextNumber);
         return "IN" + numberStr; // **Sửa thành "CP" thay vì "CO"**
     }
-
-    private String getLastInventoryIdFromDB() throws SQLException, ClassNotFoundException {
+  
+private String getLastInventoryIdFromDB() throws SQLException, ClassNotFoundException {
         String lastCouponId = null;
         // **Sửa câu SQL cho đúng tên bảng và cột, và dùng TOP 1 cho SQL Server**
         String sql = "SELECT TOP 1 ItemId FROM [db1].[dbo].[Inventory] ORDER BY ItemId DESC";
@@ -124,6 +143,8 @@ public class InventoryDAO extends DB.DBContext {
         return lastCouponId;
     }
 
+  
+  
     public void addNewInventoryItem(Inventory inventory) { // Changed parameter type to Model.InventoryItem
         String sql = "INSERT INTO [dbo].[Inventory] (ItemId,ItemName, ItemType, ItemPrice, ItemQuantity, ItemUnit, ItemDescription) " // Updated column names to InventoryItem properties
                 + "VALUES ( ?, ?, ?, ?, ?, ?,?)"; // Updated number of placeholders to match the number of columns
@@ -194,4 +215,6 @@ public class InventoryDAO extends DB.DBContext {
         }
         return count;
     }
+}
+
 }
