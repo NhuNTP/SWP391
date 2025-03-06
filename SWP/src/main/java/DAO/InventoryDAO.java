@@ -217,4 +217,4 @@ private String getLastInventoryIdFromDB() throws SQLException, ClassNotFoundExce
     }
 }
 
-}
+

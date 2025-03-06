@@ -79,7 +79,8 @@ public class DeleteInventoryItemController extends HttpServlet {
 
         try {
             InventoryDAO delItem = new InventoryDAO();
-            delItem.deleteInventoryItemById(itemId);
+            int itemID=Integer.parseInt(itemId);
+            delItem.deleteInventoryItemById(itemID);
             response.sendRedirect("ViewCouponController");
         } catch (Exception e) {
             e.printStackTrace(); // In ra lỗi

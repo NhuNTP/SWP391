@@ -19,22 +19,10 @@ public class UpdateInventoryItemController extends HttpServlet {
         String itemId = request.getParameter("itemId");
         String itemName = request.getParameter("itemName");
         String itemType = request.getParameter("itemType");
-        String itemPriceStr = request.getParameter("itemPrice");
-        double itemPrice = 0.0;
-        try {
-            itemPrice = Double.parseDouble(itemPriceStr);
-        } catch (NumberFormatException e) {
-            e.printStackTrace();
-            itemPrice = 0.0;
-        }
-        String itemQuantityStr = request.getParameter("itemQuantity");
-        int itemQuantity = 0;
-        try {
-            itemQuantity = Integer.parseInt(itemQuantityStr);
-        } catch (NumberFormatException e) {
-            e.printStackTrace();
-            itemQuantity = 0;
-        }
+        String itemPrice_raw = request.getParameter("itemPrice");
+        String itemQuantity_raw = request.getParameter("itemQuantity");
+        
+        
         String itemUnit = request.getParameter("itemUnit");
         String itemDescription = request.getParameter("itemDescription");
 

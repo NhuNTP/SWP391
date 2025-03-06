@@ -91,7 +91,6 @@ public class AddInventoryItemController extends HttpServlet {
             double itemQuantity = Integer.parseInt(request.getParameter("itemQuantity"));
             String itemUnit = request.getParameter("itemUnit");
             String itemDescription = request.getParameter("itemDescription");
-
         
             // 5. Thêm vào database
             
