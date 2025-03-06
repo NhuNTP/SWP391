@@ -47,8 +47,6 @@ public class InventoryDAO extends DB.DBContext {
         return null;
     }
 
-  
-    
     public Inventory getInventoryItemById(String itemId) {
         String sql = "SELECT * FROM Inventory WHERE ItemId = ?";
         try (PreparedStatement st = getConnection().prepareStatement(sql)) {
@@ -75,7 +73,7 @@ public class InventoryDAO extends DB.DBContext {
         }
         return null;
     }
-  
+
     public String generateNextInventoryId() throws SQLException, ClassNotFoundException {
         String lastInventoryId = getLastInventoryIdFromDB();
         int nextNumber = 1; // Số bắt đầu nếu chưa có coupon nào
@@ -96,8 +94,8 @@ public class InventoryDAO extends DB.DBContext {
         String numberStr = String.format("%03d", nextNumber);
         return "IN" + numberStr; // **Sửa thành "CP" thay vì "CO"**
     }
-  
-private String getLastInventoryIdFromDB() throws SQLException, ClassNotFoundException {
+
+    private String getLastInventoryIdFromDB() throws SQLException, ClassNotFoundException {
         String lastCouponId = null;
         // **Sửa câu SQL cho đúng tên bảng và cột, và dùng TOP 1 cho SQL Server**
         String sql = "SELECT TOP 1 ItemId FROM [db1].[dbo].[Inventory] ORDER BY ItemId DESC";
@@ -143,8 +141,6 @@ private String getLastInventoryIdFromDB() throws SQLException, ClassNotFoundExce
         return lastCouponId;
     }
 
-  
-  
     public void addNewInventoryItem(Inventory inventory) { // Changed parameter type to Model.InventoryItem
         String sql = "INSERT INTO [dbo].[Inventory] (ItemId,ItemName, ItemType, ItemPrice, ItemQuantity, ItemUnit, ItemDescription) " // Updated column names to InventoryItem properties
                 + "VALUES ( ?, ?, ?, ?, ?, ?,?)"; // Updated number of placeholders to match the number of columns
@@ -188,6 +184,16 @@ private String getLastInventoryIdFromDB() throws SQLException, ClassNotFoundExce
             st.setString(5, updatedItem.getItemUnit());
             st.setString(6, updatedItem.getItemDescription());
             st.setString(7, updatedItem.getItemId());
+            // In thông tin để kiểm tra trước khi thực hiện update
+            System.out.println("--- Thông tin Inventory Item trước khi UPDATE ---");
+            System.out.println("Item ID (WHERE Clause): " + updatedItem.getItemId());
+            System.out.println("Item Name: " + updatedItem.getItemName());
+            System.out.println("Item Type: " + updatedItem.getItemType());
+            System.out.println("Item Price: " + updatedItem.getItemPrice());
+            System.out.println("Item Quantity: " + updatedItem.getItemQuantity());
+            System.out.println("Item Unit: " + updatedItem.getItemUnit());
+            System.out.println("Item Description: " + updatedItem.getItemDescription());
+            System.out.println("----------------------------------------------");
 
             int rowsUpdated = st.executeUpdate();
             if (rowsUpdated > 0) {
@@ -202,19 +208,15 @@ private String getLastInventoryIdFromDB() throws SQLException, ClassNotFoundExce
         }
     }
 
-    public int deleteInventoryItemById(int itemId) throws ClassNotFoundException {
-        int count = 0;
+    public void deleteInventoryItemById(String itemId) throws ClassNotFoundException {
         try {
             // Modified to update IsDeleted instead of deleting
             String sql = "UPDATE [Inventory] SET IsDeleted = 1 WHERE itemId=?";
             PreparedStatement pst = getConnection().prepareStatement(sql);
-            pst.setInt(1, itemId);
-            count = pst.executeUpdate();
+            pst.setString(1, itemId);
+            pst.executeUpdate();
         } catch (SQLException ex) {
             Logger.getLogger(CouponDAO.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return count;
     }
 }
-
-

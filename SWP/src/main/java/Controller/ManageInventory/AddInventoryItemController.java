@@ -88,20 +88,25 @@ public class AddInventoryItemController extends HttpServlet {
             String itemName = request.getParameter("itemName");
             String itemType = request.getParameter("itemType");
             double itemPrice = Double.parseDouble(request.getParameter("itemPrice"));
-            double itemQuantity = Integer.parseInt(request.getParameter("itemQuantity"));
+
             String itemUnit = request.getParameter("itemUnit");
             String itemDescription = request.getParameter("itemDescription");
-        
+
+            String quantityStr = request.getParameter("itemQuantity");
+            if (quantityStr != null) {
+                // Thay thế dấu phẩy bằng dấu chấm
+                quantityStr = quantityStr.replace(",", ".");
+            }
+
+            double itemQuantity = Double.parseDouble(quantityStr);
             // 5. Thêm vào database
-            
             InventoryDAO inventoryDAO = new InventoryDAO();
-            String itemID=inventoryDAO.generateNextInventoryId();
+            String itemID = inventoryDAO.generateNextInventoryId();
             System.out.println(itemID);
-            Inventory newItem = new Inventory(itemID,itemName, itemType, itemPrice, itemQuantity, itemUnit, itemDescription,0);
+            Inventory newItem = new Inventory(itemID, itemName, itemType, itemPrice, itemQuantity, itemUnit, itemDescription, 0);
             inventoryDAO.addNewInventoryItem(newItem);
 
             // 6. Chuyển hướng
-            
             response.sendRedirect("ViewInventoryController");
 
         } catch (Exception e) {

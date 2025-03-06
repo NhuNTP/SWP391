@@ -171,22 +171,18 @@
                     <div class="text-left mb-4">
                         <h4>Coupon Management</h4>
                     </div>
-                    <div class="content-header">
-                        <div class="search-filter">
-                            <div class="search-bar">
-                                <input type="text" id="searchInput" placeholder="Search">  <!-- Thêm id="searchInput" -->
-                            </div>
-                        </div>
 
-                    </div>
                     <div class="container-fluid">
                         <main>
                             <div class="content-header">
+                                <div class="search-filter">
+                                    <div class="search-bar">
+                                        <input type="text" id="searchInput" placeholder="Search">  <!-- Thêm id="searchInput" -->
+                                    </div>
+                                </div>
 
                                 <div class="header-buttons">
-                                    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#addCouponModal">
-                                        Add New
-                                    </button>
+                                    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#addCouponModal"> Add New</button>
                                 </div>
 
                             </div>
@@ -203,6 +199,9 @@
                                             <th>Description</th>
                                             <th>Actions</th>
                                         </tr>
+                                        <tr id="noResultsRow" style="display: none;">
+                                            <td colspan="6" style="text-align: center; color: gray">Coupon Not Found.</td>
+                                        </tr>
                                     </thead>
                                     <tbody id="couponTableBody">
                                         <%
@@ -211,9 +210,7 @@
                                                 int displayIndex = 1;
                                                 for (Coupon coupon : couponList) {
                                         %>
-                                        <tr id="noResultsRow" style="display: none;">  <!-- Thêm hàng này, ban đầu ẩn -->
-                                            <td colspan="6" style="text-align: center; color: gray">Coupon Not Found.</td>
-                                        </tr>
+
                                         <tr id="couponRow<%=coupon.getCouponId()%>">
                                             <td><%= displayIndex++%></td>
                                             <td><%= coupon.getCouponId()%></td>
@@ -311,36 +308,36 @@
                     <div class="modal-body">
                         <form id="updateCouponForm">
                             <input type="hidden" id="couponIdUpdate" name="couponId">
-                            <div class="mb-3 row"> <!- Thêm class 'row' vào div.mb-3 -->
-                                <label for="couponIdUpdateDisplay" class="col-sm-4 col-form-label">Coupon ID(Just View):</label> <!- Thêm class 'col-sm-4' và 'col-form-label' cho label -->
-                                <div class="col-sm-8"> <!- Bọc input trong một div với class 'col-sm-8' -->
+                            <div class="mb-3 row">
+                                <label for="couponIdUpdateDisplay" class="col-sm-4 col-form-label">Coupon ID(Just View):</label> 
+                                <div class="col-sm-8"> 
                                     <input type="text" class="form-control" id="couponIdUpdateDisplay" readonly >
                                     <input type="hidden" id="couponIdUpdate" name="couponId">
                                 </div>
                             </div>
-                            <div class="mb-3 row"> <!- Thêm class 'row' vào div.mb-3 -->
-                                <label for="discountAmountUpdate" class="col-sm-4 col-form-label">Discount Amount:</label> <!- Thêm class 'col-sm-4' và 'col-form-label' cho label -->
-                                <div class="col-sm-8"> <!- Bọc input trong một div với class 'col-sm-8' -->
+                            <div class="mb-3 row"> 
+                                <label for="discountAmountUpdate" class="col-sm-4 col-form-label">Discount Amount:</label> 
+                                <div class="col-sm-8">
                                     <input type="number" class="form-control" id="discountAmountUpdate" name="discountAmount" min="0" max="10000000" required step="0.01">
                                     <small class="text-muted">Enter a non-negative number.</small>
                                 </div>
                             </div>
-                            <div class="mb-3 row"> <!- Thêm class 'row' vào div.mb-3 -->
-                                <label for="expirationDateUpdate" class="col-sm-4 col-form-label">Expiration Date:</label> <!- Thêm class 'col-sm-4' và 'col-form-label' cho label -->
-                                <div class="col-sm-8"> <!- Bọc input trong một div với class 'col-sm-8' -->
+                            <div class="mb-3 row"> 
+                                <label for="expirationDateUpdate" class="col-sm-4 col-form-label">Expiration Date:</label>
+                                <div class="col-sm-8">
                                     <input type="date" class="form-control" id="expirationDateUpdate" name="expirationDate" required="">
                                 </div>
                             </div>
-                            <div class="mb-3 row"> <!- Thêm class 'row' vào div.mb-3 -->
-                                <label for="timesUsedUpdate" class="col-sm-4 col-form-label">Times Used:</label> <!- Thêm class 'col-sm-4' và 'col-form-label' cho label -->
-                                <div class="col-sm-8"> <!- Bọc input trong một div với class 'col-sm-8' -->
+                            <div class="mb-3 row"> 
+                                <label for="timesUsedUpdate" class="col-sm-4 col-form-label">Times Used:</label> 
+                                <div class="col-sm-8">
                                     <input type="number" class="form-control" id="timesUsedUpdate" name="timesUsed" required min="0">
                                     <small class="text-muted">Enter a non-negative integer.</small>
                                 </div>
                             </div>
-                            <div class="mb-3 row"> <!- Thêm class 'row' vào div.mb-3 -->
-                                <label for="descriptionUpdate" class="col-sm-4 col-form-label">Description:</label> <!- Thêm class 'col-sm-4' và 'col-form-label' cho label -->
-                                <div class="col-sm-8"> <!- Bọc input trong một div với class 'col-sm-8' -->
+                            <div class="mb-3 row"> 
+                                <label for="descriptionUpdate" class="col-sm-4 col-form-label">Description:</label>
+                                <div class="col-sm-8"> 
                                     <textarea class="form-control" id="descriptionUpdate" name="description" rows="2" required=""></textarea>
                                 </div>
                             </div>
@@ -531,7 +528,7 @@
                         displayError('descriptionUpdate', 'Please enter the coupon description.');
                     }
                     if (timesUsedUpdate === '') {
-                           isValid = false;
+                        isValid = false;
                         displayError('timesUsedUpdate', 'Please enter the time used.');
                     } else if (isNaN(timesUsedUpdate)) {
                         isValid = false;
@@ -678,7 +675,7 @@
                 const noResultsRow = document.getElementById('noResultsRow'); // Lấy hàng "Không tìm thấy kết quả"
 
                 function searchCouponColumn() {
-                    const searchText = searchInput.value.toLowerCase();
+                    const searchText = searchInput.value.trim().toLowerCase();
                     let foundMatch = false; // Biến cờ, ban đầu đặt là false
                     noResultsRow.style.display = 'none'; // Ẩn hàng "Không tìm thấy kết quả" mỗi khi bắt đầu tìm kiếm
                     const rows = table.querySelectorAll('tbody tr:not(#noResultsRow)'); // Chọn tất cả tr trong tbody, trừ hàng noResultsRow
