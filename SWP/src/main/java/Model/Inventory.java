@@ -73,7 +73,7 @@ public class Inventory {
 
     public void setItemQuantity(double ItemQuantity) {
         this.ItemQuantity = ItemQuantity;
-   
+    }
 
     public String getItemUnit() {
         return ItemUnit;
