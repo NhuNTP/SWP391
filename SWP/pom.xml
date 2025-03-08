@@ -24,6 +24,12 @@
             <artifactId>mssql-jdbc</artifactId>
             <version>11.2.3.jre17</version>
         </dependency>
+        <dependency>
+            <groupId>io.github.jaspercloud</groupId>
+            <artifactId>gson-extension</artifactId>
+            <version>1.2.0</version>
+            <type>jar</type>
+        </dependency>
     </dependencies>
     
     <build>

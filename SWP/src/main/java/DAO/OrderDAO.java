@@ -10,12 +10,16 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author HuynhPhuBinh
  */
 public class OrderDAO {
+
+    private static final Logger logger = Logger.getLogger(OrderDAO.class.getName());
 
     public List<Order> getAllOrders() throws SQLException, ClassNotFoundException {
         List<Order> orders = new ArrayList<>();
@@ -104,6 +108,7 @@ public class OrderDAO {
 
     try (Connection conn = DBContext.getConnection();
          PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        logger.log(Level.INFO, "Executing SQL: {0}", sql);
 
         pstmt.setString(1, order.getOrderId());
         pstmt.setString(2, order.getUserId());
@@ -135,6 +140,10 @@ public class OrderDAO {
         }
 
         pstmt.executeUpdate();
+        logger.info("Order created successfully in database.");
+    } catch (SQLException e) {
+        logger.log(Level.SEVERE, "Error creating order in database", e);
+        throw e;  // Re-throw the exception so it's handled in the controller
     }
 }
 
