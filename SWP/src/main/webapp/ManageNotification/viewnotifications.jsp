@@ -6,7 +6,11 @@
 <head>
     <title>View Notifications</title>
     <style>
-        /* Your CSS styles here */
+        .notification-container { margin: 20px; }
+        .notification-list { list-style-type: none; padding: 0; }
+        .notification-item { border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+        .notification-content { font-weight: bold; }
+        .notification-date { color: #666; font-size: 0.9em; }
     </style>
 </head>
 <body>
@@ -22,18 +26,17 @@
 
         <%-- Display Notifications --%>
         <%
-            List<Notification> notificationList = (List<Notification>) request.getAttribute("notificationList");
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // Date formatting
+            List<Notification> notifications = (List<Notification>) request.getAttribute("notifications");
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-            if (notificationList != null && !notificationList.isEmpty()) {
+            if (notifications != null && !notifications.isEmpty()) {
         %>
         <ul class="notification-list">
-            <% for (Notification notification : notificationList) { %>
+            <% for (Notification notification : notifications) { %>
             <li class="notification-item">
                 <p class="notification-content"><%= notification.getNotificationContent() %></p>
                 <p class="notification-date">Created at: <%= dateFormat.format(notification.getNotificationCreateAt()) %></p>
-                   <p class="notification-date">UserName: <%= notification.getUserName() %></p>
-                     <p class="notification-date">UserRole: <%= notification.getUserRole() %></p>
+                <p class="notification-date">User: <%= notification.getUserName() %> (<%= notification.getUserRole() %>)</p>
             </li>
             <% } %>
         </ul>
@@ -41,7 +44,7 @@
             <p>No notifications found.</p>
         <% } %>
 
-        <a href="viewalldishes">Back to All Dishes</a>
+        <a href="${pageContext.request.contextPath}/Dashboard/AdminDashboard.jsp">Back to Dashboard</a>
     </div>
 </body>
 </html>

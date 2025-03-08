@@ -1,48 +1,45 @@
 package Controller.ManageNotification;
 
 import DAO.NotificationDAO;
+import Model.Account;
 import Model.Notification;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-@WebServlet("/viewnotifications")
+@WebServlet("/view-notifications")
 public class ViewNotificationController extends HttpServlet {
-
     private final NotificationDAO notificationDAO = new NotificationDAO();
-    private static final Logger LOGGER = Logger.getLogger(ViewNotificationController.class.getName());
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
-        try {
-            Integer userId = null;
-            String userIdStr = request.getParameter("userId");
-              if (userIdStr != null && !userIdStr.isEmpty()) {
-                   userId = Integer.parseInt(userIdStr);
-              }
-             
-            List<Notification> notificationList = notificationDAO.getAllNotificationsForUser(userId);
-
-            if (notificationList != null) {
-                request.setAttribute("notificationList", notificationList);
-                request.setAttribute("userId", userId);
-            } else {
-                request.getSession().setAttribute("errorMessage", "Error retrieving notifications. See server logs.");
-            }
-
-        } catch (NumberFormatException e) {
-            request.getSession().setAttribute("errorMessage", "Invalid User ID.");
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("account") == null) {
+            response.sendRedirect(request.getContextPath() + "/LoginPage.jsp");
+            return;
         }
-        RequestDispatcher dispatcher = request.getRequestDispatcher("ManageNotification/viewnotifications.jsp");
-        dispatcher.forward(request, response);
+
+        // Lấy đối tượng Account từ session
+        Account account = (Account) session.getAttribute("account");
+        String UserRole = account.getUserRole();
+        String UserId = account.getUserId();
+
+        // Lấy danh sách thông báo cho user
+        List<Notification> notifications = notificationDAO.getNotificationsForUser(UserId, UserRole);
+        request.setAttribute("notifications", notifications);
+
+        // Nếu là Admin hoặc Manager, lấy danh sách user để tạo thông báo
+        if ("Admin".equals(UserRole) || "Manager".equals(UserRole)) {
+            List<Account> accounts = notificationDAO.getAllAccounts();
+            request.setAttribute("accounts", accounts);
+        }
+
+        request.getRequestDispatcher("/ManageNotification/viewnotifications.jsp").forward(request, response);
     }
+
 }
