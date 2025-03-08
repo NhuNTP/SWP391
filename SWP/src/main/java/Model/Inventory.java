@@ -47,24 +47,24 @@ public class Inventory {
         return ItemName;
     }
 
-    public void setItemName(String itemName) {
-        ItemName = itemName;
+    public void setItemName(String ItemName) {
+        this.ItemName = ItemName;
     }
 
     public String getItemType() {
         return ItemType;
     }
 
-    public void setItemType(String itemType) {
-        ItemType = itemType;
+    public void setItemType(String ItemType) {
+        this.ItemType = ItemType;
     }
 
     public double getItemPrice() {
         return ItemPrice;
     }
 
-    public void setItemPrice(double itemPrice) {
-        ItemPrice = itemPrice;
+    public void setItemPrice(double ItemPrice) {
+        this.ItemPrice = ItemPrice;
     }
 
     public double getItemQuantity() {
@@ -73,22 +73,22 @@ public class Inventory {
 
     public void setItemQuantity(double ItemQuantity) {
         this.ItemQuantity = ItemQuantity;
-   
+    }
 
     public String getItemUnit() {
         return ItemUnit;
     }
 
-    public void setItemUnit(String itemUnit) {
-        ItemUnit = itemUnit;
+    public void setItemUnit(String ItemUnit) {
+        this.ItemUnit = ItemUnit;
     }
 
     public String getItemDescription() {
         return ItemDescription;
     }
 
-    public void setItemDescription(String itemDescription) {
-        ItemDescription = itemDescription;
+    public void setItemDescription(String ItemDescription) {
+        this.ItemDescription = ItemDescription;
     }
 
     public int getIsDeleted() {
@@ -99,4 +99,5 @@ public class Inventory {
         this.isDeleted = isDeleted;
     }
 
+    
 }

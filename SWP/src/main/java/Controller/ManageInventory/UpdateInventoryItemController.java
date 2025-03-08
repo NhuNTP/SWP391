@@ -14,6 +14,7 @@ public class UpdateInventoryItemController extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
+    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // 1. Lấy tất cả các tham số từ request
         String itemId = request.getParameter("itemId");
