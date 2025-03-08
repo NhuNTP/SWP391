@@ -68,19 +68,22 @@ public class DeleteInventoryItemController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String itemId = request.getParameter("itemID");
+        String itemId_raw = request.getParameter("itemID");
 
-        if (itemId == null || itemId.isEmpty()) {
-            System.out.println("ItemID is missing from the request.");
-            response.sendRedirect("error.jsp");
+        if (itemId_raw == null || itemId_raw.isEmpty()) {
+            System.out.println("itemID is missing from the request.");
             return;
         }
-        System.out.println("Giá trị ItemId nhận được từ request parameter: " + itemId);
+        System.out.println("Giá trị Id nhận được từ request parameter: " + itemId_raw);
 
         try {
+
             InventoryDAO delItem = new InventoryDAO();
-            delItem.deleteInventoryItemById(itemId);
-            response.sendRedirect("ViewCouponController");
+            delItem.deleteInventoryItemById(itemId_raw);
+            response.sendRedirect("ViewInventoryController");
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid empID: " + itemId_raw);
+            response.sendRedirect("error.jsp");
         } catch (Exception e) {
             e.printStackTrace(); // In ra lỗi
             response.sendRedirect("error.jsp");

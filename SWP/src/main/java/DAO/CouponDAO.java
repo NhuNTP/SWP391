@@ -12,7 +12,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import DB.DBContext;
+import java.math.BigDecimal;
 import java.sql.Connection;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,6 +39,15 @@ public class CouponDAO extends DB.DBContext {
                             rs.getInt("timesUsed"),
                             rs.getString("description")
                     );
+//                    if (coupon.getDiscountAmount().compareTo(BigDecimal.valueOf(100)) > 0) {
+//                        // Định dạng tiền Việt Nam
+//                        NumberFormat currencyFormat = NumberFormat.getNumberInstance(Locale.forLanguageTag("vi-VN"));
+//                        coupon.setDiscountAmount(currencyFormat.format(coupon.getDiscountAmount()) + "đ");
+//                    } else {
+//                        // Định dạng phần trăm
+//                        DecimalFormat percentFormat = new DecimalFormat("0.##%"); // Hoặc "0.00%" nếu bạn muốn 2 chữ số thập phân
+//                        coupon.setDiscountAmount = percentFormat.format(coupon.getDiscountAmount().divide(BigDecimal.valueOf(100))); // Chia cho 100 để chuyển thành phần trăm
+//                    }
                     coupons.add(coupon);
                 }
                 System.out.print("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk");

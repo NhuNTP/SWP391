@@ -1,102 +1,103 @@
 package Controller.ManageNotification;
 
 import DAO.NotificationDAO;
+import Model.Account;
+import Model.Notification;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import DAO.AccountDAO;
-import java.sql.SQLException;
+import java.util.Date;
 import java.util.List;
 
-@WebServlet("/createnotification")
+@WebServlet("/create-notification")
 public class CreateNotificationController extends HttpServlet {
-
     private final NotificationDAO notificationDAO = new NotificationDAO();
-    private final AccountDAO accountDAO;
-    private static final Logger LOGGER = Logger.getLogger(CreateNotificationController.class.getName());
-
-    public CreateNotificationController() throws ClassNotFoundException, SQLException {
-        this.accountDAO = new AccountDAO();
-    }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        request.setAttribute("userId", request.getParameter("userId"));
-
-        String target = request.getParameter("target");
-        List<String> roles = accountDAO.getAllRoles();
-         request.setAttribute("roles", roles);
-        request.setAttribute("target", target);
-
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/ManageNotification/createnotification.jsp");
-        dispatcher.forward(request, response);
-    }
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
-        String target = request.getParameter("target"); // "all", "role", or "user"
-        String notificationContent = request.getParameter("notificationContent");
-        String userIdStr;
-
-        boolean isCreated = false;
-
-        try {
-            switch (target) {
-                case "all":
-                    // Create notification for all users (UserId is null)
-                    isCreated = notificationDAO.createNotification(null, notificationContent);
-                    break;
-                case "role":
-                    // Create notification for a specific role
-                    String role = request.getParameter("role");
-
-                List<String> userIdsForRole = accountDAO.getUserIdsByRole(role);
-                    if (userIdsForRole != null) {
-                       for (String id : userIdsForRole) {
-                            isCreated = notificationDAO.createNotification(id, notificationContent);
-                       }
-                    }
-
-                    break;
-
-                case "user":
-                    // Create notification for a specific user
-                    userIdStr = request.getParameter("userId");
-                    if (userIdStr != null && !userIdStr.isEmpty()) {
-                        try {
-                            isCreated = notificationDAO.createNotification(userIdStr, notificationContent);
-                        } catch (NumberFormatException e) {
-                            request.setAttribute("errorMessage", "Invalid User ID.");
-                        }
-                    }
-                    break;
-                default:
-                    request.setAttribute("errorMessage", "Invalid target audience.");
-                    break;
-            }
-
-            if (isCreated) {
-                request.setAttribute("message", "Notification created successfully!");
-            } else {
-                request.setAttribute("errorMessage", "Failed to create notification. See server logs.");
-            }
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error creating notification", e);
-            request.setAttribute("errorMessage", "Error creating notification. See server logs.");
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("account") == null) {
+            response.sendRedirect(request.getContextPath() + "/LoginPage.jsp");
+            return;
         }
 
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/ManageNotification/createnotification.jsp");
-        request.setAttribute("target", target);
-        List<String> roles = accountDAO.getAllRoles();
-         request.setAttribute("roles", roles);
-        dispatcher.forward(request, response);
+        Account account = (Account) session.getAttribute("account");
+        String UserRole = account.getUserRole();
+
+        // Chỉ Admin và Manager được truy cập
+        if (!"Admin".equals(UserRole) && !"Manager".equals(UserRole)) {
+            response.sendRedirect(request.getContextPath() + "/view-notifications");
+            return;
+        }
+
+        // Lấy danh sách tài khoản phù hợp với quyền
+        List<Account> accounts = notificationDAO.getAllAccounts();
+        if ("Admin".equals(UserRole)) {
+            // Admin không thể tạo thông báo cho chính mình
+            accounts.removeIf(acc -> acc.getUserId().equals(account.getUserId()));
+        } else if ("Manager".equals(UserRole)) {
+            // Manager không thể tạo thông báo cho chính mình và Admin
+            accounts.removeIf(acc -> acc.getUserId().equals(account.getUserId()) || "Admin".equals(acc.getUserRole()));
+        }
+
+        request.setAttribute("accounts", accounts);
+        request.getRequestDispatcher("/ManageNotification/createnotification.jsp").forward(request, response);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("account") == null) {
+            response.sendRedirect(request.getContextPath() + "/LoginPage.jsp");
+            return;
+        }
+
+        Account account = (Account) session.getAttribute("account");
+        String UserRole = account.getUserRole();
+
+        if (!"Admin".equals(UserRole) && !"Manager".equals(UserRole)) {
+            session.setAttribute("errorMessage", "You do not have permission to create notifications.");
+            response.sendRedirect(request.getContextPath() + "/view-notifications");
+            return;
+        }
+
+        String notificationType = request.getParameter("notificationType");
+        String content = request.getParameter("content");
+        Notification notification = new Notification();
+        notification.setNotificationContent(content);
+        notification.setNotificationCreateAt(new Date());
+        notification.setUserId(account.getUserId()); // Người tạo thông báo
+
+        if ("all".equals(notificationType)) {
+            // Thông báo cho tất cả (trừ người tạo)
+            notification.setUserRole(null);
+            notification.setUserName(null);
+        } else if ("role".equals(notificationType)) {
+            // Thông báo theo role
+            String selectedRole = request.getParameter("role");
+            notification.setUserRole(selectedRole);
+            notification.setUserName(null);
+        } else if ("individual".equals(notificationType)) {
+            // Thông báo cho từng cá nhân
+            String selectedUserId = request.getParameter("UserId");
+            Account selectedAccount = notificationDAO.getAllAccounts().stream()
+                    .filter(a -> a.getUserId().equals(selectedUserId))
+                    .findFirst().orElse(null);
+            if (selectedAccount != null) {
+                notification.setUserId(selectedUserId);
+                notification.setUserRole(selectedAccount.getUserRole());
+                notification.setUserName(selectedAccount.getUserName());
+            }
+        }
+
+        // Lưu thông báo vào cơ sở dữ liệu
+        notificationDAO.createNotification(notification);
+
+        session.setAttribute("message", "Notification created successfully!");
+        response.sendRedirect(request.getContextPath() + "/view-notifications");
     }
 }

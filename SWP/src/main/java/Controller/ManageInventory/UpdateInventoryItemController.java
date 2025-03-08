@@ -12,37 +12,36 @@ import java.io.IOException;
 @WebServlet(name = "UpdateInventoryItemController", urlPatterns = {"/UpdateInventoryItemController"})
 public class UpdateInventoryItemController extends HttpServlet {
 
-    private static final long serialVersionUID = 1L;
-
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // 1. Lấy tất cả các tham số từ request
         String itemId = request.getParameter("itemId");
         String itemName = request.getParameter("itemName");
         String itemType = request.getParameter("itemType");
-        String itemPriceStr = request.getParameter("itemPrice");
-        double itemPrice = 0.0;
-        try {
-            itemPrice = Double.parseDouble(itemPriceStr);
-        } catch (NumberFormatException e) {
-            e.printStackTrace();
-            itemPrice = 0.0;
-        }
-        String itemQuantityStr = request.getParameter("itemQuantity");
-        int itemQuantity = 0;
-        try {
-            itemQuantity = Integer.parseInt(itemQuantityStr);
-        } catch (NumberFormatException e) {
-            e.printStackTrace();
-            itemQuantity = 0;
-        }
+        String itemPrice_raw = request.getParameter("itemPrice");
+        String itemQuantity_raw = request.getParameter("itemQuantity");
+
         String itemUnit = request.getParameter("itemUnit");
         String itemDescription = request.getParameter("itemDescription");
-
+        System.err.println(itemQuantity_raw);
+        System.err.println(itemQuantity_raw);
+        System.err.println(itemQuantity_raw);
+        System.err.println(itemQuantity_raw);
+        System.err.println(itemQuantity_raw);
+        System.err.println(itemQuantity_raw);
         // 1. Kiểm tra dữ liệu đầu vào (Validation)
         double itemPrice = Double.parseDouble(itemPrice_raw);
-        double itemQuantity = Integer.parseInt(itemQuantity_raw);
-      
+        double itemQuantity = Double.parseDouble(itemQuantity_raw);
+        
+        
+        
+        System.out.println("--- Giá trị đã parse trong doPost ---");
+        System.out.println("itemPrice: " + itemPrice);
+        System.out.println("itemQuantity: " + itemQuantity);
+        System.out.println("------------------------------------");
+        
+        
+        
         // 2. Tạo đối tượng Inventory để cập nhật
         Inventory updatedItem = new Inventory();
         updatedItem.setItemId(itemId);

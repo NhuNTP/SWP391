@@ -14,11 +14,9 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Inventory Management - Admin Dashboard</title>
 
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <!-- Font Awesome Icons -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-        <!-- Chart.js -->
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <!-- jQuery -->
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <!-- SweetAlert2 for enhanced alerts -->
@@ -47,22 +45,9 @@
                 background-color: #1A252F;
             }
 
-            /* Card Stats Styles */
-            .card-stats {
-                background: linear-gradient(to right, #4CAF50, #81C784);
-                color: white;
+            .modal-header{
+                background-color: #f7f7f0
             }
-
-            .card-stats i {
-                font-size: 2rem;
-            }
-
-            /* Chart Container Styles */
-            .chart-container {
-                position: relative;
-                height: 300px;
-            }
-
             /* Main Content */
             .main-content-area {
                 padding: 20px;
@@ -92,7 +77,7 @@
                 background-color: #0056b3;
             }
 
-            /* Search Bar (THÊM MỚI) - Added Search Bar Styles from ViewCoupon */
+            /* Search Bar */
             .search-bar {
                 display: flex;
                 align-items: center;
@@ -103,18 +88,12 @@
                 padding: 8px 12px;
                 border: 1px solid #ccc;
                 border-radius: 3px;
-                width: 250px; /* Điều chỉnh độ rộng nếu cần */
-            }
-            .search-bar select {
-                padding: 8px 12px;
-                border: 1px solid #ccc;
-                border-radius: 3px;
-                width: auto; /* Điều chỉnh độ rộng nếu cần */
+                width: 250px;
             }
 
 
             /* Inventory Table */
-            .employee-grid .table { /* Reusing employee-grid class for table container */
+            .employee-grid .table {
                 width: 100%;
                 border-collapse: collapse;
                 margin-top: 10px;
@@ -140,15 +119,6 @@
             }
 
             /* Table Buttons */
-            .employee-grid .btn-warning, .employee-grid .btn-danger {
-                border: none;
-                padding: 5px 10px;
-                border-radius: 5px;
-                color: white;
-                text-decoration: none;
-                cursor: pointer;
-                margin: 2px;
-            }
             .btn-edit, .btn-delete {
                 padding: 5px 10px;
                 border-radius: 5px;
@@ -185,16 +155,8 @@
                 color: #777;
             }
 
-            /* Image Style in Table */
-            .employee-grid .table img {
-                max-width: 100px;
-                max-height: 100px;
-                display: block;
-                margin-left: auto;
-                margin-right: auto;
-            }
 
-            /* Highlight CSS - Added Highlight CSS from ViewCoupon */
+            /* Highlight CSS */
             .highlight {
                 background-color: yellow;
             }
@@ -205,7 +167,9 @@
             .sidebar h4{
                 font-size: 1.5rem;
             }
-
+            #itemIdUpdateDisplay{
+                background-color: #f7f7f0
+            }
         </style>
     </head>
 
@@ -235,16 +199,6 @@
                             <div class="content-header">
                                 <div class="search-bar"> <%-- Search bar and filter added here --%>
                                     <input type="text" id="searchInput" placeholder="Search Inventory Item"> <%-- Updated placeholder --%>
-                                    <select id="columnFilter" class="form-control">
-                                        <option value="">All Columns</option>
-                                        <option value="itemId">ID</option>
-                                        <option value="itemName">Name</option>
-                                        <option value="itemType">Type</option>
-                                        <option value="itemPrice">Price</option>
-                                        <option value="itemQuantity">Quantity</option>
-                                        <option value="itemUnit">Unit</option>
-                                        <option value="itemDescription">Description</option>
-                                    </select>
                                 </div>
 
                                 <div class="header-buttons">
@@ -252,71 +206,80 @@
                                 </div>
                             </div>
                             <div class="employee-grid"> <%-- Reusing employee-grid class for layout consistency --%>
-                                <table class="table table-bordered"  method="post">
-                                    <thead>
-                                        <tr>
-                                            <th>No.</th>
-                                            <th>ID</th>
-                                            <th>Name</th>
-                                            <th>Type</th>
-                                            <th>Price</th>
-                                            <th>Quantity</th>
-                                            <th>Unit</th>
-                                            <th>Description</th>
-                                            <th>Actions</th> <%-- Action column title --%>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="inventoryTableBody"> <%-- Added ID for table body --%>
-                                        <%
-                                            List<Inventory> inventoryItemList = (List<Inventory>) request.getAttribute("InventoryItemList");
-                                            if (inventoryItemList != null && !inventoryItemList.isEmpty()) {
-                                                int displayIndex = 1;
-                                                for (Inventory listItem : inventoryItemList) {
-                                        %>
-                                        <tr id="inventoryRow<%=listItem.getItemId()%>">
-                                            <Td valign="middle"><% out.print(displayIndex++); %></td>
-                                            <Td valign="middle"><% out.print(listItem.getItemId()); %></td>
-                                            <Td valign="middle"><% out.print(listItem.getItemName()); %></td>
-                                            <Td valign="middle"><% out.print(listItem.getItemType()); %></td>
-                                            <Td valign="middle"><% out.print(listItem.getItemPrice()); %></td>
-                                            <Td valign="middle"><% out.print(listItem.getItemQuantity()); %></td>
-                                            <Td valign="middle"><% out.print(listItem.getItemUnit()); %></td>
-                                            <Td valign="middle"><% out.print(listItem.getItemDescription());%></td>
-                                            <Td valign="middle">
-                                                <button type="button" class="btn btn-edit btn-update-inventory"
-                                                        data-bs-toggle="modal" data-bs-target="#updateInventoryModal"
-                                                        data-item-id="<%= listItem.getItemId()%>"
-                                                        data-item-name="<%= listItem.getItemName()%>"
-                                                        data-item-type="<%= listItem.getItemType()%>"
-                                                        data-item-price="<%= listItem.getItemPrice()%>"
-                                                        data-item-quantity="<%= listItem.getItemQuantity()%>"
-                                                        data-item-unit="<%= listItem.getItemUnit()%>"
-                                                        data-item-description="<%= listItem.getItemDescription()%>">
-                                                    <i class="fas fa-edit"></i> Update
-                                                </button>
-                                                <button type="button" class="btn btn-delete btn-delete-inventory"
-                                                        data-bs-toggle="modal" data-bs-target="#deleteInventoryModal"
-                                                        data-item-id="<%= listItem.getItemId()%>">
-                                                    <i class="fas fa-trash-alt"></i> Delete
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        <%
-                                            }
-                                        } else {
-                                        %>
-                                        <tr id="noDataRow" > <%-- Added ID and style for no data row --%>
-                                            <td colspan="9">
-                                                <div class="no-data">
-                                                    No inventory items found.
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <%
-                                            }
-                                        %>
-                                    </tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered"  method="post">
+                                        <thead>
+                                            <tr>
+                                                <th>No.</th>
+                                                <th>ID</th>
+                                                <th>Name</th>
+                                                <th>Type</th>
+                                                <th>Price</th>
+                                                <th>Quantity</th>
+                                                <th>Unit</th>
+                                                <th>Description</th>
+                                                <th>Actions</th> <%-- Action column title --%>
+                                            </tr>
+
+                                            <tr id="noResultsRow" style="display: none;">
+                                                <td colspan="9" style="text-align: center; color: gray">Inventory Item Not Found.</td>
+                                            </tr>
+                                        </thead>
+
+                                        <tbody id="inventoryTableBody"> <%-- Added ID for table body --%>
+
+                                            <%
+                                                List<Inventory> inventoryItemList = (List<Inventory>) request.getAttribute("InventoryItemList");
+                                                if (inventoryItemList != null && !inventoryItemList.isEmpty()) {
+                                                    int displayIndex = 1;
+                                                    for (Inventory listItem : inventoryItemList) {
+                                            %>
+
+                                            <tr id="inventoryRow<%=listItem.getItemId()%>">
+                                                <Td valign="middle"><% out.print(displayIndex++); %></td>
+                                                <Td valign="middle"><% out.print(listItem.getItemId()); %></td>
+                                                <Td valign="middle"><% out.print(listItem.getItemName()); %></td>
+                                                <Td valign="middle"><% out.print(listItem.getItemType()); %></td>
+                                                <Td valign="middle"><% out.print(listItem.getItemPrice()); %></td>
+                                                <Td valign="middle"><% out.print(listItem.getItemQuantity()); %></td>
+                                                <Td valign="middle"><% out.print(listItem.getItemUnit()); %></td>
+                                                <Td valign="middle"><% out.print(listItem.getItemDescription());%></td>
+                                                <Td valign="middle">
+                                                    <button type="button" class="btn btn-edit btn-update-inventory"
+                                                            data-bs-toggle="modal" data-bs-target="#updateInventoryModal"
+                                                            data-item-id="<%= listItem.getItemId()%>"
+                                                            data-item-name="<%= listItem.getItemName()%>"
+                                                            data-item-type="<%= listItem.getItemType()%>"
+                                                            data-item-price="<%= listItem.getItemPrice()%>"
+                                                            data-item-quantity="<%= listItem.getItemQuantity()%>"
+                                                            data-item-unit="<%= listItem.getItemUnit()%>"
+                                                            data-item-description="<%= listItem.getItemDescription()%>">
+                                                        <i class="fas fa-edit"></i> Update
+                                                    </button>
+                                                    <button type="button" class="btn btn-delete btn-delete-inventory"
+                                                            data-bs-toggle="modal" data-bs-target="#deleteInventoryModal"
+                                                            data-item-id="<%= listItem.getItemId()%>">
+                                                        <i class="fas fa-trash-alt"></i> Delete
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            <%
+                                                }
+                                            } else {
+                                            %>
+                                            <tr>
+                                                <td colspan="9">
+                                                    <div class="no-data">
+                                                        No inventory items found.
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <%
+                                                }
+                                            %>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </main>
                     </div>
@@ -334,13 +297,13 @@
                     </div>
                     <div class="modal-body">
                         <form id="addInventoryForm">
-                            <div class="row mb-3">
+                            <div class="mb-3 row">
                                 <label for="itemName" class="col-sm-4 col-form-label">Name:</label>
                                 <div class="col-sm-8">
                                     <input type="text" class="form-control" id="itemName" name="itemName" required>
                                 </div>
                             </div>
-                            <div class="row mb-3">
+                            <div class="mb-3 row">
                                 <label for="itemType" class="col-sm-4 col-form-label">Type:</label>
                                 <div class="col-sm-8">
                                     <select class="form-control" id="itemType" name="itemType" required >
@@ -350,19 +313,21 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="row mb-3">
+                            <div class="mb-3 row">
                                 <label for="itemPrice" class="col-sm-4 col-form-label">Price:</label>
                                 <div class="col-sm-8">
                                     <input type="number" class="form-control" id="itemPrice" name="itemPrice" required min="0" step="0.01">
+                                    <small class="text-muted">Enter a non-negative number.</small>
                                 </div>
                             </div>
-                            <div class="row mb-3">
+                            <div class="mb-3 row">
                                 <label for="itemQuantity" class="col-sm-4 col-form-label">Quantity:</label>
                                 <div class="col-sm-8">
-                                    <input type="text" class="form-control" id="itemQuantity" name="itemQuantity" required min="0">
+                                    <input type="number" class="form-control" id="itemQuantity" name="itemQuantity" required min="0">
+                                    <small class="text-muted">Enter a non-negative integer.</small>
                                 </div>
                             </div>
-                            <div class="row mb-3">
+                            <div class="mb-3 row">
                                 <label for="itemUnit" class="col-sm-4 col-form-label">Unit:</label>
                                 <div class="col-sm-8">
                                     <select class="form-control" id="itemUnit" name="itemUnit" required>
@@ -379,7 +344,7 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="row mb-3">
+                            <div class="mb-3 row">
                                 <label for="itemDescription" class="col-sm-4 col-form-label">Description:</label>
                                 <div class="col-sm-8">
                                     <textarea class="form-control" id="itemDescription" name="itemDescription" rows="2"></textarea>
@@ -405,44 +370,47 @@
                     </div>
                     <div class="modal-body">
                         <form id="updateInventoryForm">
-                            <div class="row mb-3">
+                            <div class="mb-3 row">
                                 <label for="itemIdUpdate" class="col-sm-4 col-form-label">Item ID (View Only):</label>
                                 <div class="col-sm-8">
                                     <input type="text" class="form-control" id="itemIdUpdateDisplay" readonly>
                                     <input type="hidden" class="form-control" id="itemIdUpdate" name="itemId">
                                 </div>
                             </div>
-                            <div class="row mb-3">
+                            <div class="mb-3 row">
                                 <label for="itemNameUpdate" class="col-sm-4 col-form-label">Name:</label>
                                 <div class="col-sm-8">
-                                    <input type="text" class="form-control" id="itemNameUpdate" name="itemName">
+                                    <input type="text" class="form-control" id="itemNameUpdate" name="itemName" required>
                                 </div>
                             </div>
-                            <div class="row mb-3">
+                            <div class="mb-3 row">
                                 <label for="itemTypeUpdate" class="col-sm-4 col-form-label">Type:</label>
                                 <div class="col-sm-8">
-                                    <select class="form-control" id="itemTypeUpdate" name="itemType">
+                                    <select class="form-control" id="itemTypeUpdate" name="itemType" required>
+                                        <option value="">Select type...</option>
                                         <option value="food">Food</option>
                                         <option value="drink">Drink</option>
                                     </select>
                                 </div>
                             </div>
-                            <div class="row mb-3">
+                            <div class="mb-3 row">
                                 <label for="itemPriceUpdate" class="col-sm-4 col-form-label">Price:</label>
                                 <div class="col-sm-8">
-                                    <input type="number" class="form-control" id="itemPriceUpdate" name="itemPrice" min="0" step="0.01">
+                                    <input type="number" class="form-control" id="itemPriceUpdate" name="itemPrice" required min="0" step="0.01">
+                                    <small class="text-muted">Enter a non-negative number.</small>
                                 </div>
                             </div>
-                            <div class="row mb-3">
+                            <div class="mb-3 row">
                                 <label for="itemQuantityUpdate" class="col-sm-4 col-form-label">Quantity:</label>
                                 <div class="col-sm-8">
-                                    <input type="number" class="form-control" id="itemQuantityUpdate" name="itemQuantity" min="0">
+                                    <input type="number" class="form-control" id="itemQuantityUpdate" name="itemQuantity" required min="0" step="0.01">
+                                    <small class="text-muted">Enter a non-negative integer.</small>
                                 </div>
                             </div>
-                            <div class="row mb-3">
+                            <div class="mb-3 row">
                                 <label for="itemUnitUpdate" class="col-sm-4 col-form-label">Unit:</label>
                                 <div class="col-sm-8">
-                                    <select class="form-control" id="itemUnitUpdate" name="itemUnit">
+                                    <select class="form-control" id="itemUnitUpdate" name="itemUnit" required>
                                         <option value="">Select unit...</option> <!-- Tùy chọn mặc định -->
                                         <option value="piece">Piece</option>
                                         <option value="kg">Kg</option>
@@ -456,7 +424,7 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="row mb-3">
+                            <div class="mb-3 row">
                                 <label for="itemDescriptionUpdate" class="col-sm-4 col-form-label">Description:</label>
                                 <div class="col-sm-8">
                                     <textarea class="form-control" id="itemDescriptionUpdate" name="itemDescription" rows="2"></textarea>
@@ -491,11 +459,28 @@
                 </div>
             </div>
         </div>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
         <script>
+
+            function formatDiscountDisplay(priceFormat) {
+                const priceStr = String(priceFormat); // Chuyển số thành chuỗi
+                if (priceStr.length > 0) {
+                    // Định dạng số lớn hơn 999 thành tiền tệ với dấu phẩy và 'đ'
+                    return formatCurrency(priceFormat) + 'đ';
+                } else {
+                    // Định dạng số nhỏ hơn hoặc bằng 999 thành phần trăm với '%'
+                    return priceFormat + '%';
+                }
+            }
+
+            function formatCurrency(number) {
+                return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            }
             $(document).ready(function () {
                 bindEventHandlers();
+                reloadViewInventory();
                 setupSearchFilter();
+
 
                 // **Xử lý Thêm Inventory Item**
                 $('#btnAddInventory').click(function () {
@@ -503,19 +488,27 @@
                     $('.error-message').remove();
                     $('.is-invalid').removeClass('is-invalid');
 
-                    var itemName = $('#itemName').val().trim(); // trim() để loại bỏ khoảng trắng đầu cuối
-                    var itemType = $('#itemType').val();
-                    var itemPrice = $('#itemPrice').val();
-                    var itemQuantity = $('#itemQuantity').val();
-                    var itemUnit = $('#itemUnit').val();
-                    var itemDescription = $('#itemDescription').val();
+                    var itemNameInput = $('#itemName');
+                    var itemTypeInput = $('#itemType');
+                    var itemPriceInput = $('#itemPrice');
+                    var itemQuantityInput = $('#itemQuantity');
+                    var itemUnitInput = $('#itemUnit');
+                    var itemDescriptionInput = $('#itemDescription');
+
+
+                    var itemName = itemNameInput.val().trim(); // trim() để loại bỏ khoảng trắng đầu cuối
+                    var itemType = itemTypeInput.val();
+                    var itemPrice = itemPriceInput.val();
+                    var itemQuantity = itemQuantityInput.val();
+                    var itemUnit = itemUnitInput.val();
+                    var itemDescription = itemDescriptionInput.val();
 
                     var isValid = true; // Biến cờ để theo dõi trạng thái hợp lệ của form
 
                     // Kiểm tra trường Name
                     if (itemName === '') {
                         isValid = false;
-                        displayError('itemName', 'Name cannot be empty.');
+                        displayError('itemName', 'Please input this field.');
                     }
 
                     // Kiểm tra trường Type
@@ -525,17 +518,16 @@
                     }
 
                     // Kiểm tra trường Price
-                    if (itemPrice === '' || isNaN(itemPrice) || parseFloat(itemPrice) < 0) {
+                    if (itemPrice === '' || isNaN(itemPrice) || parseFloat(itemPrice) <= 0) {
                         isValid = false;
-                        displayError('itemPrice', 'Price must be a valid number and cannot be negative.');
+                        displayError('itemPrice', 'Price must be a valid non-negative number and greater than 0.');
                     }
 
                     // Kiểm tra trường Quantity
-                    if (itemQuantity === '' || isNaN(itemQuantity) || parseDouble(itemQuantity) < 0 || !Number.isInteger(Number(itemQuantity))) {
+                    if (itemQuantity === '' || isNaN(itemQuantity) || parseFloat(itemQuantity) <= 0) {
                         isValid = false;
-                        displayError('itemQuantity', 'Quantity must be a non-negative integer.');
+                        displayError('itemQuantity', 'Quantity must be a non-negative number.');
                     }
-
                     // Kiểm tra trường Unit
                     if (itemUnit === '') {
                         isValid = false;
@@ -579,57 +571,91 @@
                     }
                 });
 
-// Hàm hiển thị thông báo lỗi bên dưới trường nhập liệu
+                // Hàm hiển thị thông báo lỗi bên dưới trường nhập liệu
                 function displayError(fieldId, message) {
-                    var field = $('#' + fieldId);
-                    var errorElement = $('<div class="error-message text-danger mt-1"></div>').text(message); // Tạo element div thông báo lỗi
-                    field.addClass('is-invalid'); // Thêm class 'is-invalid' để highlight input lỗi (Bootstrap)
-                    field.parent().append(errorElement); // Thêm thông báo lỗi vào sau input field
+                    $('#' + fieldId).addClass('is-invalid'); // Thêm class 'is-invalid' để hiển thị lỗi CSS nếu cần
+                    $('#' + fieldId).after('<div class="error-message" style="color: red;">' + message + '</div>'); // Thêm thông báo lỗi
                 }
 
                 // **Xử lý Cập nhật Inventory Item**
                 $('#btnUpdateInventory').click(function () {
-                    var itemId = $('#itemIdUpdate').val();
-                    var itemName = $('#itemNameUpdate').val();
-                    var itemType = $('#itemTypeUpdate').val();
-                    var itemPrice = $('#itemPriceUpdate').val();
-                    var itemQuantity = $('#itemQuantityUpdate').val();
-                    var itemUnit = $('#itemUnitUpdate').val();
-                    var itemDescription = $('#itemDescriptionUpdate').val();
+                    // **Clear old error messages (if any)**
+                    $('.error-message').remove();
+                    $('.is-invalid').removeClass('is-invalid');
+
+                    var itemNameUpdateInput = $('#itemNameUpdate');
+                    var itemTypeUpdateInput = $('#itemTypeUpdate');
+                    var itemPriceUpdateInput = $('#itemPriceUpdate');
+                    var itemQuantityUpdateInput = $('#itemQuantityUpdate');
+                    var itemUnitUpdateInput = $('#itemUnitUpdate');
+                    var itemDescriptionUpdateInput = $('#itemDescriptionUpdate');
+
+                    var itemNameUpdate = itemNameUpdateInput.val();
+                    var itemTypeUpdate = itemTypeUpdateInput.val();
+                    var itemPriceUpdate = itemPriceUpdateInput.val();
+                    var itemQuantityUpdate = itemQuantityUpdateInput.val();
+                    var itemUnitUpdate = itemUnitUpdateInput.val();
+                    var itemDescriptionUpdate = itemDescriptionUpdateInput.val();
 
 
-                    $.ajax({
-                        url: 'UpdateInventoryItemController',
-                        type: 'POST',
-                        data: {
-                            itemId: itemId,
-                            itemName: itemName,
-                            itemType: itemType,
-                            itemPrice: itemPrice,
-                            itemQuantity: itemQuantity,
-                            itemUnit: itemUnit,
-                            itemDescription: itemDescription
-                        },
-                        success: function () {
-                            var updateInventoryModal = bootstrap.Modal.getInstance(document.getElementById('updateInventoryModal'));
-                            updateInventoryModal.hide();
-                            reloadViewInventory();
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success!',
-                                text: 'Inventory item updated successfully.',
-                                timer: 2000,
-                                showConfirmButton: false
-                            });
-                        },
-                        error: function (error) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error!',
-                                text: 'Error updating inventory item: ' + error
-                            });
-                        }
-                    });
+                    var isValid = true;
+
+                    if (itemNameUpdate === '') {
+                        isValid = false;
+                        displayError('itemNameUpdate', 'Please input this field.');
+                    }
+                    if (itemTypeUpdate === '') {
+                        isValid = false;
+                        displayError('itemTypeUpdate', 'Please select item type.');
+                    }
+                    if (itemPriceUpdate === '' || isNaN(itemPriceUpdate) || parseFloat(itemPriceUpdate) <= 0) {
+                        isValid = false;
+                        displayError('itemPriceUpdate', 'Price must be a valid non-negative number and greater than 0.');
+                    }
+                    if (itemQuantityUpdate === '' || isNaN(itemQuantityUpdate) || parseFloat(itemQuantityUpdate) <= 0) {
+                        isValid = false;
+                        displayError('itemQuantityUpdate', 'Quantity must be a non-negative integer.');
+                    }
+                    if (itemUnitUpdate === '') {
+                        isValid = false;
+                        displayError('itemUnitUpdate', 'Please select item unit.');
+                    }
+
+                    if (isValid) {
+                        var itemId = $('#itemIdUpdate').val();
+                        $.ajax({
+                            url: 'UpdateInventoryItemController',
+                            type: 'POST',
+                            data: {
+                                itemId: itemId,
+                                itemName: itemNameUpdate,
+                                itemType: itemTypeUpdate,
+                                itemPrice: itemPriceUpdate,
+                                itemQuantity: itemQuantityUpdate,
+                                itemUnit: itemUnitUpdate,
+                                itemDescription: itemDescriptionUpdate
+                            },
+                            success: function () {
+                                var updateInventoryModal = bootstrap.Modal.getInstance(document.getElementById('updateInventoryModal'));
+                                updateInventoryModal.hide();
+                                reloadViewInventory();
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success!',
+                                    text: 'Inventory item updated successfully.',
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
+                            },
+                            error: function (error) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error!',
+                                    text: 'Error updating inventory item: ' + error
+                                });
+                            }
+                        });
+                    }
                 });
 
                 // **Xử lý Xóa Inventory Item**
@@ -698,98 +724,81 @@
             function reloadViewInventory() {
                 $.get('ViewInventoryController', function (data) {
                     var newBody = $(data).find('tbody').html();
-                    $('tbody').html(newBody);
-                    bindEventHandlers();
+                    $('tbody').html(newBody); // Thay thế tbody bằng HTML mới
+
+                    // **Định dạng cột giá sau khi load lại bảng**
+                    $('tbody tr').each(function () { // Lặp qua từng hàng trong tbody mới
+                        var priceCell = $(this).find('td:nth-child(5)'); // **ĐÃ KIỂM TRA, CỘT THỨ 3 LÀ DISCOUNT AMOUNT**
+                        if (priceCell.length) { // Kiểm tra xem có tìm thấy td hay không
+                            var discountAmountText = priceCell.text();
+                            var discountAmount = parseFloat(discountAmountText); // Chuyển text thành số
+                            if (!isNaN(discountAmount)) { // Kiểm tra xem có phải là số hợp lệ không
+                                var formattedDiscount = formatDiscountDisplay(discountAmount); // Định dạng giá trị
+                                priceCell.text(formattedDiscount); // Cập nhật text của td với giá trị đã định dạng
+                            }
+                        }
+                    });
+                    bindEventHandlers(); // Re-bind event handlers sau khi HTML được thay thế
                 });
             }
 
             function setupSearchFilter() {
-                const searchInput = $("#searchInput");
-                const columnFilter = $("#columnFilter");
-                const inventoryTableBody = $("#inventoryTableBody");
-                const noDataRow = $("#noDataRow");
-                const rows = inventoryTableBody.find("tr"); // Select all rows initially
+                const searchInput = document.getElementById('searchInput');
+                const table = document.querySelector('.table');
+                const noResultsRow = document.getElementById('noResultsRow');
 
-                function filterTable() {
-                    const searchText = searchInput.val().toLowerCase();
-                    const selectedColumn = columnFilter.val();
-                    let rowVisible = false;
+                function searchInventory() {
+                    const searchText = searchInput.value.trim().toLowerCase();
+                    let foundMatch = false;
+                    noResultsRow.style.display = 'none';
+                    const rows = table.querySelectorAll('tbody tr:not(#noResultsRow)');
 
-                    rows.each(function () { // Use the initially selected rows
-                        const row = $(this);
-                        if (row.attr('id') && row.attr('id') === 'noDataRow')
-                            return true; // Skip noDataRow
+                    rows.forEach(row => {
+                        let rowVisible = false;
+                        row.querySelectorAll('td').forEach((cell, cellIndex) => {
+                            if (cellIndex > 0 && cellIndex < 8) { // Search in columns from ID to Description
+                                const originalText = cell.textContent;
+                                const cellText = originalText.toLowerCase();
+                                cell.innerHTML = originalText; // Reset highlight
 
-                        let shouldShowRow = false;
-
-                        row.find("td").each(function (index) {
-                            if (index > 0) { // Skip the first column (No.)
-                                const cell = $(this);
-                                const cellText = cell.text().toLowerCase();
-                                cell.html(cell.text()); // Reset highlight
-
-                                let columnMatch = true;
-
-                                if (selectedColumn && selectedColumn !== "") {
-                                    let columnIndex;
-                                    switch (selectedColumn) {
-                                        case 'itemId':
-                                            columnIndex = 1;
-                                            break;
-                                        case 'itemName':
-                                            columnIndex = 2;
-                                            break;
-                                        case 'itemType':
-                                            columnIndex = 3;
-                                            break;
-                                        case 'itemPrice':
-                                            columnIndex = 4;
-                                            break;
-                                        case 'itemQuantity':
-                                            columnIndex = 5;
-                                            break;
-                                        case 'itemUnit':
-                                            columnIndex = 6;
-                                            break;
-                                        case 'itemDescription':
-                                            columnIndex = 7;
-                                            break;
-                                        default:
-                                            columnIndex = -1; // Should not happen, but for safety
-                                    }
-                                    if (index !== columnIndex) {
-                                        columnMatch = false;
-                                    }
+                                if (searchText.trim() === "") {
+                                    row.style.display = '';
+                                    rowVisible = true;
+                                    return;
                                 }
 
-                                if (columnMatch) {
-                                    if (searchText && cellText.includes(searchText)) {
-                                        const highlightedText = cell.text().replace(new RegExp(searchText, 'gi'), '<span class="highlight">$&</span>');
-                                        cell.html(highlightedText);
-                                        shouldShowRow = true;
+                                if (cellText.includes(searchText)) {
+                                    let highlightedText = "";
+                                    let currentIndex = 0;
+                                    let searchIndex = originalText.toLowerCase().indexOf(searchText, currentIndex);
+
+                                    while (searchIndex !== -1) {
+                                        highlightedText += originalText.slice(currentIndex, searchIndex);
+                                        highlightedText += '<span class="highlight">' + originalText.slice(searchIndex, searchIndex + searchText.length) + '</span>';
+                                        currentIndex = searchIndex + searchText.length;
+                                        searchIndex = originalText.toLowerCase().indexOf(searchText, currentIndex);
                                     }
+                                    highlightedText += originalText.slice(currentIndex);
+
+                                    cell.innerHTML = highlightedText;
+                                    rowVisible = true;
+                                    foundMatch = true;
                                 }
                             }
                         });
-
-                        if (searchText === "" || shouldShowRow) {
-                            row.show();
-                            rowVisible = true;
+                        if (rowVisible) {
+                            row.style.display = '';
                         } else {
-                            row.hide();
+                            row.style.display = 'none';
                         }
                     });
-
-                    if (rowVisible) {
-                        noDataRow.hide();
-                    } else {
-                        noDataRow.show();
+                    if (!foundMatch && searchText.trim() !== "") {
+                        noResultsRow.style.display = '';
                     }
                 }
-
-                searchInput.on("keyup", filterTable);
-                columnFilter.on("change", filterTable);
+                searchInput.addEventListener('keyup', searchInventory);
             }
+
 
         </script>
     </body>
