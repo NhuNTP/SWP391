@@ -24,22 +24,24 @@ public class ViewNotificationController extends HttpServlet {
             return;
         }
 
-        // Lấy đối tượng Account từ session
         Account account = (Account) session.getAttribute("account");
-        String UserRole = account.getUserRole();
-        String UserId = account.getUserId();
+        String userRole = account.getUserRole();
+        String userId = account.getUserId();
+        List<Notification> notifications;
 
-        // Lấy danh sách thông báo cho user
-        List<Notification> notifications = notificationDAO.getNotificationsForUser(UserId, UserRole);
-        request.setAttribute("notifications", notifications);
-
-        // Nếu là Admin hoặc Manager, lấy danh sách user để tạo thông báo
-        if ("Admin".equals(UserRole) || "Manager".equals(UserRole)) {
-            List<Account> accounts = notificationDAO.getAllAccounts();
-            request.setAttribute("accounts", accounts);
+        // Phân quyền xem thông báo
+        if ("Admin".equals(userRole)) {
+            // Admin xem tất cả thông báo
+            notifications = notificationDAO.getAllNotifications();
+        } else if ("Manager".equals(userRole)) {
+            // Manager chỉ xem thông báo mình tạo
+            notifications = notificationDAO.getNotificationsByCreator(userId);
+        } else {
+            // Các role còn lại (Cashier, Waiter, Kitchen staff) xem thông báo của mình
+            notifications = notificationDAO.getNotificationsForUser(userId, userRole);
         }
 
-        request.getRequestDispatcher("/ManageNotification/viewnotifications.jsp").forward(request, response);
+        request.setAttribute("notifications", notifications);
+        request.getRequestDispatcher("/ManageNotification/viewnotification.jsp").forward(request, response);
     }
-
 }

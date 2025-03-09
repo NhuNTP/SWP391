@@ -30,29 +30,39 @@ public class AccountDAO {
         conn = DBContext.getConnection();
     }
 
-    public Account login(String username, String password) {
-        String query = "SELECT * FROM Account WHERE UserName = ? AND UserPassword = ?";
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {
-            ps.setString(1, username);
-            ps.setString(2, password);
-            ResultSet rs = ps.executeQuery();
+    public Account login(String username, String password) throws ClassNotFoundException, SQLException {
+        String sql = "SELECT UserId, UserEmail, UserPassword, UserName, UserRole, IdentityCard, UserAddress, UserImage, IsDeleted " +
+                     "FROM Account WHERE UserName = ? AND UserPassword = ? AND IsDeleted = 0";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, username);
+            pstmt.setString(2, password);
+            ResultSet rs = pstmt.executeQuery();
+
             if (rs.next()) {
-                return new Account(
-                        rs.getString("UserId"), // Use getString to match Model
-                        rs.getString("UserEmail"),
-                        rs.getString("UserPassword"),
-                        rs.getString("UserName"),
-                        rs.getString("UserRole"),
-                        rs.getString("IdentityCard"),
-                        rs.getString("UserAddress"),
-                        rs.getString("UserImage"),
-                        rs.getBoolean("IsDeleted") // Retrieve IsDeleted
-                );
+                Account account = new Account();
+                account.setUserId(rs.getString("UserId"));
+                account.setUserEmail(rs.getString("UserEmail"));
+                account.setUserPassword(rs.getString("UserPassword"));
+                account.setUserName(rs.getString("UserName"));
+                account.setUserRole(rs.getString("UserRole"));
+                account.setIdentityCard(rs.getString("IdentityCard"));
+                account.setUserAddress(rs.getString("UserAddress"));
+                account.setUserImage(rs.getString("UserImage"));
+                account.setIsDeleted(rs.getBoolean("IsDeleted"));
+                LOGGER.info("Login successful for user: " + username);
+                return account;
+            } else {
+                LOGGER.info("Login failed for user: " + username + " - Account not found or deleted.");
+                return null;
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error during login for user: " + username, e);
+            throw e;
+        } catch (ClassNotFoundException e) {
+            LOGGER.log(Level.SEVERE, "Database driver not found", e);
+            throw e;
         }
-        return null;
     }
 
     public ResultSet getAllAccount() {
