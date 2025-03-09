@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @WebServlet("/create-notification")
 public class CreateNotificationController extends HttpServlet {
@@ -26,22 +27,22 @@ public class CreateNotificationController extends HttpServlet {
         }
 
         Account account = (Account) session.getAttribute("account");
-        String UserRole = account.getUserRole();
+        String userRole = account.getUserRole();
 
-        // Chỉ Admin và Manager được truy cập
-        if (!"Admin".equals(UserRole) && !"Manager".equals(UserRole)) {
+        if (!"Admin".equals(userRole) && !"Manager".equals(userRole)) {
             response.sendRedirect(request.getContextPath() + "/view-notifications");
             return;
         }
 
-        // Lấy danh sách tài khoản phù hợp với quyền
         List<Account> accounts = notificationDAO.getAllAccounts();
-        if ("Admin".equals(UserRole)) {
-            // Admin không thể tạo thông báo cho chính mình
-            accounts.removeIf(acc -> acc.getUserId().equals(account.getUserId()));
-        } else if ("Manager".equals(UserRole)) {
-            // Manager không thể tạo thông báo cho chính mình và Admin
-            accounts.removeIf(acc -> acc.getUserId().equals(account.getUserId()) || "Admin".equals(acc.getUserRole()));
+        if ("Admin".equals(userRole)) {
+            accounts = accounts.stream()
+                    .filter(acc -> !acc.getUserId().equals(account.getUserId()))
+                    .collect(Collectors.toList());
+        } else if ("Manager".equals(userRole)) {
+            accounts = accounts.stream()
+                    .filter(acc -> !"Admin".equals(acc.getUserRole()) && !"Manager".equals(acc.getUserRole()))
+                    .collect(Collectors.toList());
         }
 
         request.setAttribute("accounts", accounts);
@@ -57,9 +58,9 @@ public class CreateNotificationController extends HttpServlet {
         }
 
         Account account = (Account) session.getAttribute("account");
-        String UserRole = account.getUserRole();
+        String userRole = account.getUserRole();
 
-        if (!"Admin".equals(UserRole) && !"Manager".equals(UserRole)) {
+        if (!"Admin".equals(userRole) && !"Manager".equals(userRole)) {
             session.setAttribute("errorMessage", "You do not have permission to create notifications.");
             response.sendRedirect(request.getContextPath() + "/view-notifications");
             return;
@@ -70,33 +71,39 @@ public class CreateNotificationController extends HttpServlet {
         Notification notification = new Notification();
         notification.setNotificationContent(content);
         notification.setNotificationCreateAt(new Date());
-        notification.setUserId(account.getUserId()); // Người tạo thông báo
 
         if ("all".equals(notificationType)) {
-            // Thông báo cho tất cả (trừ người tạo)
+            notification.setUserId(null); // Thông báo cho tất cả
             notification.setUserRole(null);
             notification.setUserName(null);
         } else if ("role".equals(notificationType)) {
-            // Thông báo theo role
             String selectedRole = request.getParameter("role");
+            if ("Manager".equals(userRole) && ("Admin".equals(selectedRole) || "Manager".equals(selectedRole))) {
+                session.setAttribute("errorMessage", "Manager cannot send notifications to Admin or Manager.");
+                response.sendRedirect(request.getContextPath() + "/create-notification");
+                return;
+            }
+            notification.setUserId(null);
             notification.setUserRole(selectedRole);
             notification.setUserName(null);
         } else if ("individual".equals(notificationType)) {
-            // Thông báo cho từng cá nhân
             String selectedUserId = request.getParameter("UserId");
             Account selectedAccount = notificationDAO.getAllAccounts().stream()
                     .filter(a -> a.getUserId().equals(selectedUserId))
                     .findFirst().orElse(null);
             if (selectedAccount != null) {
-                notification.setUserId(selectedUserId);
+                if ("Manager".equals(userRole) && ("Admin".equals(selectedAccount.getUserRole()) || "Manager".equals(selectedAccount.getUserRole()))) {
+                    session.setAttribute("errorMessage", "Manager cannot send notifications to Admin or Manager.");
+                    response.sendRedirect(request.getContextPath() + "/create-notification");
+                    return;
+                }
+                notification.setUserId(selectedUserId); // UserId của người nhận
                 notification.setUserRole(selectedAccount.getUserRole());
                 notification.setUserName(selectedAccount.getUserName());
             }
         }
 
-        // Lưu thông báo vào cơ sở dữ liệu
         notificationDAO.createNotification(notification);
-
         session.setAttribute("message", "Notification created successfully!");
         response.sendRedirect(request.getContextPath() + "/view-notifications");
     }

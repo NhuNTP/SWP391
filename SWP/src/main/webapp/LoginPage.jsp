@@ -1,82 +1,109 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Tasty Restaurant</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            font-family: 'Poppins', sans-serif;
+            background: url('https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
+            background-size: cover;
             height: 100vh;
-            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-
-        .container {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 300px;
-        }
-
-        h2 {
-            text-align: center;
-            color: #333;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        input[type="username"],
-        input[type="password"] {
+        .login-container {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
             width: 100%;
-            padding: 8px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box; /* Ensures padding doesn't affect width */
         }
-
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 15px;
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .login-header h2 {
+            color: #d35400;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .login-header img {
+            width: 80px;
+            margin-bottom: 10px;
+        }
+        .form-control {
+            border-radius: 25px;
+            padding: 12px 20px;
+            border: 1px solid #e67e22;
+        }
+        .form-control:focus {
+            border-color: #d35400;
+            box-shadow: 0 0 5px rgba(211, 84, 0, 0.5);
+        }
+        .btn-login {
+            background-color: #e67e22;
             border: none;
-            border-radius: 4px;
-            cursor: pointer;
+            border-radius: 25px;
+            padding: 12px;
+            font-weight: 600;
+            transition: background-color 0.3s;
             width: 100%;
-            font-size: 16px;
         }
-
-        button:hover {
-            background-color: #3e8e41;
+        .btn-login:hover {
+            background-color: #d35400;
         }
-
-        .error-message {
-            color: red;
-            text-align: center;
-            margin-top: 10px;
+        .alert {
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .input-group-text {
+            background-color: #e67e22;
+            color: white;
+            border: none;
+            border-radius: 25px 0 0 25px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Login</h2>
-        <form action="login" method="post">
-            <label for="username">Name:</label>
-            <input type="username" id="username" name="username" required><br>
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required><br>
-            <button type="submit">Login</button>
-        </form>
-        <% if (request.getAttribute("error") != null) { %>
-            <p class="error-message"><%= request.getAttribute("error") %></p>
+    <div class="login-container">
+        <div class="login-header">
+            <img src="https://img.icons8.com/color/96/000000/restaurant.png" alt="Restaurant Logo">
+            <h2>Tasty Restaurant</h2>
+            <p class="text-muted">By GROUP 5 - SE1812</p>
+        </div>
+
+        <% String error = (String) request.getAttribute("error");
+           if (error != null) { %>
+        <div class="alert alert-danger"><%= error %></div>
         <% } %>
+
+        <form action="${pageContext.request.contextPath}/login" method="post">
+            <div class="mb-3">
+                <label for="username" class="form-label fw-bold text-dark">Username</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                    <input type="text" class="form-control" id="username" name="username" placeholder="Enter username" required>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label for="password" class="form-label fw-bold text-dark">Password</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-login">Login</button>
+        </form>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </body>
 </html>

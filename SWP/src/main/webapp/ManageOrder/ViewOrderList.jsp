@@ -1,6 +1,16 @@
+<%@page import="Model.Account"%>
 <%@page import="java.util.List"%>
 <%@page import="Model.Order"%>
 <%@ page contentType="text/html" pageEncoding="UTF-8"%>
+<%
+    if (session == null || session.getAttribute("account") == null) {
+        response.sendRedirect(request.getContextPath() + "/LoginPage.jsp");
+        return;
+    }
+
+    Account account = (Account) session.getAttribute("account");
+    String UserRole = account.getUserRole();
+%>
 <!DOCTYPE html>
 <html lang="vi">
 
