@@ -40,7 +40,7 @@ public class UpdateDishController extends HttpServlet {
             request.setAttribute("dish", dish);
             request.setAttribute("dishIngredients", dishIngredients);
             request.setAttribute("inventoryList", inventoryList);
-            RequestDispatcher dispatcher = request.getRequestDispatcher("ManageMenu/updatedish.jsp");
+            RequestDispatcher dispatcher = request.getRequestDispatcher("ManageMenu/UpdateDish.jsp");
             dispatcher.forward(request, response);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error in doGet", e);

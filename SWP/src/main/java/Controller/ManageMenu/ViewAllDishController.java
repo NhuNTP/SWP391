@@ -56,6 +56,6 @@ public class ViewAllDishController extends HttpServlet {
 
         request.setAttribute("dishList", dishList);
         request.setAttribute("inventoryList", inventoryList);
-        request.getRequestDispatcher("/ManageMenu/viewalldish.jsp").forward(request, response);
+        request.getRequestDispatcher("/ManageMenu/ViewAllDish.jsp").forward(request, response);
     }
 }

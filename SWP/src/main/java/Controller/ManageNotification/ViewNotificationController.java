@@ -42,6 +42,6 @@ public class ViewNotificationController extends HttpServlet {
         }
 
         request.setAttribute("notifications", notifications);
-        request.getRequestDispatcher("/ManageNotification/viewnotification.jsp").forward(request, response);
+        request.getRequestDispatcher("/ManageNotification/ViewNotification.jsp").forward(request, response);
     }
 }

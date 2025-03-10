@@ -63,7 +63,7 @@ public class DishDetailController extends HttpServlet {
             request.setAttribute("dishIngredients", dishIngredients);
             request.setAttribute("ingredients", ingredients);
 
-            RequestDispatcher dispatcher = request.getRequestDispatcher("ManageMenu/dishdetail.jsp");
+            RequestDispatcher dispatcher = request.getRequestDispatcher("ManageMenu/DishDetail.jsp");
             dispatcher.forward(request, response);
 
         } catch (Exception e) {
@@ -72,4 +72,3 @@ public class DishDetailController extends HttpServlet {
         }
     }
 }
-//ok

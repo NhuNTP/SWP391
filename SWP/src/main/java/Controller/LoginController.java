@@ -42,7 +42,7 @@ public class LoginController extends HttpServlet {
                 // Chuyển hướng theo vai trò
                 switch (account.getUserRole()) {
                     case "Admin":
-                        response.sendRedirect(request.getContextPath() + "/Dashboard/AdminDashboard.jsp");
+                        response.sendRedirect(request.getContextPath() + "/dashboard");
                         break;
                     case "Manager":
                         response.sendRedirect(request.getContextPath() + "/Dashboard/ManagerDashboard.jsp");

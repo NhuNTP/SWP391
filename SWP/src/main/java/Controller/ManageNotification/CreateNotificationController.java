@@ -46,7 +46,7 @@ public class CreateNotificationController extends HttpServlet {
         }
 
         request.setAttribute("accounts", accounts);
-        request.getRequestDispatcher("/ManageNotification/createnotification.jsp").forward(request, response);
+        request.getRequestDispatcher("/ManageNotification/CreateNotification.jsp").forward(request, response);
     }
 
     @Override
