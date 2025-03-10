@@ -28,7 +28,7 @@ public class DeleteDishController extends HttpServlet {
             session.setAttribute("errorMessage", "Cannot delete dish. It exists in order details.");
         }
 
-        response.sendRedirect("ViewAllDish");  // Chuyển hướng về trang danh sách món ăn
+        response.sendRedirect("viewalldish");  // Chuyển hướng về trang danh sách món ăn
     }
 }
 //ok
