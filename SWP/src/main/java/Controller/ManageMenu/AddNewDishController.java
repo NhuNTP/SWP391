@@ -42,7 +42,7 @@ protected void doGet(HttpServletRequest request, HttpServletResponse response)
         LOGGER.warning("Inventory list is null or empty.");
         request.setAttribute("errorMessage", "No inventory items available.");
     }
-    RequestDispatcher dispatcher = request.getRequestDispatcher("ManageMenu/addnewdish.jsp");
+    RequestDispatcher dispatcher = request.getRequestDispatcher("ManageMenu/AddNewDish.jsp");
     dispatcher.forward(request, response);
 }
 
@@ -62,14 +62,14 @@ protected void doPost(HttpServletRequest request, HttpServletResponse response)
         dishPrice = Double.parseDouble(dishPriceStr);
     } catch (NumberFormatException e) {
         request.getSession().setAttribute("errorMessage", "Invalid dish price format.");
-        response.sendRedirect(request.getContextPath() + "/viewalldish");
+        response.sendRedirect(request.getContextPath() + "/ViewAllDish");
         return;
     }
 
     boolean dishNameExists = menuDAO.dishNameExists(dishName);
     if (dishNameExists) {
         request.getSession().setAttribute("errorMessage", "Dish name already exists.");
-        response.sendRedirect(request.getContextPath() + "/viewalldish");
+        response.sendRedirect(request.getContextPath() + "/ViewAllDish");
         return;
     }
 
@@ -89,7 +89,7 @@ protected void doPost(HttpServletRequest request, HttpServletResponse response)
         }
     } catch (Exception e) {
         request.getSession().setAttribute("errorMessage", "Error uploading image: " + e.getMessage());
-        response.sendRedirect(request.getContextPath() + "/viewalldish");
+        response.sendRedirect(request.getContextPath() + "/ViewAllDish");
         return;
     }
 
@@ -136,7 +136,7 @@ protected void doPost(HttpServletRequest request, HttpServletResponse response)
     } else {
         request.getSession().setAttribute("errorMessage", "Failed to add dish.");
     }
-    response.sendRedirect(request.getContextPath() + "/viewalldish");
+    response.sendRedirect(request.getContextPath() + "/ViewAllDish");
 }
 }
 //ok
