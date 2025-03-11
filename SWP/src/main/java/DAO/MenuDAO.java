@@ -1,7 +1,7 @@
 package DAO;
 
 import Model.Dish;
-import Model.Inventory;
+import Model.InventoryItem;
 import Model.DishInventory;
 import DB.DBContext;
 
@@ -301,13 +301,13 @@ public class MenuDAO {
     return dishIngredients; // Trả về danh sách rỗng thay vì null
 }
 
-    // Inventory operations
-    public List<Inventory> getAllInventory() {
-    List<Inventory> inventoryList = new ArrayList<>();
+    // InventoryItem operations
+    public List<InventoryItem> getAllInventory() {
+    List<InventoryItem> inventoryList = new ArrayList<>();
     String sql = "SELECT ItemId, ItemName, ItemType, ItemPrice, ItemQuantity, ItemUnit, ItemDescription FROM Inventory WHERE IsDeleted = 0";
     try (Connection connection = DBContext.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(sql); ResultSet resultSet = preparedStatement.executeQuery()) {
         while (resultSet.next()) {
-            Inventory inventory = new Inventory();
+            InventoryItem inventory = new InventoryItem();
             inventory.setItemId(resultSet.getString("ItemId"));
             inventory.setItemName(resultSet.getString("ItemName"));
             inventory.setItemType(resultSet.getString("ItemType"));
@@ -342,14 +342,14 @@ public class MenuDAO {
     }
 }
 
-    public Inventory getInventoryItemById(String itemId) {
+    public InventoryItem getInventoryItemById(String itemId) {
         String sql = "SELECT ItemId, ItemName, ItemType, ItemPrice, ItemQuantity, ItemUnit, ItemDescription FROM Inventory WHERE ItemId = ?";
         try (Connection connection = DBContext.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
             preparedStatement.setString(1, itemId);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 if (resultSet.next()) {
-                    Inventory inventory = new Inventory();
+                    InventoryItem inventory = new InventoryItem();
                     inventory.setItemId(resultSet.getString("ItemId"));
                     inventory.setItemName(resultSet.getString("ItemName"));
                     inventory.setItemType(resultSet.getString("ItemType"));
@@ -425,7 +425,7 @@ public class MenuDAO {
 
     boolean allSufficient = true;
     for (DishInventory ingredient : ingredients) {
-        Inventory inventory = getInventoryItemById(ingredient.getItemId());
+        InventoryItem inventory = getInventoryItemById(ingredient.getItemId());
         if (inventory == null || inventory.getItemQuantity() < ingredient.getQuantityUsed()) {
             allSufficient = false;
             break;
