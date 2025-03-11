@@ -3,7 +3,7 @@ package Controller.ManageMenu;
 import DAO.MenuDAO;
 import Model.Account;
 import Model.Dish;
-import Model.Inventory;
+import Model.InventoryItem;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -40,7 +40,7 @@ public class ViewAllDishController extends HttpServlet {
         }
 
         List<Dish> dishList = menuDAO.getAllDishes();
-        List<Inventory> inventoryList = menuDAO.getAllInventory();
+        List<InventoryItem> inventoryList = menuDAO.getAllInventory();
 
         LOGGER.log(Level.INFO, "Dish list size: " + (dishList != null ? dishList.size() : "null"));
         LOGGER.log(Level.INFO, "Inventory list size: " + (inventoryList != null ? inventoryList.size() : "null"));

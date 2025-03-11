@@ -3,7 +3,7 @@ package Controller.ManageMenu;
 import DAO.MenuDAO;
 import Model.Dish;
 import Model.DishInventory;
-import Model.Inventory;
+import Model.InventoryItem;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -36,7 +36,7 @@ public class UpdateDishController extends HttpServlet {
                 return;
             }
             List<DishInventory> dishIngredients = menuDAO.getDishIngredients(dishId);
-            List<Inventory> inventoryList = menuDAO.getAllInventory();
+            List<InventoryItem> inventoryList = menuDAO.getAllInventory();
             request.setAttribute("dish", dish);
             request.setAttribute("dishIngredients", dishIngredients);
             request.setAttribute("inventoryList", inventoryList);

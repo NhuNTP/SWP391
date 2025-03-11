@@ -4,9 +4,9 @@
     Author     : DELL-Laptop
 --%>
 
+<%@page import="Model.InventoryItem"%>
 <%@page import="Model.Account"%>
 <%@page import="java.util.List"%>
-<%@page import="Model.Inventory"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%
     if (session == null || session.getAttribute("account") == null) {
@@ -245,10 +245,10 @@
                                         <tbody id="inventoryTableBody"> <%-- Added ID for table body --%>
 
                                             <%
-                                                List<Inventory> inventoryItemList = (List<Inventory>) request.getAttribute("InventoryItemList");
+                                                List<InventoryItem> inventoryItemList = (List<InventoryItem>) request.getAttribute("InventoryItemList");
                                                 if (inventoryItemList != null && !inventoryItemList.isEmpty()) {
                                                     int displayIndex = 1;
-                                                    for (Inventory listItem : inventoryItemList) {
+                                                    for (InventoryItem listItem : inventoryItemList) {
                                             %>
 
                                             <tr id="inventoryRow<%=listItem.getItemId()%>">

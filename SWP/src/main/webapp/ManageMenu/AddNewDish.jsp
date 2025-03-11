@@ -1,5 +1,6 @@
+<%@page import="Model.InventoryItem"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ page import="Model.Inventory" %>
+<%@ page import="Model.InventoryItem" %>
 <%@ page import="java.util.List" %>
 <!DOCTYPE html>
 <html>
@@ -160,9 +161,9 @@
 
     <h2>Ingredients</h2>
     <%
-        List<Inventory> inventoryList = (List<Inventory>) request.getAttribute("inventoryList");
+        List<InventoryItem> inventoryList = (List<InventoryItem>) request.getAttribute("inventoryList");
         if (inventoryList != null && !inventoryList.isEmpty()) {
-            for (Inventory inventory : inventoryList) {
+            for (InventoryItem inventory : inventoryList) {
     %>
     <div>
         <label for="itemId<%= inventory.getItemId() %>"><%= inventory.getItemName() %> (<%= inventory.getItemUnit() %>) - Quantity: <%= inventory.getItemQuantity() %></label>

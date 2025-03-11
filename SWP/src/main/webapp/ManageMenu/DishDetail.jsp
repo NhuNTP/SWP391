@@ -1,13 +1,14 @@
+<%@page import="Model.InventoryItem"%>
 <%@ page import="Model.Dish" %>
 <%@ page import="Model.DishInventory" %>
-<%@ page import="Model.Inventory" %>
+<%@ page import="Model.InventoryItem" %>
 <%@ page import="java.util.List" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 
 <%
     Dish dish = (Dish) request.getAttribute("dish");
     List<DishInventory> dishIngredients = (List<DishInventory>) request.getAttribute("dishIngredients");
-    List<Inventory> ingredients = (List<Inventory>) request.getAttribute("ingredients");
+    List<InventoryItem> ingredients = (List<InventoryItem>) request.getAttribute("ingredients");
 
     if (dish != null) {
 %>
@@ -21,7 +22,7 @@
 <% if (ingredients != null && !ingredients.isEmpty()) { %>
     <ul>
         <% for (int i = 0; i < ingredients.size(); i++) {
-            Inventory ingredient = ingredients.get(i);
+            InventoryItem ingredient = ingredients.get(i);
             DishInventory dishInventory = dishIngredients.get(i);
         %>
             <li><%= ingredient.getItemName() %> - Quantity Used: <%= dishInventory.getQuantityUsed() %></li>

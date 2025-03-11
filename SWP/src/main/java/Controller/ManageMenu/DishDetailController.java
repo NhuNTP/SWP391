@@ -3,7 +3,7 @@ package Controller.ManageMenu;
 import DAO.MenuDAO;
 import Model.Dish;
 import Model.DishInventory;
-import Model.Inventory;
+import Model.InventoryItem;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -47,9 +47,9 @@ public class DishDetailController extends HttpServlet {
             }
 
             // Retrieve inventory items for the ingredients
-            List<Inventory> ingredients = new ArrayList<>();
+            List<InventoryItem> ingredients = new ArrayList<>();
             for (DishInventory dishInventory : dishIngredients) {
-                Inventory inventoryItem = menuDAO.getInventoryItemById(dishInventory.getItemId());
+                InventoryItem inventoryItem = menuDAO.getInventoryItemById(dishInventory.getItemId());
                 if (inventoryItem != null) {
                     ingredients.add(inventoryItem);
                 } else {

@@ -5,7 +5,7 @@
 package Controller.ManageInventory;
 
 import DAO.InventoryDAO;
-import Model.Inventory;
+import Model.InventoryItem;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -103,7 +103,7 @@ public class AddInventoryItemController extends HttpServlet {
             InventoryDAO inventoryDAO = new InventoryDAO();
             String itemID = inventoryDAO.generateNextInventoryId();
             System.out.println(itemID);
-            Inventory newItem = new Inventory(itemID, itemName, itemType, itemPrice, itemQuantity, itemUnit, itemDescription, 0);
+            InventoryItem newItem = new InventoryItem(itemID, itemName, itemType, itemPrice, itemQuantity, itemUnit, itemDescription, 0);
             inventoryDAO.addNewInventoryItem(newItem);
 
             // 6. Chuyển hướng
