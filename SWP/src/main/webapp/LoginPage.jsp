@@ -76,7 +76,7 @@
         <div class="login-header">
             <img src="https://img.icons8.com/color/96/000000/restaurant.png" alt="Restaurant Logo">
             <h2>Tasty Restaurant</h2>
-            <p class="text-muted">By GROUP 5 - SE1812</p>
+            <p class="text-muted">By GROUP 3 - SE1812</p>
         </div>
 
         <% String error = (String) request.getAttribute("error");
