@@ -5,7 +5,7 @@
 package Controller.ManageInventory;
 
 import DAO.InventoryDAO;
-import Model.Inventory;
+import Model.InventoryItem;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -61,7 +61,7 @@ public class ViewInventoryController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
           InventoryDAO dao = new InventoryDAO();
-        List<Inventory> ItemList = dao.getAllInventoryItem();
+        List<InventoryItem> ItemList = dao.getAllInventoryItem();
         System.out.println("List Item Inventory check: " + ItemList);
         request.setAttribute("InventoryItemList", ItemList);
         request.getRequestDispatcher("/ManageInventory/ViewInventoryItem.jsp").forward(request, response);

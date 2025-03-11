@@ -3,7 +3,7 @@ package Controller.ManageMenu;
 import DAO.MenuDAO;
 import Model.Dish;
 import Model.DishInventory;
-import Model.Inventory;
+import Model.InventoryItem;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -34,7 +34,7 @@ protected void doGet(HttpServletRequest request, HttpServletResponse response)
         throws ServletException, IOException {
     response.setContentType("text/html;charset=UTF-8");
 
-    List<Inventory> inventoryList = menuDAO.getAllInventory();
+    List<InventoryItem> inventoryList = menuDAO.getAllInventory();
     if (inventoryList != null && !inventoryList.isEmpty()) {
         LOGGER.info("Inventory list retrieved with " + inventoryList.size() + " items.");
         request.setAttribute("inventoryList", inventoryList);

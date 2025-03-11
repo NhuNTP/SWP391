@@ -1,6 +1,6 @@
 package DAO;
 
-import Model.Inventory;
+import Model.InventoryItem;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,13 +12,13 @@ import java.util.logging.Logger;
 
 public class InventoryDAO extends DB.DBContext {
 
-    public List<Inventory> getAllInventoryItem() {
+    public List<InventoryItem> getAllInventoryItem() {
         String sql = "SELECT * FROM Inventory WHERE isDeleted = 0";
-        List<Inventory> inventoryItemList = new ArrayList<>();
+        List<InventoryItem> inventoryItemList = new ArrayList<>();
         try (PreparedStatement st = getConnection().prepareStatement(sql)) {
             try (ResultSet rs = st.executeQuery()) {
                 while (rs.next()) {
-                    Inventory inventoryItem = new Inventory(
+                    InventoryItem inventoryItem = new InventoryItem(
                             rs.getString("ItemId"),
                             rs.getString("ItemName"),
                             rs.getString("ItemType"),
@@ -27,7 +27,7 @@ public class InventoryDAO extends DB.DBContext {
                             rs.getString("ItemUnit"),
                             rs.getString("ItemDescription")
                     );
-                    //    System.out.println("--- Inventory Item " + rowCount + " ---");
+                    //    System.out.println("--- InventoryItem Item " + rowCount + " ---");
                     System.out.println("ItemId: " + inventoryItem.getItemId());
                     System.out.println("ItemName: " + inventoryItem.getItemName());
                     System.out.println("ItemType: " + inventoryItem.getItemType());
@@ -47,13 +47,13 @@ public class InventoryDAO extends DB.DBContext {
         return null;
     }
 
-    public Inventory getInventoryItemById(String itemId) {
+    public InventoryItem getInventoryItemById(String itemId) {
         String sql = "SELECT * FROM Inventory WHERE ItemId = ?";
         try (PreparedStatement st = getConnection().prepareStatement(sql)) {
             st.setString(1, itemId);
             try (ResultSet rs = st.executeQuery()) {
                 if (rs.next()) {
-                    Inventory inventoryItem = new Inventory(
+                    InventoryItem inventoryItem = new InventoryItem(
                             rs.getString("ItemId"),
                             rs.getString("ItemName"),
                             rs.getString("ItemType"),
@@ -141,7 +141,7 @@ public class InventoryDAO extends DB.DBContext {
         return lastCouponId;
     }
 
-    public void addNewInventoryItem(Inventory inventory) { // Changed parameter type to Model.InventoryItem
+    public void addNewInventoryItem(InventoryItem inventory) { // Changed parameter type to Model.InventoryItem
         String sql = "INSERT INTO [dbo].[Inventory] (ItemId,ItemName, ItemType, ItemPrice, ItemQuantity, ItemUnit, ItemDescription) " // Updated column names to InventoryItem properties
                 + "VALUES ( ?, ?, ?, ?, ?, ?,?)"; // Updated number of placeholders to match the number of columns
         try (PreparedStatement st = getConnection().prepareStatement(sql)) { // Try-with-resources để tự động đóng PreparedStatement
@@ -173,7 +173,7 @@ public class InventoryDAO extends DB.DBContext {
         }
     }
 
-    public void updateInventoryItem(Inventory updatedItem) {
+    public void updateInventoryItem(InventoryItem updatedItem) {
         String sql = "UPDATE Inventory SET itemName = ?, itemType = ?, itemPrice = ?, itemQuantity = ?, itemUnit = ?, itemDescription = ? WHERE itemId = ?";
         try (PreparedStatement st = getConnection().prepareStatement(sql)) {
 

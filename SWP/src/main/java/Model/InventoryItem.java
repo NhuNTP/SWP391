@@ -1,6 +1,6 @@
 package Model;
 
-public class Inventory {
+public class InventoryItem {
 
     private String ItemId;
     private String ItemName;
@@ -11,10 +11,10 @@ public class Inventory {
     private String ItemDescription;
     private int isDeleted;
 
-    public Inventory() {
+    public InventoryItem() {
     }
 
-    public Inventory(String ItemId, String ItemName, String ItemType, double ItemPrice, double ItemQuantity, String ItemUnit, String ItemDescription, int isDeleted) {
+    public InventoryItem(String ItemId, String ItemName, String ItemType, double ItemPrice, double ItemQuantity, String ItemUnit, String ItemDescription, int isDeleted) {
         this.ItemId = ItemId;
         this.ItemName = ItemName;
         this.ItemType = ItemType;
@@ -25,7 +25,7 @@ public class Inventory {
         this.isDeleted = isDeleted;
     }
 
-    public Inventory(String ItemId, String ItemName, String ItemType, double ItemPrice, double ItemQuantity, String ItemUnit, String ItemDescription) {
+    public InventoryItem(String ItemId, String ItemName, String ItemType, double ItemPrice, double ItemQuantity, String ItemUnit, String ItemDescription) {
         this.ItemId = ItemId;
         this.ItemName = ItemName;
         this.ItemType = ItemType;

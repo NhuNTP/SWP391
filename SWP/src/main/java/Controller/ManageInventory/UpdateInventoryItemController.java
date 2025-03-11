@@ -1,7 +1,7 @@
 package Controller.ManageInventory;
 
 import DAO.InventoryDAO;
-import Model.Inventory;
+import Model.InventoryItem;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -42,8 +42,8 @@ public class UpdateInventoryItemController extends HttpServlet {
         
         
         
-        // 2. Tạo đối tượng Inventory để cập nhật
-        Inventory updatedItem = new Inventory();
+        // 2. Tạo đối tượng InventoryItem để cập nhật
+        InventoryItem updatedItem = new InventoryItem();
         updatedItem.setItemId(itemId);
         updatedItem.setItemName(itemName);
         updatedItem.setItemType(itemType);
