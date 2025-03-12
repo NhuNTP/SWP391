@@ -1,3 +1,4 @@
+<%@page import="Model.Revenue"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="jakarta.servlet.http.HttpSession" %>
 <%@ page import="Model.Account" %>
@@ -192,64 +193,65 @@
     </div>
 
     <!-- Chart.js Scripts -->
-    <script>
-        // Revenue Chart
-        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-        const revenueData = {
-            labels: [<% Map<String, Double> revenueData = (Map<String, Double>) request.getAttribute("revenueData");
-                        if (revenueData != null) {
-                            for (String date : revenueData.keySet()) { %>
-                                '<%= date %>',
-                        <% } } %>],
-            datasets: [{
-                label: 'Revenue (VNĐ)',
-                data: [<% if (revenueData != null) {
-                            for (Double revenue : revenueData.values()) { %>
-                                <%= revenue %>,
-                        <% } } %>],
-                borderColor: '#4CAF50',
-                backgroundColor: 'rgba(76, 175, 80, 0.2)',
-                borderWidth: 2,
-                fill: true
-            }]
-        };
-        const revenueChart = new Chart(revenueCtx, {
-            type: 'line',
-            data: revenueData,
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { display: true }
-                }
+    <!-- Chỉ cập nhật phần Chart.js Scripts liên quan đến Revenue Chart -->
+<script>
+    // Revenue Chart
+    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+    const revenueData = {
+        labels: [<% List<Revenue> revenueData = (List<Revenue>) request.getAttribute("revenueData");
+                    if (revenueData != null && !revenueData.isEmpty()) {
+                        for (Revenue revenue : revenueData) { %>
+                            '<%= revenue.getRevenueId() %>', // Dùng RevenueId làm nhãn
+                    <% } } %>],
+        datasets: [{
+            label: 'Revenue (VNĐ)',
+            data: [<% if (revenueData != null && !revenueData.isEmpty()) {
+                        for (Revenue revenue : revenueData) { %>
+                            <%= revenue.getTotalRevenue() %>,
+                    <% } } %>],
+            borderColor: '#4CAF50',
+            backgroundColor: 'rgba(76, 175, 80, 0.2)',
+            borderWidth: 2,
+            fill: true
+        }]
+    };
+    const revenueChart = new Chart(revenueCtx, {
+        type: 'line',
+        data: revenueData,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true }
             }
-        });
+        }
+    });
 
-        // Top Items Chart
-        const topItemsCtx = document.getElementById('topItemsChart').getContext('2d');
-        const topItemsData = {
-            labels: [<% Map<String, Integer> topDishes = (Map<String, Integer>) request.getAttribute("topDishes");
-                        if (topDishes != null) {
-                            for (String dishName : topDishes.keySet()) { %>
-                                '<%= dishName %>',
-                        <% } } %>],
-            datasets: [{
-                data: [<% if (topDishes != null) {
-                            for (Integer quantity : topDishes.values()) { %>
-                                <%= quantity %>,
-                        <% } } %>],
-                backgroundColor: ['#4CAF50', '#FF9800', '#03A9F4', '#E91E63', '#9C27B0']
-            }]
-        };
-        const topItemsChart = new Chart(topItemsCtx, {
-            type: 'pie',
-            data: topItemsData,
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { display: true }
-                }
+    // Top Items Chart (giữ nguyên)
+    const topItemsCtx = document.getElementById('topItemsChart').getContext('2d');
+    const topItemsData = {
+        labels: [<% Map<String, Integer> topDishes = (Map<String, Integer>) request.getAttribute("topDishes");
+                    if (topDishes != null && !topDishes.isEmpty()) {
+                        for (String dishName : topDishes.keySet()) { %>
+                            '<%= dishName %>',
+                    <% } } %>],
+        datasets: [{
+            data: [<% if (topDishes != null && !topDishes.isEmpty()) {
+                        for (Integer quantity : topDishes.values()) { %>
+                            <%= quantity %>,
+                    <% } } %>],
+            backgroundColor: ['#4CAF50', '#FF9800', '#03A9F4', '#E91E63', '#9C27B0']
+        }]
+    };
+    const topItemsChart = new Chart(topItemsCtx, {
+        type: 'pie',
+        data: topItemsData,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true }
             }
-        });
-    </script>
+        }
+    });
+</script>
 </body>
 </html>

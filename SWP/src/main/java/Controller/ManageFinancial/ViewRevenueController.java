@@ -2,6 +2,7 @@ package Controller.ManageFinancial;
 
 import DAO.RevenueDAO;
 import Model.Account;
+import Model.Revenue;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -9,7 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
-import java.util.Map;
+import java.util.List;
 
 @WebServlet("/view-revenue")
 public class ViewRevenueController extends HttpServlet {
@@ -37,7 +38,7 @@ public class ViewRevenueController extends HttpServlet {
 
         // Dữ liệu tổng quan
         double totalRevenue = 0.0;
-        Map<String, Double> revenueByPeriod = null;
+        List<Revenue> revenueByPeriod = null;
 
         switch (period) {
             case "day":

@@ -1,8 +1,10 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="jakarta.servlet.http.HttpSession" %>
 <%@ page import="Model.Account" %>
-<%@ page import="java.util.Map" %>
+<%@ page import="Model.Revenue" %>
+<%@ page import="java.util.List" %>
 <%@ page import="java.text.DecimalFormat" %>
+<%@ page import="java.text.SimpleDateFormat" %>
 <%
     if (session == null || session.getAttribute("account") == null) {
         response.sendRedirect(request.getContextPath() + "/LoginPage.jsp");
@@ -17,6 +19,7 @@
     }
 
     DecimalFormat currencyFormat = new DecimalFormat("#,### VNĐ");
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -102,16 +105,16 @@
     <script>
         const revenueCtx = document.getElementById('revenueChart').getContext('2d');
         const revenueData = {
-            labels: [<% Map<String, Double> revenueByPeriod = (Map<String, Double>) request.getAttribute("revenueByPeriod");
+            labels: [<% List<Revenue> revenueByPeriod = (List<Revenue>) request.getAttribute("revenueByPeriod");
                         if (revenueByPeriod != null && !revenueByPeriod.isEmpty()) {
-                            for (String key : revenueByPeriod.keySet()) { %>
-                                '<%= key %>',
+                            for (Revenue revenue : revenueByPeriod) { %>
+                                '<%= revenue.getRevenueId() %>', // Hiển thị RevenueId làm nhãn
                         <% } } %>],
             datasets: [{
                 label: 'Revenue (VNĐ)',
                 data: [<% if (revenueByPeriod != null && !revenueByPeriod.isEmpty()) {
-                            for (Double revenue : revenueByPeriod.values()) { %>
-                                <%= revenue %>,
+                            for (Revenue revenue : revenueByPeriod) { %>
+                                <%= revenue.getTotalRevenue() %>,
                         <% } } %>],
                 backgroundColor: 'rgba(76, 175, 80, 0.2)',
                 borderColor: '#4CAF50',
