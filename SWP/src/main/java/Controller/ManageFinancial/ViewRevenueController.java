@@ -1,4 +1,4 @@
-package Controller;
+package Controller.ManageFinancial;
 
 import DAO.RevenueDAO;
 import Model.Account;
