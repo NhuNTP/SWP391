@@ -127,7 +127,6 @@
         }
     %>
     <br>
-    <input type="submit" value="Update Dish">
 </form>
 <!-- ... (Phần còn lại giữ nguyên) -->
     <%
