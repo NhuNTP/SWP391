@@ -14,13 +14,15 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <title>Employee Account List - Admin Dashboard</title>
         <script>
             function confirmDelete(userId, userName) {
                 if (confirm('Are you sure you want to delete the account with ID: ' + userId + ' - user name: ' + userName + '?')) {
-                    window.location.href = 'DeleteAccount?UserId=' + userId; // **Đổi 'id' thành 'UserId'**
+                    window.location.href = 'DeleteAccount?UserId=' + userId;
                 }
             }
+
             function validateForm() {
                 let email = document.getElementById("UserEmail").value.trim();
                 let password = document.getElementById("UserPassword").value.trim();
@@ -33,19 +35,17 @@
                     alert("Please complete all fields.");
                     return false;
                 }
-
                 if (!email.endsWith("@gmail.com")) {
                     alert("Emails must end with '@gmail.com'.");
                     return false;
                 }
-
                 if (!/^\d{12}$/.test(idCard)) {
                     alert("ID card/CCCD number must be exactly 12 digits.");
                     return false;
                 }
-
                 return true;
             }
+
             function validateUpdateForm() {
                 let email = document.getElementById("EditUserEmail").value.trim();
                 let password = document.getElementById("EditUserPassword").value.trim();
@@ -58,18 +58,155 @@
                     alert("Vui lòng điền đầy đủ tất cả các trường.");
                     return false;
                 }
-
                 if (!email.endsWith("@gmail.com")) {
                     alert("Email phải kết thúc bằng '@gmail.com'.");
                     return false;
                 }
-
                 if (!/^\d{12}$/.test(idCard)) {
                     alert("Số CMND/CCCD phải đúng 12 chữ số.");
                     return false;
                 }
-
                 return true;
+            }
+
+            // Hàm cập nhật danh sách tài khoản động
+            function refreshAccountList() {
+                $.ajax({
+                    url: "ViewAccountList",
+                    type: "GET",
+                    dataType: "json",
+                    success: function (data) {
+                        var tbody = $("table tbody");
+                        tbody.empty();
+
+                        if (data.length > 0) {
+                            data.forEach(function (account, index) {
+                                var row = "<tr>" +
+                                        "<td>" + (index + 1) + "</td>" +
+                                        "<td>" + account.userId + "</td>" +
+                                        "<td>" + (account.userImage ? '<img src="' + account.userImage + '" alt="' + account.userName + '" class="rounded-image">' : 'No Image') + "</td>" +
+                                        "<td>" + account.userEmail + "</td>" +
+                                        "<td>" + account.userPassword + "</td>" +
+                                        "<td>" + account.userName + "</td>" +
+                                        "<td>" + account.userRole + "</td>" +
+                                        "<td>" + account.identityCard + "</td>" +
+                                        "<td>" + account.userAddress + "</td>" +
+                                        "<td>" +
+                                        (account.userRole.toLowerCase() !== "admin" ?
+                                                '<a href="#" class="edit-employee-btn btn btn-primary btn-sm" ' +
+                                                'data-userid="' + account.userId + '" ' +
+                                                'data-useremail="' + account.userEmail + '" ' +
+                                                'data-username="' + account.userName + '" ' +
+                                                'data-userpassword="' + account.userPassword + '" ' +
+                                                'data-userrole="' + account.userRole + '" ' +
+                                                'data-identitycard="' + account.identityCard + '" ' +
+                                                'data-useraddress="' + account.userAddress + '" ' +
+                                                'data-userimage="' + account.userImage + '">' +
+                                                '<i class="fas fa-edit"></i> Edit</a>' +
+                                                ' <a href="#" onclick="confirmDelete(\'' + account.userId + '\', \'' + account.userName + '\')" class="btn btn-danger btn-sm">' +
+                                                '<i class="fas fa-trash-alt"></i> Delete</a>' : '') +
+                                        "</td>" +
+                                        "</tr>";
+                                tbody.append(row);
+                            });
+
+                            // Gắn lại sự kiện cho các nút Edit sau khi cập nhật bảng
+                            attachEditButtonEvents();
+                        } else {
+                            tbody.append('<tr><td colspan="10">No accounts found.</td></tr>');
+                        }
+                    },
+                    error: function () {
+                        alert("Không thể tải lại danh sách tài khoản.");
+                    }
+                });
+            }
+
+            // Hàm gắn sự kiện cho các nút Edit
+            function attachEditButtonEvents() {
+                var editButtons = document.querySelectorAll(".edit-employee-btn");
+                editButtons.forEach(function (btn) {
+                    btn.onclick = function (e) {
+                        e.preventDefault();
+                        document.getElementById('EditUserIdHidden').value = btn.dataset.userid;
+                        document.getElementById('EditUserId').value = btn.dataset.userid;
+                        document.getElementById('EditUserEmail').value = btn.dataset.useremail;
+                        document.getElementById('EditUserPassword').value = btn.dataset.userpassword;
+                        document.getElementById('EditUserName').value = btn.dataset.username;
+                        document.getElementById('EditUserRole').value = btn.dataset.userrole;
+                        document.getElementById('EditIdentityCard').value = btn.dataset.identitycard;
+                        document.getElementById('EditUserAddress').value = btn.dataset.useraddress;
+                        document.getElementById('EditCurrentImage').src = '<%= request.getContextPath()%>/' + btn.dataset.userimage;
+                        document.getElementById('EditOldImagePath').value = btn.dataset.userimage;
+                        document.getElementById("editEmployeeModal").style.display = "block";
+                    };
+                });
+            }
+
+            // Gửi form tạo tài khoản bằng AJAX
+            function submitCreateForm(event) {
+                event.preventDefault();
+                if (!validateForm())
+                    return false;
+
+                var formData = new FormData(document.getElementById("createAccountForm"));
+                $.ajax({
+                    url: "CreateAccount",
+                    type: "POST",
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    dataType: "json", // Đảm bảo phản hồi được parse thành JSON
+                    success: function (response) {
+                        if (response.success) {
+                            // Thành công: Đóng modal và cập nhật danh sách
+                            alert(response.message);
+                            document.getElementById("createEmployeeModal").style.display = "none";
+                            refreshAccountList();
+                        } else {
+                            // Lỗi: Hiển thị thông báo và giữ modal mở
+                            alert(response.message);
+                            // Modal vẫn mở, không cần làm gì thêm vì nó không đóng
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        alert("Đã xảy ra lỗi khi gửi yêu cầu: " + error);
+                    }
+                });
+                return false;
+            }
+
+            // Gửi form cập nhật tài khoản bằng AJAX
+            function submitUpdateForm(event) {
+                event.preventDefault();
+                if (!validateUpdateForm())
+                    return false;
+
+                var formData = new FormData(document.getElementById("updateAccountForm"));
+                $.ajax({
+                    url: "UpdateAccount",
+                    type: "POST",
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    dataType: "json", // Đảm bảo phản hồi được parse thành JSON
+                    success: function (response) {
+                        if (response.success) {
+                            // Thành công: Đóng modal và cập nhật danh sách
+                            alert(response.message);
+                            document.getElementById("editEmployeeModal").style.display = "none";
+                            refreshAccountList();
+                        } else {
+                            // Lỗi: Hiển thị thông báo và giữ modal mở
+                            alert(response.message);
+                            // Modal vẫn mở, không cần làm gì thêm vì nó không đóng
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        alert("Đã xảy ra lỗi khi gửi yêu cầu: " + error);
+                    }
+                });
+                return false;
             }
         </script>
         <link rel="stylesheet" href="style.css">
@@ -704,8 +841,8 @@
             <div class="sidebar col-md-2 p-3">
                 <h4 class="text-center mb-4">Admin</h4>
                 <ul class="nav flex-column">
-                   <li class="nav-item"><a href="${pageContext.request.contextPath}/dashboard" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
-                   <li class="nav-item"><a href="${pageContext.request.contextPath}/view-revenue" class="nav-link"><i class="fas fa-chart-line me-2"></i>View Revenue</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/dashboard" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/view-revenue" class="nav-link"><i class="fas fa-chart-line me-2"></i>View Revenue</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-list-alt me-2"></i>Menu Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewAccountList" class="nav-link"><i class="fas fa-users me-2"></i>Employee Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewTableList" class="nav-link"><i class="fas fa-building me-2"></i>Table Management</a></li>
@@ -888,29 +1025,28 @@
                 </section>
             </div>
         </div>
-
         <!-- Modal Create Employee Account -->
         <div id="createEmployeeModal" class="modal">
             <div class="modal-content">
                 <span class="close-button">×</span>
                 <h2>Create New Employee Account</h2>
                 <div class="modal-form-container">
-                    <form method="post" action="CreateAccount" enctype="multipart/form-data" onsubmit="return validateForm()">
+                    <form id="createAccountForm" enctype="multipart/form-data" onsubmit="return submitCreateForm(event)">
                         <div>
                             <label for="UserEmail">Email Address</label>
-                            <input type="email" id="UserEmail" name="UserEmail" placeholder="Enter email" required="Please fill in this field">
+                            <input type="email" id="UserEmail" name="UserEmail" value="" placeholder="Enter email" required>
                         </div>
                         <div>
                             <label for="UserPassword">Password</label>
-                            <input type="password" id="UserPassword" name="UserPassword" placeholder="Password" required="Please fill in this field">
+                            <input type="password" id="UserPassword" name="UserPassword" value="" placeholder="Password" required>
                         </div>
                         <div>
                             <label for="UserName">Full Name</label>
-                            <input type="text" id="UserName" name="UserName" placeholder="Enter full name" required="Please fill in this field">
+                            <input type="text" id="UserName" name="UserName" value="" placeholder="Enter full name" required>
                         </div>
                         <div>
                             <label for="UserRole">Role</label>
-                            <select id="UserRole" name="UserRole" required="Please select in this field">
+                            <select id="UserRole" name="UserRole" required>
                                 <option value="Manager">Manager</option>
                                 <option value="Cashier">Cashier</option>
                                 <option value="Waiter">Waiter</option>
@@ -919,19 +1055,19 @@
                         </div>
                         <div>
                             <label for="IdentityCard">Identity Card (12 digits)</label>
-                            <input type="text" id="IdentityCard" name="IdentityCard" placeholder="Enter 12-digit ID Card number" required="Please fill in this field">
+                            <input type="text" id="IdentityCard" name="IdentityCard" value="" placeholder="Enter 12-digit ID Card number" required>
                         </div>
                         <div>
                             <label for="UserAddress">Address</label>
-                            <input type="text" id="UserAddress" name="UserAddress" placeholder="Enter address" required="Please fill in this field">
+                            <input type="text" id="UserAddress" name="UserAddress" value="" placeholder="Enter address" required>
                         </div>
                         <div>
                             <label for="UserImage">Profile Image</label>
-                            <input type="file" id="UserImage" name="UserImage" required="Please fill in this field">
+                            <input type="file" id="UserImage" name="UserImage">
                         </div>
                         <div class="modal-actions">
-                            <input type="submit" class="btn btn-primary" name="btnSubmit" value="Create Account"/>
-                            <button type="button" class="btn btn-secondary close-button">Cancel</button>
+                            <input type="submit" value="Create Account">
+                            <button type="button" class="close-button">Cancel</button>
                         </div>
                     </form>
                 </div>
@@ -944,154 +1080,114 @@
                 <span class="close-button">×</span>
                 <h2>Edit Employee Account</h2>
                 <div class="modal-form-container">
-                    <form method="post" action="UpdateAccount" enctype="multipart/form-data" onsubmit="return validateUpdateForm()">
-                        <input type="hidden" id="EditUserIdHidden" name="UserIdHidden" value=""/>
+                    <form id="updateAccountForm" enctype="multipart/form-data" onsubmit="return submitUpdateForm(event)">
+                        <input type="hidden" id="EditUserIdHidden" name="UserIdHidden" value="">
                         <div>
-                            <div>
-                                <div>
-                                    <img id="EditCurrentImage" src="" alt="Current Image" style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover;"/>
-                                </div>
-                                <label for="EditUserImage">Update Profile Image</label>
-                                <input type="file" id="EditUserImage" name="UserImage"/>
-                            </div>
-                            <div>
-                                <div>
-                                    <label for="EditUserId">User ID</label>
-                                    <input type="text" id="EditUserId" name="UserId" value="" readonly/>
-                                </div>
-                                <div>
-                                    <label for="EditUserEmail">Email Address</label>
-                                    <input type="email" id="EditUserEmail" name="UserEmail" value="" required="Please fill in this field"/>
-                                </div>
-                                <div>
-                                    <label for="EditUserPassword">Password</label>
-                                    <input type="password" id="EditUserPassword" name="UserPassword" value="" required="Please fill in this field"/>
-                                </div>
-                                <div>
-                                    <label for="EditUserName">Full Name</label>
-                                    <input type="text" id="EditUserName" name="UserName" value="" required="Please fill in this field"/>
-                                </div>
-                                <div>
-                                    <label for="EditUserRole">Role</label>
-                                    <select id="EditUserRole" name="UserRole" required="Please select in this field">
-                                        <option value="Manager">Manager</option>
-                                        <option value="Cashier">Cashier</option>
-                                        <option value="Waiter">Waiter</option>
-                                        <option value="Kitchen staff">Kitchen staff</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label for="EditIdentityCard">Identity Card (12 digits)</label>
-                                    <input type="text" id="EditIdentityCard" name="IdentityCard" value="" required="Please fill in this field"/>
-                                </div>
-                                <div>
-                                    <label for="EditUserAddress">Address</label>
-                                    <input type="text" id="EditUserAddress" name="UserAddress" value="" required="Please fill in this field"/>
-                                </div>
-                            </div>
+                            <label>Current Image</label>
+                            <img id="EditCurrentImage" src="" alt="Current Image" class="rounded-image">
                         </div>
-
-                        <!-- Save and Back to List Buttons -->
+                        <div>
+                            <label for="EditUserImage">Update Profile Image</label>
+                            <input type="file" id="EditUserImage" name="UserImage">
+                            <input type="hidden" name="oldImagePath" id="EditOldImagePath" value="">
+                        </div>
+                        <div>
+                            <label for="EditUserId">User ID</label>
+                            <input type="text" id="EditUserId" name="UserId" value="" readonly>
+                        </div>
+                        <div>
+                            <label for="EditUserEmail">Email Address</label>
+                            <input type="email" id="EditUserEmail" name="UserEmail" value="" required>
+                        </div>
+                        <div>
+                            <label for="EditUserPassword">Password</label>
+                            <input type="password" id="EditUserPassword" name="UserPassword" value="" required>
+                        </div>
+                        <div>
+                            <label for="EditUserName">Full Name</label>
+                            <input type="text" id="EditUserName" name="UserName" value="" required>
+                        </div>
+                        <div>
+                            <label for="EditUserRole">Role</label>
+                            <select id="EditUserRole" name="UserRole" required>
+                                <option value="Manager">Manager</option>
+                                <option value="Cashier">Cashier</option>
+                                <option value="Waiter">Waiter</option>
+                                <option value="Kitchen staff">Kitchen staff</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="EditIdentityCard">Identity Card (12 digits)</label>
+                            <input type="text" id="EditIdentityCard" name="IdentityCard" value="" required>
+                        </div>
+                        <div>
+                            <label for="EditUserAddress">Address</label>
+                            <input type="text" id="EditUserAddress" name="UserAddress" value="" required>
+                        </div>
                         <div class="modal-actions">
-                            <input type="submit" class="btn btn-primary" name="btnSubmit" value="Save Changes"/>
-                            <button type="button" class="btn btn-secondary close-button">Cancel</button>
+                            <input type="submit" value="Save Changes">
+                            <button type="button" class="close-button">Cancel</button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
 
-
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                // Modal Create Account
                 var createModal = document.getElementById("createEmployeeModal");
+                var editModal = document.getElementById("editEmployeeModal");
                 var createBtn = document.querySelector(".add-employee-btn");
-                var closeCreateButtons = document.querySelectorAll("#createEmployeeModal .close-button");
+                var editButtons = document.querySelectorAll(".edit-employee-btn");
+                var closeButtons = document.querySelectorAll(".close-button");
 
-                if (createBtn && createModal) {
+                if (createBtn) {
                     createBtn.onclick = function () {
                         createModal.style.display = "block";
-                    }
+                        document.getElementById("createAccountForm").reset();
+                    };
                 }
 
-                if (closeCreateButtons) {
-                    closeCreateButtons.forEach(function (btnClose) {
-                        btnClose.onclick = function () {
-                            createModal.style.display = "none";
-                        }
-                    });
-                }
+                attachEditButtonEvents();
 
-                // Modal Edit Account
-                var editModal = document.getElementById("editEmployeeModal");
-                var editButtons = document.querySelectorAll(".edit-employee-btn");
-                var closeEditButtons = document.querySelectorAll("#editEmployeeModal .close-button");
-
-                if (editButtons) {
-                    editButtons.forEach(function (btnEdit) {
-                        btnEdit.onclick = function (e) {
-                            e.preventDefault();
-                            document.getElementById('EditUserIdHidden').value = btnEdit.dataset.userid;
-                            document.getElementById('EditUserId').value = btnEdit.dataset.userid;
-                            document.getElementById('EditUserEmail').value = btnEdit.dataset.useremail;
-                            document.getElementById('EditUserName').value = btnEdit.dataset.username;
-                            document.getElementById('EditUserPassword').value = btnEdit.dataset.userpassword;
-                            document.getElementById('EditUserRole').value = btnEdit.dataset.userrole;
-                            document.getElementById('EditIdentityCard').value = btnEdit.dataset.identitycard;
-                            document.getElementById('EditUserAddress').value = btnEdit.dataset.useraddress;
-                            document.getElementById('EditCurrentImage').src = '<%= request.getContextPath()%>' + btnEdit.dataset.userimage;
-
-                            editModal.style.display = "block";
-                        }
-                    });
-                }
-
-                if (closeEditButtons) {
-                    closeEditButtons.forEach(function (btnClose) {
-                        btnClose.onclick = function () {
-                            editModal.style.display = "none";
-                        }
-                    });
-                }
+                closeButtons.forEach(function (btn) {
+                    btn.onclick = function () {
+                        createModal.style.display = "none";
+                        editModal.style.display = "none";
+                    };
+                });
 
                 window.onclick = function (event) {
-                    if (event.target == createModal) {
+                    if (event.target == createModal)
                         createModal.style.display = "none";
-                    }
-                    if (event.target == editModal) {
+                    if (event.target == editModal)
                         editModal.style.display = "none";
-                    }
+                };
+
+                const searchInput = document.getElementById('searchInput');
+                const roleFilter = document.getElementById('roleFilter');
+                const rows = document.querySelectorAll('.table tbody tr');
+
+                function filterTable() {
+                    const searchText = searchInput.value.toLowerCase();
+                    const selectedRole = roleFilter.value;
+
+                    rows.forEach(row => {
+                        const id = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                        const name = row.querySelector('td:nth-child(6)').textContent.toLowerCase();
+                        const email = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
+                        const role = row.querySelector('td:nth-child(7)').textContent;
+
+                        let matchesSearch = id.includes(searchText) || name.includes(searchText) || email.includes(searchText);
+                        let matchesRole = selectedRole === '' || role === selectedRole;
+
+                        row.style.display = (matchesSearch && matchesRole) ? '' : 'none';
+                    });
                 }
+
+                searchInput.addEventListener('keyup', filterTable);
+                roleFilter.addEventListener('change', filterTable);
             });
-            const searchInput = document.getElementById('searchInput');
-            const roleFilter = document.getElementById('roleFilter'); // Lấy phần tử select
-            const table = document.querySelector('.table');
-            const rows = table.querySelectorAll('tbody tr');
-
-            function filterTable() {
-                const searchText = searchInput.value.toLowerCase();
-                const selectedRole = roleFilter.value; // Lấy role được chọn
-
-                rows.forEach(row => {
-                    const id = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-                    const name = row.querySelector('td:nth-child(6)').textContent.toLowerCase();
-                    const email = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
-                    const role = row.querySelector('td:nth-child(7)').textContent; // Lấy role của hàng, không chuyển thành chữ thường
-
-                    let matchesSearch = id.includes(searchText) || name.includes(searchText) || email.includes(searchText);
-                    let matchesRole = selectedRole === '' || role === selectedRole; // So sánh với role được chọn, hoặc hiển thị tất cả nếu chọn "All Roles"
-
-                    if (matchesSearch && matchesRole) {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = 'none';
-                    }
-                });
-            }
-            searchInput.addEventListener('keyup', filterTable); // Gọi hàm filterTable khi gõ vào ô tìm kiếm
-            roleFilter.addEventListener('change', filterTable); // Gọi hàm filterTable khi thay đổi lựa chọn trong dropdown
-
         </script>
     </body>
 </html>

@@ -141,5 +141,4 @@ public class Account {
     public void setIsDeleted(boolean IsDeleted) {
         this.IsDeleted = IsDeleted;
     }
-    // Bỏ phương thức getAccountId() không liên quan.
 }

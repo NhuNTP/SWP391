@@ -1,21 +1,11 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package DAO;
 
-/**
- *
- * @author LxP
- */
 import Model.Account;
 import DB.DBContext;
-import static DB.DBContext.getConnection;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -25,16 +15,16 @@ public class AccountDAO {
 
     private Connection conn;
     private String sql;
+    private static final Logger LOGGER = Logger.getLogger(AccountDAO.class.getName());
 
     public AccountDAO() throws ClassNotFoundException, SQLException {
         conn = DBContext.getConnection();
     }
 
     public Account login(String username, String password) throws ClassNotFoundException, SQLException {
-        String sql = "SELECT UserId, UserEmail, UserPassword, UserName, UserRole, IdentityCard, UserAddress, UserImage, IsDeleted " +
-                     "FROM Account WHERE UserName = ? AND UserPassword = ? AND IsDeleted = 0";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        String sql = "SELECT UserId, UserEmail, UserPassword, UserName, UserRole, IdentityCard, UserAddress, UserImage, IsDeleted "
+                + "FROM Account WHERE UserName = ? AND UserPassword = ? AND IsDeleted = 0";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, username);
             pstmt.setString(2, password);
             ResultSet rs = pstmt.executeQuery();
@@ -56,63 +46,19 @@ public class AccountDAO {
                 LOGGER.info("Login failed for user: " + username + " - Account not found or deleted.");
                 return null;
             }
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error during login for user: " + username, e);
-            throw e;
-        } catch (ClassNotFoundException e) {
-            LOGGER.log(Level.SEVERE, "Database driver not found", e);
-            throw e;
         }
     }
 
     public ResultSet getAllAccount() {
         ResultSet rs = null;
         try {
-            Statement st = conn.createStatement();
-            sql = "SELECT * FROM Account where IsDeleted = 0";
-            rs = st.executeQuery(sql);
+            sql = "SELECT * FROM Account WHERE IsDeleted = 0";
+            PreparedStatement ps = conn.prepareStatement(sql); // Sử dụng PreparedStatement để an toàn hơn
+            rs = ps.executeQuery();
         } catch (SQLException ex) {
-            Logger.getLogger(AccountDAO.class.getName()).log(Level.SEVERE, null, ex);
-            ex.printStackTrace(); // **THÊM DÒNG NÀY ĐỂ IN LỖI SQL CHI TIẾT RA LOG**
+            LOGGER.log(Level.SEVERE, "Error fetching all accounts", ex);
         }
         return rs;
-    }
-
-    public int createAccount(Account account) throws ClassNotFoundException {
-        int count = 0;
-        String sql = "INSERT INTO Account (UserId, UserEmail, UserPassword, UserName, UserRole, IdentityCard, UserAddress, UserImage, IsDeleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"; // Include UserId in INSERT
-        try (Connection con = getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
-
-            String userId = generateUniqueUserId(account.getUserRole()); // Generate Unique UserId based on role
-            account.setUserId(userId); // Set the generated UserId back to account object
-
-            ps.setString(1, account.getUserId()); // Set UserId as String
-            ps.setString(2, account.getUserEmail());
-            ps.setString(3, account.getUserPassword());
-            ps.setString(4, account.getUserName());
-            ps.setString(5, account.getUserRole());
-            ps.setString(6, account.getIdentityCard());
-            ps.setString(7, account.getUserAddress());
-            ps.setString(8, account.getUserImage());
-            ps.setBoolean(9, account.isIsDeleted()); // Set IsDeleted
-
-            count = ps.executeUpdate(); // **Thực thi câu lệnh INSERT**
-        } catch (SQLException e) {
-            e.printStackTrace(); // **In lỗi SQLException trong DAO**
-        }
-        return count; // **Trả về count (số hàng bị ảnh hưởng)**
-    }
-
-    private String generateUniqueUserId(String userRole) throws SQLException, ClassNotFoundException {
-        String prefix = getPrefixForRole(userRole);
-        int nextNumber = 1;
-        while (true) {
-            String userId = prefix + String.format("%02d", nextNumber);
-            if (!isUserIdExists(userId)) {
-                return userId;
-            }
-            nextNumber++;
-        }
     }
 
     private String getPrefixForRole(String userRole) {
@@ -128,144 +74,203 @@ public class AccountDAO {
             case "Kitchen staff":
                 return "KS";
             default:
-                return "EM"; // Default prefix for Employee or other roles if needed
+                return "EM";
+        }
+    }
+
+    private String generateUniqueUserId(String userRole) throws SQLException, ClassNotFoundException {
+        String prefix = getPrefixForRole(userRole);
+        int nextNumber = 1;
+        while (true) {
+            String userId = prefix + String.format("%02d", nextNumber);
+            if (!isUserIdExists(userId)) {
+                return userId;
+            }
+            nextNumber++;
         }
     }
 
     private boolean isUserIdExists(String userId) throws SQLException, ClassNotFoundException {
         String sqlCheckId = "SELECT UserId FROM Account WHERE UserId = ?";
-        try (Connection con = getConnection(); PreparedStatement ps = con.prepareStatement(sqlCheckId)) {
+        try (Connection con = DBContext.getConnection(); PreparedStatement ps = con.prepareStatement(sqlCheckId)) {
             ps.setString(1, userId);
             ResultSet rs = ps.executeQuery();
-            return rs.next(); // Returns true if UserId exists
+            return rs.next();
         }
     }
 
-    public Account getAccountId(String id) { // Parameter is String now
-        Account obj = null;
-        try {
-            sql = "SELECT UserId, UserEmail, UserPassword, UserName, UserRole, IdentityCard, UserAddress, UserImage FROM Account WHERE UserId = ?"; // Select IsDeleted
-            PreparedStatement pst = conn.prepareStatement(sql);
-            pst.setString(1, id); // Set parameter as String
-            ResultSet rs = pst.executeQuery();
-            if (rs.next()) {
-                obj = new Account();
-                obj.setUserId(rs.getString("UserId")); // Use getString
-                obj.setUserEmail(rs.getString("UserEmail"));
-                obj.setUserPassword(rs.getString("UserPassword"));
-                obj.setUserName(rs.getString("UserName"));
-                obj.setUserRole(rs.getString("UserRole"));
-                obj.setIdentityCard(rs.getString("IdentityCard"));
-                obj.setUserAddress(rs.getString("UserAddress"));
-                obj.setUserImage(rs.getString("UserImage"));
-
+    public boolean isEmailExists(String email, String userIdToExclude) throws SQLException, ClassNotFoundException {
+        String sqlCheckEmail = "SELECT UserEmail FROM Account WHERE UserEmail = ? AND IsDeleted = 0"
+                + (userIdToExclude != null ? " AND UserId <> ?" : "");
+        try (Connection con = DBContext.getConnection(); PreparedStatement ps = con.prepareStatement(sqlCheckEmail)) {
+            ps.setString(1, email);
+            if (userIdToExclude != null) {
+                ps.setString(2, userIdToExclude);
             }
-        } catch (SQLException ex) {
-            Logger.getLogger(AccountDAO.class.getName()).log(Level.SEVERE, null, ex);
+            ResultSet rs = ps.executeQuery();
+            return rs.next();
         }
-        return obj;
     }
 
-    public int updateAccount(String id, Account newInfo) throws SQLException, ClassNotFoundException {
-        int count = 0;
-        Account existingAccount = getAccountByIdForUpdate(id); // Get existing account for role comparison
-        
-        if (existingAccount != null && !existingAccount.getUserRole().equals(newInfo.getUserRole())) {
-            // Role has changed, need to regenerate UserId
-            String newUserId;
-            String newRolePrefix = getPrefixForRole(newInfo.getUserRole());
-            int suffix = 1;
-            while (true) {
-                newUserId = newRolePrefix + String.format("%03d", suffix);
-                if (!isUserIdExists(newUserId)) {
-                    newInfo.setUserId(newUserId); // Set new UserId to newInfo
-                    break; // Unique UserId found
-                }
-                suffix++;
+    public boolean isIdentityCardExists(String identityCard, String userIdToExclude) throws SQLException, ClassNotFoundException {
+        String sqlCheckIdCard = "SELECT IdentityCard FROM Account WHERE IdentityCard = ? AND IsDeleted = 0"
+                + (userIdToExclude != null ? " AND UserId <> ?" : "");
+        try (Connection con = DBContext.getConnection(); PreparedStatement ps = con.prepareStatement(sqlCheckIdCard)) {
+            ps.setString(1, identityCard);
+            if (userIdToExclude != null) {
+                ps.setString(2, userIdToExclude);
             }
-        } else {
-            // Role not changed, keep the existing UserId (or if you want to allow UserId update even without role change, you can generate new userId here too based on new Role)
-            newInfo.setUserId(id); // Keep the same UserId if role is not changed. Or you can comment this line if you want to regenerate even if role is same.
+            ResultSet rs = ps.executeQuery();
+            return rs.next();
         }
-
-        try {
-            sql = "UPDATE Account SET UserId=?, UserEmail=?, UserPassword=?, UserName=?, UserRole=?, IdentityCard=?, UserAddress=?, UserImage=?, IsDeleted=? WHERE UserId=?"; // Include UserId in UPDATE
-            PreparedStatement pst = conn.prepareStatement(sql);
-            pst.setString(1, newInfo.getUserId()); // Set potentially new UserId
-            pst.setString(2, newInfo.getUserEmail());
-            pst.setString(3, newInfo.getUserPassword()); // Nếu cần băm mật khẩu, hãy gọi hàm băm tại đây
-            pst.setString(4, newInfo.getUserName());
-            pst.setString(5, newInfo.getUserRole());
-            pst.setString(6, newInfo.getIdentityCard());
-            pst.setString(7, newInfo.getUserAddress());
-            pst.setString(8, newInfo.getUserImage());
-            pst.setBoolean(9, newInfo.isIsDeleted()); // Set IsDeleted
-            pst.setString(10, id); // Set original id for WHERE clause
-
-            count = pst.executeUpdate();
-
-        } catch (SQLException ex) {
-            LOGGER.log(Level.SEVERE, "Error update account", ex);
-            throw ex; // Re-throw the exception so the caller knows update failed
-        }
-        return count;
     }
 
-    private Account getAccountByIdForUpdate(String id) throws SQLException, ClassNotFoundException {
+    public Account getAccountById(String id, boolean fullDetails) throws SQLException, ClassNotFoundException {
         Account obj = null;
-        String sqlSelect = "SELECT UserId, UserRole FROM Account WHERE UserId = ?"; // Just need UserId and UserRole
-        try (Connection con = getConnection(); PreparedStatement pst = con.prepareStatement(sqlSelect)) {
+        String sql = fullDetails
+                ? "SELECT UserId, UserEmail, UserPassword, UserName, UserRole, IdentityCard, UserAddress, UserImage FROM Account WHERE UserId = ?"
+                : "SELECT UserId, UserRole, UserEmail, IdentityCard FROM Account WHERE UserId = ?";
+        try (Connection con = DBContext.getConnection(); PreparedStatement pst = con.prepareStatement(sql)) {
             pst.setString(1, id);
             ResultSet rs = pst.executeQuery();
             if (rs.next()) {
                 obj = new Account();
-                obj.setUserId(rs.getString("UserId")); // Get UserId
-                obj.setUserRole(rs.getString("UserRole")); // Get UserRole for comparison
+                obj.setUserId(rs.getString("UserId"));
+                if (fullDetails) {
+                    obj.setUserEmail(rs.getString("UserEmail"));
+                    obj.setUserPassword(rs.getString("UserPassword"));
+                    obj.setUserName(rs.getString("UserName"));
+                    obj.setUserAddress(rs.getString("UserAddress"));
+                    obj.setUserImage(rs.getString("UserImage"));
+                }
+                obj.setUserRole(rs.getString("UserRole"));
+                obj.setIdentityCard(rs.getString("IdentityCard"));
             }
         }
         return obj;
     }
 
-    public int deleteNotificationsByUserId(int userId) { // Keep as int if Notification uses int UserId
+    // Cập nhật phương thức createAccount
+    public int createAccount(Account account) throws ClassNotFoundException, SQLException {
         int count = 0;
-        try {
-            // Assuming you want to soft delete notifications as well
-            sql = "UPDATE Notification SET IsDeleted = 1 WHERE UserId = ?";
-            PreparedStatement pst = conn.prepareStatement(sql);
-            pst.setInt(1, userId); // Keep as setInt if userId for Notification is int
-            count = pst.executeUpdate();
-        } catch (SQLException ex) {
-            Logger.getLogger(AccountDAO.class.getName()).log(Level.SEVERE, null, ex);
+        if (isEmailExists(account.getUserEmail(), null)) {
+            LOGGER.warning("createAccount - Email already exists: " + account.getUserEmail());
+            return -1;
+        }
+        if (account.getIdentityCard() != null && !account.getIdentityCard().isEmpty() && isIdentityCardExists(account.getIdentityCard(), null)) {
+            LOGGER.warning("createAccount - IdentityCard already exists: " + account.getIdentityCard());
+            return -2;
+        }
+
+        String sql = "INSERT INTO Account (UserId, UserEmail, UserPassword, UserName, UserRole, IdentityCard, UserAddress, UserImage, IsDeleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection con = DBContext.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+            String userId = generateUniqueUserId(account.getUserRole());
+            account.setUserId(userId);
+
+            ps.setString(1, userId);
+            ps.setString(2, account.getUserEmail());
+            ps.setString(3, account.getUserPassword());
+            ps.setString(4, account.getUserName());
+            ps.setString(5, account.getUserRole());
+            ps.setString(6, account.getIdentityCard());
+            ps.setString(7, account.getUserAddress());
+            ps.setString(8, account.getUserImage());
+            ps.setBoolean(9, false);
+
+            count = ps.executeUpdate();
+            LOGGER.info("createAccount - Account created: " + userId);
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "createAccount - SQLException: ", e);
+            throw e;
         }
         return count;
     }
 
-    // Xóa mềm tài khoản (soft delete) - Thay đổi phương thức deleteAccount
-    public int deleteAccount(String id) { // Parameter id is String
+    // Cập nhật phương thức updateAccount
+    public int updateAccount(String oldId, Account newInfo) throws SQLException, ClassNotFoundException {
         int count = 0;
+        Connection con = null;
+        PreparedStatement pstAccount = null;
+
         try {
-            sql = "UPDATE Account SET IsDeleted = 1 WHERE UserId = ?"; // Đặt IsDeleted thành 1 thay vì xóa
-            PreparedStatement pst = conn.prepareStatement(sql);
-            pst.setString(1, id); // Set id as String
-            count = pst.executeUpdate();
+            con = DBContext.getConnection();
+            con.setAutoCommit(false);
+
+            Account existingAccount = getAccountById(oldId, false); // Chỉ lấy thông tin cơ bản
+
+            if (!existingAccount.getUserRole().equals(newInfo.getUserRole())) {
+                String newUserId = generateUniqueUserId(newInfo.getUserRole());
+                newInfo.setUserId(newUserId);
+            } else {
+                newInfo.setUserId(oldId);
+            }
+
+            if (!newInfo.getUserEmail().equals(existingAccount.getUserEmail()) && isEmailExists(newInfo.getUserEmail(), oldId)) {
+                LOGGER.warning("updateAccount - Email already exists: " + newInfo.getUserEmail());
+                return -1;
+            }
+
+            if (newInfo.getIdentityCard() != null && !newInfo.getIdentityCard().isEmpty()
+                    && !newInfo.getIdentityCard().equals(existingAccount.getIdentityCard())
+                    && isIdentityCardExists(newInfo.getIdentityCard(), oldId)) {
+                LOGGER.warning("updateAccount - IdentityCard already exists: " + newInfo.getIdentityCard());
+                return -2;
+            }
+
+            sql = "UPDATE Account SET UserId=?, UserEmail=?, UserPassword=?, UserName=?, UserRole=?, IdentityCard=?, UserAddress=?, UserImage=?, IsDeleted=? WHERE UserId=?";
+            pstAccount = con.prepareStatement(sql);
+            pstAccount.setString(1, newInfo.getUserId());
+            pstAccount.setString(2, newInfo.getUserEmail());
+            pstAccount.setString(3, newInfo.getUserPassword());
+            pstAccount.setString(4, newInfo.getUserName());
+            pstAccount.setString(5, newInfo.getUserRole());
+            pstAccount.setString(6, newInfo.getIdentityCard());
+            pstAccount.setString(7, newInfo.getUserAddress());
+            pstAccount.setString(8, newInfo.getUserImage());
+            pstAccount.setBoolean(9, newInfo.isIsDeleted());
+            pstAccount.setString(10, oldId);
+
+            count = pstAccount.executeUpdate();
+            con.commit();
+            LOGGER.info("updateAccount - Account updated successfully, affected rows: " + count);
         } catch (SQLException ex) {
-            LOGGER.log(Level.SEVERE, "Error delete account", ex); // Use the logger
+            if (con != null) {
+                con.rollback();
+            }
+            LOGGER.log(Level.SEVERE, "updateAccount - SQLException: ", ex);
+            throw ex;
+        } finally {
+            if (pstAccount != null) {
+                pstAccount.close();
+            }
+            if (con != null) {
+                con.setAutoCommit(true);
+                con.close();
+            }
         }
         return count;
     }
 
-    private static final Logger LOGGER = Logger.getLogger(AccountDAO.class.getName());
+    public int deleteAccount(String id) {
+        int count = 0;
+        try {
+            sql = "UPDATE Account SET IsDeleted = 1 WHERE UserId = ?";
+            PreparedStatement pst = conn.prepareStatement(sql);
+            pst.setString(1, id);
+            count = pst.executeUpdate();
+        } catch (SQLException ex) {
+            LOGGER.log(Level.SEVERE, "Error deleting account", ex);
+        }
+        return count;
+    }
 
     public List<String> getAllRoles() {
         List<String> roles = new ArrayList<>();
-        String sql = "SELECT DISTINCT UserRole FROM Account"; // Adjust table and column names as needed
-
-        try (Connection connection = DBContext.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(sql); ResultSet resultSet = preparedStatement.executeQuery()) {
-
-            while (resultSet.next()) {
-                roles.add(resultSet.getString("UserRole")); // Adjust column name as needed
+        String sql = "SELECT DISTINCT UserRole FROM Account";
+        try (Connection connection = DBContext.getConnection(); PreparedStatement ps = connection.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                roles.add(rs.getString("UserRole"));
             }
-
         } catch (SQLException | ClassNotFoundException e) {
             LOGGER.log(Level.SEVERE, "Error getting all roles", e);
             return null;
@@ -273,20 +278,16 @@ public class AccountDAO {
         return roles;
     }
 
-    public List<String> getUserIdsByRole(String role) { // Return List<String> now
+    public List<String> getUserIdsByRole(String role) {
         List<String> userIds = new ArrayList<>();
-        String sql = "SELECT UserId FROM Account WHERE UserRole = ?"; // Adjust table and column names as needed
-
-        try (Connection connection = DBContext.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-
-            preparedStatement.setString(1, role);
-
-            try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                while (resultSet.next()) {
-                    userIds.add(resultSet.getString("UserId")); // Use getString and add String to list
+        String sql = "SELECT UserId FROM Account WHERE UserRole = ?";
+        try (Connection connection = DBContext.getConnection(); PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, role);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    userIds.add(rs.getString("UserId"));
                 }
             }
-
         } catch (SQLException | ClassNotFoundException e) {
             LOGGER.log(Level.SEVERE, "Error getting user IDs by role", e);
             return null;

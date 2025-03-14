@@ -896,7 +896,7 @@
                             </div>
                             <div>
                                 <label for="EditFloorNumber">Number Of Floors</label>
-                                <input type="number" id="EditFloorNumber" name="FloorNumber" value="" min="1" required>
+                                <input type="number" id="EditFloorNumber" name="FloorNumber" value="" min="1" readonly>
                             </div>
                             <div>
                                 <label for="EditNumberOfSeats">Number Of Seats</label>
