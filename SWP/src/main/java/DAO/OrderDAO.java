@@ -21,10 +21,10 @@ public class OrderDAO {
         List<Order> orderList = new ArrayList<>();
         Connection conn = null;
         PreparedStatement pstmt = null;
-        java.sql.ResultSet rs = null;
+        ResultSet rs = null;
         try {
             conn = DBContext.getConnection();
-            String sql = "SELECT OrderId, UserId, CustomerId, OrderDate, OrderStatus, OrderType, OrderDescription, CouponId, TableId FROM [Order]";
+            String sql = "SELECT OrderId, UserId, CustomerId, OrderDate, OrderStatus, OrderType, OrderDescription, CouponId, TableId, CustomerPhone FROM [Order]";
             pstmt = conn.prepareStatement(sql);
             rs = pstmt.executeQuery();
             while (rs.next()) {
@@ -38,18 +38,13 @@ public class OrderDAO {
                 order.setOrderDescription(rs.getString("OrderDescription"));
                 order.setCouponId(rs.getString("CouponId"));
                 order.setTableId(rs.getString("TableId"));
+                order.setCustomerPhone(rs.getString("CustomerPhone"));
                 orderList.add(order);
             }
         } finally {
-            if (rs != null) {
-                rs.close();
-            }
-            if (pstmt != null) {
-                pstmt.close();
-            }
-            if (conn != null) {
-                conn.close();
-            }
+            if (rs != null) rs.close();
+            if (pstmt != null) pstmt.close();
+            if (conn != null) conn.close();
         }
         return orderList;
     }
@@ -57,7 +52,7 @@ public class OrderDAO {
     public Order getOrderById(String orderId) throws ClassNotFoundException {
         Order order = null;
         try (Connection conn = DBContext.getConnection()) {
-            String sql = "SELECT * FROM [Order] WHERE OrderId = ?";
+            String sql = "SELECT OrderId, UserId, CustomerId, OrderDate, OrderStatus, OrderType, OrderDescription, CouponId, TableId, CustomerPhone FROM [Order] WHERE OrderId = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, orderId);
             ResultSet rs = stmt.executeQuery();
@@ -73,6 +68,7 @@ public class OrderDAO {
                 order.setOrderDescription(rs.getString("OrderDescription"));
                 order.setCouponId(rs.getString("CouponId"));
                 order.setTableId(rs.getString("TableId"));
+                order.setCustomerPhone(rs.getString("CustomerPhone"));
                 order.setOrderDetails(getOrderDetailsByOrderId(orderId));
             }
         } catch (SQLException e) {
@@ -111,7 +107,7 @@ public class OrderDAO {
             conn = DBContext.getConnection();
             conn.setAutoCommit(false);
 
-            String sqlOrder = "INSERT INTO [Order] (OrderId, UserId, CustomerId, OrderDate, OrderStatus, OrderType, OrderDescription, CouponId, TableId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String sqlOrder = "INSERT INTO [Order] (OrderId, UserId, CustomerId, OrderDate, OrderStatus, OrderType, OrderDescription, CouponId, TableId, CustomerPhone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             pstmtOrder = conn.prepareStatement(sqlOrder);
             pstmtOrder.setString(1, order.getOrderId());
             pstmtOrder.setString(2, order.getUserId());
@@ -133,6 +129,11 @@ public class OrderDAO {
                 pstmtOrder.setString(9, order.getTableId());
             } else {
                 pstmtOrder.setNull(9, java.sql.Types.NVARCHAR);
+            }
+            if (order.getCustomerPhone() != null && !order.getCustomerPhone().isEmpty()) {
+                pstmtOrder.setString(10, order.getCustomerPhone());
+            } else {
+                pstmtOrder.setNull(10, java.sql.Types.NVARCHAR);
             }
             pstmtOrder.executeUpdate();
 
@@ -162,15 +163,9 @@ public class OrderDAO {
             }
             throw e;
         } finally {
-            if (pstmtOrderDetail != null) {
-                pstmtOrderDetail.close();
-            }
-            if (pstmtOrder != null) {
-                pstmtOrder.close();
-            }
-            if (conn != null) {
-                conn.close();
-            }
+            if (pstmtOrderDetail != null) pstmtOrderDetail.close();
+            if (pstmtOrder != null) pstmtOrder.close();
+            if (conn != null) conn.close();
         }
     }
 
@@ -178,7 +173,7 @@ public class OrderDAO {
         Connection conn = DBContext.getConnection();
         String sql = "SELECT TOP 1 OrderId FROM [Order] ORDER BY OrderId DESC";
         PreparedStatement pstmt = conn.prepareStatement(sql);
-        java.sql.ResultSet rs = pstmt.executeQuery();
+        ResultSet rs = pstmt.executeQuery();
         String nextId = "OR001";
         if (rs.next()) {
             String lastId = rs.getString("OrderId");
@@ -211,7 +206,7 @@ public class OrderDAO {
             conn = DBContext.getConnection();
             conn.setAutoCommit(false);
 
-            String sqlOrder = "UPDATE [Order] SET UserId = ?, CustomerId = ?, OrderDate = ?, OrderStatus = ?, OrderType = ?, OrderDescription = ?, CouponId = ?, TableId = ? WHERE OrderId = ?";
+            String sqlOrder = "UPDATE [Order] SET UserId = ?, CustomerId = ?, OrderDate = ?, OrderStatus = ?, OrderType = ?, OrderDescription = ?, CouponId = ?, TableId = ?, CustomerPhone = ? WHERE OrderId = ?";
             pstmtOrder = conn.prepareStatement(sqlOrder);
             pstmtOrder.setString(1, order.getUserId());
             if (order.getCustomerId() != null && !order.getCustomerId().isEmpty()) {
@@ -233,7 +228,12 @@ public class OrderDAO {
             } else {
                 pstmtOrder.setNull(8, java.sql.Types.NVARCHAR);
             }
-            pstmtOrder.setString(9, order.getOrderId());
+            if (order.getCustomerPhone() != null && !order.getCustomerPhone().isEmpty()) {
+                pstmtOrder.setString(9, order.getCustomerPhone());
+            } else {
+                pstmtOrder.setNull(9, java.sql.Types.NVARCHAR);
+            }
+            pstmtOrder.setString(10, order.getOrderId());
             pstmtOrder.executeUpdate();
 
             String sqlDeleteDetails = "DELETE FROM OrderDetail WHERE OrderId = ?";
@@ -265,18 +265,10 @@ public class OrderDAO {
             }
             throw e;
         } finally {
-            if (pstmtOrderDetail != null) {
-                pstmtOrderDetail.close();
-            }
-            if (pstmtDeleteDetails != null) {
-                pstmtDeleteDetails.close();
-            }
-            if (pstmtOrder != null) {
-                pstmtOrder.close();
-            }
-            if (conn != null) {
-                conn.close();
-            }
+            if (pstmtOrderDetail != null) pstmtOrderDetail.close();
+            if (pstmtDeleteDetails != null) pstmtDeleteDetails.close();
+            if (pstmtOrder != null) pstmtOrder.close();
+            if (conn != null) conn.close();
         }
     }
 
@@ -284,7 +276,7 @@ public class OrderDAO {
         List<OrderDetail> orderDetails = new ArrayList<>();
         Connection conn = null;
         PreparedStatement pstmt = null;
-        java.sql.ResultSet rs = null;
+        ResultSet rs = null;
         try {
             conn = DBContext.getConnection();
             String sql = "SELECT DishId, Quantity, Subtotal, DishName FROM OrderDetail WHERE OrderId = ?";
@@ -300,15 +292,9 @@ public class OrderDAO {
                 orderDetails.add(detail);
             }
         } finally {
-            if (rs != null) {
-                rs.close();
-            }
-            if (pstmt != null) {
-                pstmt.close();
-            }
-            if (conn != null) {
-                conn.close();
-            }
+            if (rs != null) rs.close();
+            if (pstmt != null) pstmt.close();
+            if (conn != null) conn.close();
         }
         return orderDetails;
     }
@@ -345,5 +331,137 @@ public class OrderDAO {
             pstmt.setDouble(4, orderDetail.getSubtotal());
             pstmt.executeUpdate();
         }
+    }
+
+    public void addOrderDetail(String orderId, OrderDetail detail) throws SQLException, ClassNotFoundException {
+        Connection conn = null;
+        PreparedStatement checkStmt = null;
+        PreparedStatement updateStmt = null;
+        PreparedStatement insertStmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = DBContext.getConnection();
+            conn.setAutoCommit(false);
+
+            String checkSql = "SELECT OrderDetailId, Quantity FROM OrderDetail WHERE OrderId = ? AND DishId = ?";
+            checkStmt = conn.prepareStatement(checkSql);
+            checkStmt.setString(1, orderId);
+            checkStmt.setString(2, detail.getDishId());
+            rs = checkStmt.executeQuery();
+
+            if (rs.next()) {
+                String orderDetailId = rs.getString("OrderDetailId");
+                int existingQuantity = rs.getInt("Quantity");
+                int newQuantity = existingQuantity + detail.getQuantity();
+
+                double dishPrice = getDishPrice(detail.getDishId(), conn);
+                double newSubtotal = dishPrice * newQuantity;
+
+                String updateSql = "UPDATE OrderDetail SET Quantity = ?, Subtotal = ? WHERE OrderDetailId = ?";
+                updateStmt = conn.prepareStatement(updateSql);
+                updateStmt.setInt(1, newQuantity);
+                updateStmt.setDouble(2, newSubtotal);
+                updateStmt.setString(3, orderDetailId);
+                updateStmt.executeUpdate();
+            } else {
+                String maxIdSql = "SELECT MAX(OrderDetailId) as MaxId FROM OrderDetail WHERE OrderId = ?";
+                PreparedStatement maxIdStmt = conn.prepareStatement(maxIdSql);
+                maxIdStmt.setString(1, orderId);
+                ResultSet maxIdRs = maxIdStmt.executeQuery();
+
+                int detailCounter = 1;
+                if (maxIdRs.next() && maxIdRs.getString("MaxId") != null) {
+                    String lastId = maxIdRs.getString("MaxId");
+                    detailCounter = Integer.parseInt(lastId.substring(lastId.length() - 3)) + 1;
+                }
+                maxIdRs.close();
+                maxIdStmt.close();
+
+                String orderDetailId = orderId + String.format("%03d", detailCounter);
+
+                String insertSql = "INSERT INTO OrderDetail (OrderDetailId, OrderId, DishId, Quantity, Subtotal, DishName) VALUES (?, ?, ?, ?, ?, ?)";
+                insertStmt = conn.prepareStatement(insertSql);
+                insertStmt.setString(1, orderDetailId);
+                insertStmt.setString(2, orderId);
+                insertStmt.setString(3, detail.getDishId());
+                insertStmt.setInt(4, detail.getQuantity());
+                insertStmt.setDouble(5, detail.getSubtotal());
+                insertStmt.setString(6, detail.getDishName());
+                insertStmt.executeUpdate();
+            }
+
+            updateOrderTotal(orderId, conn);
+
+            conn.commit();
+        } catch (SQLException | ClassNotFoundException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    logger.log(Level.SEVERE, "Failed to rollback transaction", ex);
+                }
+            }
+            throw e;
+        } finally {
+            if (rs != null) rs.close();
+            if (checkStmt != null) checkStmt.close();
+            if (updateStmt != null) updateStmt.close();
+            if (insertStmt != null) insertStmt.close();
+            if (conn != null) conn.close();
+        }
+    }
+
+    private double getDishPrice(String dishId, Connection conn) throws SQLException {
+        String sql = "SELECT DishPrice FROM Dish WHERE DishId = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, dishId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getDouble("DishPrice");
+            } else {
+                throw new SQLException("Dish not found: " + dishId);
+            }
+        }
+    }
+
+    private void updateOrderTotal(String orderId, Connection conn) throws SQLException {
+        String sql = "UPDATE [Order] SET Total = (SELECT SUM(Subtotal) FROM OrderDetail WHERE OrderId = ?) WHERE OrderId = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, orderId);
+            stmt.setString(2, orderId);
+            stmt.executeUpdate();
+        }
+    }
+
+    public void updateCustomerPhone(String orderId, String customerPhone) throws SQLException, ClassNotFoundException {
+        try (Connection conn = DBContext.getConnection()) {
+            String sql = "UPDATE [Order] SET CustomerPhone = ? WHERE OrderId = ?";
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, customerPhone);
+            pstmt.setString(2, orderId);
+            pstmt.executeUpdate();
+            logger.log(Level.INFO, "Updated customer phone for order {0} to {1}", new Object[]{orderId, customerPhone});
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error updating customer phone", e);
+            throw e;
+        }
+    }
+
+    public String getOrderIdByTableId(String tableId) throws SQLException, ClassNotFoundException {
+        String orderId = null;
+        String sql = "SELECT OrderId FROM [Order] WHERE TableId = ? AND OrderStatus = 'Pending'";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, tableId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    orderId = rs.getString("OrderId");
+                }
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(OrderDAO.class.getName()).log(Level.SEVERE, "Error fetching orderId by tableId", ex);
+            throw ex;
+        }
+        return orderId;
     }
 }

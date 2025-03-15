@@ -1,10 +1,12 @@
 package Controller.ManageOrder;
 
-import DAO.OrderDAO;
 import DAO.MenuDAO;
+import DAO.OrderDAO;
+import DAO.TableDAO;
 import Model.Order;
 import Model.OrderDetail;
 import Model.Dish;
+import Model.Table;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -13,7 +15,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @WebServlet("/CreateOrder")
@@ -22,7 +23,9 @@ public class CreateOrderController extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         OrderDAO orderDAO = new OrderDAO();
+        TableDAO tableDAO;
         try {
+            tableDAO = new TableDAO();
             Order order = new Order();
             order.setOrderId(orderDAO.generateNextOrderId());
             order.setUserId(request.getParameter("userId"));
@@ -53,6 +56,13 @@ public class CreateOrderController extends HttpServlet {
             order.setOrderDetails(details);
 
             orderDAO.CreateOrder(order);
+
+            Table table = tableDAO.getTableById(order.getTableId());
+            if (table != null) {
+                table.setTableStatus("Occupied");
+                tableDAO.updateTable(order.getTableId(), table);
+            }
+
             response.getWriter().write("success");
         } catch (Exception e) {
             e.printStackTrace();
