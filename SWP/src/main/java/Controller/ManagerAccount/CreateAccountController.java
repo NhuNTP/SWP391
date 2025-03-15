@@ -44,6 +44,7 @@ public class CreateAccountController extends HttpServlet {
             String UserRole = request.getParameter("UserRole");
             String IdentityCard = request.getParameter("IdentityCard");
             String UserAddress = request.getParameter("UserAddress");
+            String UserPhone = request.getParameter("UserPhone"); // Get UserPhone from request
 
             Part filePart = request.getPart("UserImage");
             String UserImage = null;
@@ -72,17 +73,17 @@ public class CreateAccountController extends HttpServlet {
                 }
             }
 
-            Account account = new Account(null, UserEmail, UserPassword, UserName, UserRole, IdentityCard, UserAddress, UserImage);
+            Account account = new Account(null, UserEmail, UserPassword, UserName, UserRole, IdentityCard, UserAddress, UserPhone, UserImage, false); // Include UserPhone in constructor
             AccountDAO dao = new AccountDAO();
 
-            // Sử dụng hàm gộp, truyền userIdToExclude = null vì không cần loại trừ tài khoản
+            // Check for email and identity card uniqueness, with userIdToExclude = null since it's a new account
             if (dao.isEmailExists(UserEmail, null)) {
-                jsonResponse.append("{\"success\":false,\"message\":\"Email đã tồn tại. Vui lòng nhập email khác.\"}");
+                jsonResponse.append("{\"success\":false,\"message\":\"Email already exists. Please enter a different email.\"}");
                 out.print(jsonResponse.toString());
                 return;
             }
             if (IdentityCard != null && !IdentityCard.isEmpty() && dao.isIdentityCardExists(IdentityCard, null)) {
-                jsonResponse.append("{\"success\":false,\"message\":\"Số CMND/CCCD đã tồn tại. Vui lòng nhập số khác.\"}");
+                jsonResponse.append("{\"success\":false,\"message\":\"Identity card/CCCD already exists. Please enter a different number.\"}");
                 out.print(jsonResponse.toString());
                 return;
             }
@@ -90,13 +91,14 @@ public class CreateAccountController extends HttpServlet {
             int count = dao.createAccount(account);
 
             if (count > 0) {
-                jsonResponse.append("{\"success\":true,\"message\":\"Tài khoản được tạo thành công!\"}");
+                // On success, return a response to close the modal and reload the page
+                jsonResponse.append("{\"success\":true,\"action\":\"closeAndReload\"}");
             } else {
-                jsonResponse.append("{\"success\":false,\"message\":\"Có lỗi xảy ra trong quá trình tạo tài khoản.\"}");
+                jsonResponse.append("{\"success\":false,\"message\":\"An error occurred while creating the account.\"}");
             }
             out.print(jsonResponse.toString());
         } catch (Exception e) {
-            jsonResponse.append("{\"success\":false,\"message\":\"Lỗi không xác định: ").append(escapeJson(e.getMessage())).append("\"}");
+            jsonResponse.append("{\"success\":false,\"message\":\"Unknown error: ").append(escapeJson(e.getMessage())).append("\"}");
             out.print(jsonResponse.toString());
         } finally {
             out.close();

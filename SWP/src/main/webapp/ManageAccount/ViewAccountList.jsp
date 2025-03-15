@@ -16,27 +16,38 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <title>Employee Account List - Admin Dashboard</title>
-        <script>
+        <%-- <script>
             function confirmDelete(userId, userName) {
-                if (confirm('Are you sure you want to delete the account with ID: ' + userId + ' - user name: ' + userName + '?')) {
-                    window.location.href = 'DeleteAccount?UserId=' + userId;
+                if (confirm('Are you sure you want to delete the account with ID: ' + userId + ' - User Name: ' + userName + '?')) {
+                    $.ajax({
+                        url: 'DeleteAccount',
+                        type: 'GET',
+                        data: {UserId: userId},
+                        success: function () {
+                            location.reload();
+                        },
+                        error: function (xhr, status, error) {
+                            alert("Error deleting account: " + error);
+                        }
+                    });
                 }
             }
 
-            function validateForm() {
-                let email = document.getElementById("UserEmail").value.trim();
-                let password = document.getElementById("UserPassword").value.trim();
-                let name = document.getElementById("UserName").value.trim();
-                let role = document.getElementById("UserRole").value;
-                let idCard = document.getElementById("IdentityCard").value.trim();
-                let address = document.getElementById("UserAddress").value.trim();
+            function validateCreateForm() {
+                let email = $("#UserEmail").val().trim();
+                let password = $("#UserPassword").val().trim();
+                let name = $("#UserName").val().trim();
+                let role = $("#UserRole").val();
+                let idCard = $("#IdentityCard").val().trim();
+                let address = $("#UserAddress").val().trim();
+                let phone = $("#UserPhone").val().trim();
 
-                if (!email || !password || !name || !role || !idCard || !address) {
-                    alert("Please complete all fields.");
+                if (!email || !password || !name || !role || !idCard || !address || !phone) {
+                    alert("Please fill in all required fields.");
                     return false;
                 }
                 if (!email.endsWith("@gmail.com")) {
-                    alert("Emails must end with '@gmail.com'.");
+                    alert("Email must end with '@gmail.com'.");
                     return false;
                 }
                 if (!/^\d{12}$/.test(idCard)) {
@@ -46,169 +57,202 @@
                 return true;
             }
 
-            function validateUpdateForm() {
-                let email = document.getElementById("EditUserEmail").value.trim();
-                let password = document.getElementById("EditUserPassword").value.trim();
-                let name = document.getElementById("EditUserName").value.trim();
-                let role = document.getElementById("EditUserRole").value;
-                let idCard = document.getElementById("EditIdentityCard").value.trim();
-                let address = document.getElementById("EditUserAddress").value.trim();
+            function validateUpdateDetailForm() {
+                let email = $("#DetailUserEmail").val().trim();
+                let password = $("#DetailUserPassword").val().trim();
+                let name = $("#DetailUserName").val().trim();
+                let role = $("#DetailUserRole").val();
+                let idCard = $("#DetailIdentityCard").val().trim();
+                let address = $("#DetailUserAddress").val().trim();
+                let phone = $("#DetailUserPhone").val().trim();
 
-                if (!email || !password || !name || !role || !idCard || !address) {
-                    alert("Vui lòng điền đầy đủ tất cả các trường.");
+                if (!email || !password || !name || !role || !idCard || !address || !phone) {
+                    alert("Please fill in all required fields.");
                     return false;
                 }
                 if (!email.endsWith("@gmail.com")) {
-                    alert("Email phải kết thúc bằng '@gmail.com'.");
+                    alert("Email must end with '@gmail.com'.");
                     return false;
                 }
                 if (!/^\d{12}$/.test(idCard)) {
-                    alert("Số CMND/CCCD phải đúng 12 chữ số.");
+                    alert("Identity Card must be exactly 12 digits.");
                     return false;
                 }
                 return true;
             }
 
-            // Hàm cập nhật danh sách tài khoản động
-            function refreshAccountList() {
-                $.ajax({
-                    url: "ViewAccountList",
-                    type: "GET",
-                    dataType: "json",
-                    success: function (data) {
-                        var tbody = $("table tbody");
-                        tbody.empty();
-
-                        if (data.length > 0) {
-                            data.forEach(function (account, index) {
-                                var row = "<tr>" +
-                                        "<td>" + (index + 1) + "</td>" +
-                                        "<td>" + account.userId + "</td>" +
-                                        "<td>" + (account.userImage ? '<img src="' + account.userImage + '" alt="' + account.userName + '" class="rounded-image">' : 'No Image') + "</td>" +
-                                        "<td>" + account.userEmail + "</td>" +
-                                        "<td>" + account.userPassword + "</td>" +
-                                        "<td>" + account.userName + "</td>" +
-                                        "<td>" + account.userRole + "</td>" +
-                                        "<td>" + account.identityCard + "</td>" +
-                                        "<td>" + account.userAddress + "</td>" +
-                                        "<td>" +
-                                        (account.userRole.toLowerCase() !== "admin" ?
-                                                '<a href="#" class="edit-employee-btn btn btn-primary btn-sm" ' +
-                                                'data-userid="' + account.userId + '" ' +
-                                                'data-useremail="' + account.userEmail + '" ' +
-                                                'data-username="' + account.userName + '" ' +
-                                                'data-userpassword="' + account.userPassword + '" ' +
-                                                'data-userrole="' + account.userRole + '" ' +
-                                                'data-identitycard="' + account.identityCard + '" ' +
-                                                'data-useraddress="' + account.userAddress + '" ' +
-                                                'data-userimage="' + account.userImage + '">' +
-                                                '<i class="fas fa-edit"></i> Edit</a>' +
-                                                ' <a href="#" onclick="confirmDelete(\'' + account.userId + '\', \'' + account.userName + '\')" class="btn btn-danger btn-sm">' +
-                                                '<i class="fas fa-trash-alt"></i> Delete</a>' : '') +
-                                        "</td>" +
-                                        "</tr>";
-                                tbody.append(row);
-                            });
-
-                            // Gắn lại sự kiện cho các nút Edit sau khi cập nhật bảng
-                            attachEditButtonEvents();
-                        } else {
-                            tbody.append('<tr><td colspan="10">No accounts found.</td></tr>');
-                        }
-                    },
-                    error: function () {
-                        alert("Không thể tải lại danh sách tài khoản.");
-                    }
-                });
-            }
-
-            // Hàm gắn sự kiện cho các nút Edit
-            function attachEditButtonEvents() {
-                var editButtons = document.querySelectorAll(".edit-employee-btn");
-                editButtons.forEach(function (btn) {
-                    btn.onclick = function (e) {
-                        e.preventDefault();
-                        document.getElementById('EditUserIdHidden').value = btn.dataset.userid;
-                        document.getElementById('EditUserId').value = btn.dataset.userid;
-                        document.getElementById('EditUserEmail').value = btn.dataset.useremail;
-                        document.getElementById('EditUserPassword').value = btn.dataset.userpassword;
-                        document.getElementById('EditUserName').value = btn.dataset.username;
-                        document.getElementById('EditUserRole').value = btn.dataset.userrole;
-                        document.getElementById('EditIdentityCard').value = btn.dataset.identitycard;
-                        document.getElementById('EditUserAddress').value = btn.dataset.useraddress;
-                        document.getElementById('EditCurrentImage').src = '<%= request.getContextPath()%>/' + btn.dataset.userimage;
-                        document.getElementById('EditOldImagePath').value = btn.dataset.userimage;
-                        document.getElementById("editEmployeeModal").style.display = "block";
-                    };
-                });
-            }
-
-            // Gửi form tạo tài khoản bằng AJAX
             function submitCreateForm(event) {
                 event.preventDefault();
-                if (!validateForm())
+                if (!validateCreateForm())
                     return false;
 
-                var formData = new FormData(document.getElementById("createAccountForm"));
+                var formData = new FormData($("#createAccountForm")[0]);
                 $.ajax({
                     url: "CreateAccount",
                     type: "POST",
                     data: formData,
                     contentType: false,
                     processData: false,
-                    dataType: "json", // Đảm bảo phản hồi được parse thành JSON
+                    dataType: "json",
                     success: function (response) {
                         if (response.success) {
-                            // Thành công: Đóng modal và cập nhật danh sách
-                            alert(response.message);
-                            document.getElementById("createEmployeeModal").style.display = "none";
-                            refreshAccountList();
+                            alert("Account created successfully!");
+                            $("#createEmployeeModal").hide();
+                            location.reload();
                         } else {
-                            // Lỗi: Hiển thị thông báo và giữ modal mở
-                            alert(response.message);
-                            // Modal vẫn mở, không cần làm gì thêm vì nó không đóng
+                            alert(response.message || "Failed to create account.");
                         }
                     },
                     error: function (xhr, status, error) {
-                        alert("Đã xảy ra lỗi khi gửi yêu cầu: " + error);
+                        alert("Error creating account: " + error);
                     }
                 });
                 return false;
             }
 
-            // Gửi form cập nhật tài khoản bằng AJAX
-            function submitUpdateForm(event) {
+            function submitUpdateDetailForm(event) {
                 event.preventDefault();
-                if (!validateUpdateForm())
+                if (!validateUpdateDetailForm())
                     return false;
 
-                var formData = new FormData(document.getElementById("updateAccountForm"));
+                var formData = new FormData($("#updateAccountDetailForm")[0]);
                 $.ajax({
                     url: "UpdateAccount",
                     type: "POST",
                     data: formData,
                     contentType: false,
                     processData: false,
-                    dataType: "json", // Đảm bảo phản hồi được parse thành JSON
+                    dataType: "json",
                     success: function (response) {
                         if (response.success) {
-                            // Thành công: Đóng modal và cập nhật danh sách
-                            alert(response.message);
-                            document.getElementById("editEmployeeModal").style.display = "none";
-                            refreshAccountList();
+                            alert("Account updated successfully!");
+                            $("#viewAccountDetailModal").hide();
+                            location.reload();
                         } else {
-                            // Lỗi: Hiển thị thông báo và giữ modal mở
-                            alert(response.message);
-                            // Modal vẫn mở, không cần làm gì thêm vì nó không đóng
+                            alert(response.message || "Failed to update account.");
                         }
                     },
                     error: function (xhr, status, error) {
-                        alert("Đã xảy ra lỗi khi gửi yêu cầu: " + error);
+                        alert("Error updating account: " + error);
                     }
                 });
                 return false;
             }
-        </script>
+
+            function checkImageSelected() {
+                var imageInput = $("#DetailUserImage")[0];
+                var noImageMessage = $("#noImageMessage");
+                var currentImage = $("#DetailCurrentImage");
+
+                if (imageInput.files.length === 0 && currentImage.attr('src') === '') {
+                    noImageMessage.show();
+                    currentImage.hide();
+                } else {
+                    noImageMessage.hide();
+                    currentImage.show();
+                }
+            }
+
+            $(document).ready(function () {
+                var createModal = $("#createEmployeeModal");
+                var detailModal = $("#viewAccountDetailModal");
+                var createBtn = $(".add-employee-btn");
+                var detailButtons = $(".view-detail-btn");
+
+                // Override default HTML5 validation messages to English
+                function setCustomValidationMessages(formId) {
+                    $(`#${formId} [required]`).each(function () {
+                        $(this).on('invalid', function (e) {
+                            e.preventDefault();
+                            this.setCustomValidity('Please fill in this field.');
+                        });
+                        $(this).on('input', function () {
+                            this.setCustomValidity('');
+                        });
+                    });
+                }
+
+                // Apply custom validation messages to both forms
+                setCustomValidationMessages('createAccountForm');
+                setCustomValidationMessages('updateAccountDetailForm');
+
+                createBtn.on("click", function () {
+                    createModal.show();
+                    $("#createAccountForm")[0].reset();
+                    $("#createNoImageMessage").show();
+                    $("#createCurrentImage").hide();
+                });
+
+                detailButtons.on("click", function (e) {
+                    e.preventDefault();
+                    var btn = $(this);
+                    var isAdmin = btn.data("userrole").toLowerCase() === "admin";
+
+                    $("#DetailUserIdHidden").val(btn.data("userid"));
+                    $("#DetailUserRoleHidden").val(btn.data("userrole"));
+                    $("#DetailUserId").val(btn.data("userid"));
+                    $("#DetailUserEmail").val(btn.data("useremail"));
+                    $("#DetailUserPassword").val(btn.data("userpassword"));
+                    $("#DetailUserName").val(btn.data("username"));
+                    $("#DetailUserRole").val(btn.data("userrole"));
+                    $("#DetailIdentityCard").val(btn.data("identitycard"));
+                    $("#DetailUserAddress").val(btn.data("useraddress"));
+                    $("#DetailUserPhone").val(btn.data("userphone") || '');
+                    $("#DetailCurrentImage").attr("src", btn.data("userimage") || '');
+                    $("#DetailOldImagePath").val(btn.data("userimage") || '');
+
+                    $("#DetailUserEmail, #DetailUserPassword, #DetailUserName, #DetailUserRole, #DetailIdentityCard, #DetailUserAddress, #DetailUserPhone, #DetailUserImage")
+                            .prop("disabled", isAdmin);
+
+                    var modalActions = $("#modalActions");
+                    modalActions.empty();
+                    if (isAdmin) {
+                        modalActions.append('<button type="button" class="close-button" onclick="$(\'#viewAccountDetailModal\').hide();">Close</button>');
+                    } else {
+                        modalActions.append('<input type="submit" value="Update">');
+                        modalActions.append('<button type="button" class="delete-button" id="deleteAccountBtn">Delete</button>');
+                        modalActions.append('<button type="button" class="close-button" onclick="$(\'#viewAccountDetailModal\').hide();">Cancel</button>');
+
+                        $("#deleteAccountBtn").off("click").on("click", function () {
+                            confirmDelete(btn.data("userid"), btn.data("username"));
+                        });
+                    }
+
+                    detailModal.show();
+                    checkImageSelected();
+                });
+
+                $("#createAccountForm").submit(submitCreateForm);
+                $("#updateAccountDetailForm").submit(submitUpdateDetailForm);
+
+                $(window).on("click", function (event) {
+                    if (event.target == createModal[0])
+                        createModal.hide();
+                    if (event.target == detailModal[0])
+                        detailModal.hide();
+                });
+
+                $("#searchInput").on("keyup", filterTable);
+                $("#roleFilter").on("change", filterTable);
+
+                function filterTable() {
+                    const searchText = $("#searchInput").val().toLowerCase();
+                    const selectedRole = $("#roleFilter").val();
+                    $("table tbody tr").each(function () {
+                        const id = $(this).find("td:nth-child(2)").text().toLowerCase();
+                        const name = $(this).find("td:nth-child(3)").text().toLowerCase();
+                        const email = $(this).find("td:nth-child(4)").text().toLowerCase();
+                        const role = $(this).find("td:nth-child(5)").text();
+
+                        let matchesSearch = id.includes(searchText) || name.includes(searchText) || email.includes(searchText);
+                        let matchesRole = selectedRole === '' || role === selectedRole;
+
+                        $(this).css("display", (matchesSearch && matchesRole) ? '' : 'none');
+                    });
+                }
+            });
+        </script> --%>
+
         <link rel="stylesheet" href="style.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -617,7 +661,7 @@
             }
             /* Kết thúc nội dung CSS */
 
-            /* CSS cho Modal - GIỮ NGUYÊN */
+            /* CSS cho Modal */
             .modal {
                 display: none;
                 position: fixed;
@@ -635,7 +679,7 @@
             .modal-content {
                 background-color: #fefefe;
                 margin-top: 4%;
-                margin-left: auto; /* Giữ margin-left và margin-right là auto để căn giữa ngang */
+                margin-left: auto;
                 margin-right: auto;
                 padding: 20px;
                 border: 1px solid #888;
@@ -681,19 +725,21 @@
                 box-sizing: border-box;
                 font-size: 14px;
             }
+
             .modal-actions {
                 text-align: right;
                 margin-top: 20px;
             }
 
             .modal-actions input[type="submit"],
-            .modal-actions button.close-button {
+            .modal-actions button {
                 padding: 10px 20px;
                 border: none;
                 border-radius: 5px;
                 cursor: pointer;
                 font-size: 14px;
-                margin-left: 10px; /* Khoảng cách giữa các nút */
+                margin-left: 10px;
+                transition: background-color 0.3s ease;
             }
 
             .modal-actions input[type="submit"] {
@@ -701,11 +747,18 @@
                 color: white;
             }
 
+            .modal-actions input[type="submit"]:hover {
+                background-color: #0056b3;
+            }
+
             .modal-actions button.close-button {
-                background-color: #dc3545;
+                background-color: #6c757d; /* Gray for "Close" button */
                 color: white;
             }
 
+            .modal-actions button.close-button:hover {
+                background-color: #5a6268;
+            }
 
             .card-stats {
                 background: linear-gradient(to right, #4CAF50, #81C784);
@@ -715,52 +768,68 @@
             .card-stats i {
                 font-size: 2rem;
             }
-            .btn-edit {
-                background-color: #007bff; /* Blue color for edit */
+
+            /* Updated styles for buttons */
+            .btn-detail {
+                background-color: #17a2b8; /* Cyan color for "View Detail" */
                 color: white;
                 border: none;
-                padding: 5px 10px;
+                padding: 8px 15px;
                 border-radius: 5px;
                 cursor: pointer;
-                text-decoration: none; /* Remove underline if it's an <a> tag */
-                display: inline-flex; /* To align icon and text */
+                text-decoration: none;
+                display: inline-flex;
                 align-items: center;
                 justify-content: center;
+                transition: background-color 0.3s ease;
             }
 
-            .btn-edit:hover {
-                background-color: #0056b3; /* Darker blue on hover */
+            .btn-detail:hover {
+                background-color: #138496; /* Darker cyan on hover */
             }
 
             .btn-delete {
-                background-color: #dc3545; /* Red color for delete */
+                background-color: #dc3545; /* Red color for "Delete" */
                 color: white;
                 border: none;
-                padding: 5px 10px;
+                padding: 8px 15px;
                 border-radius: 5px;
                 cursor: pointer;
-                text-decoration: none; /* Remove underline if it's an <a> tag */
-                display: inline-flex; /* To align icon and text */
+                text-decoration: none;
+                display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                margin-left: 5px; /* Add some spacing between buttons */
+                margin-left: 5px;
+                transition: background-color 0.3s ease;
             }
 
             .btn-delete:hover {
                 background-color: #c82333; /* Darker red on hover */
             }
 
-            .btn-edit i, .btn-delete i {
-                margin-right: 5px; /* Spacing between icon and text */
+            /* Style for the delete button in the modal */
+            .modal-actions .delete-button {
+                background-color: #dc3545; /* Red color for "Delete" in modal */
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 14px;
+                margin-left: 10px;
+                transition: background-color 0.3s ease;
+            }
+
+            .modal-actions .delete-button:hover {
+                background-color: #c82333; /* Darker red on hover */
             }
 
             .button-container {
-                display: flex; /* Kích hoạt Flexbox cho container */
-                flex-direction: row; /* Sắp xếp các nút theo hàng ngang */
-                align-items: center; /* Căn chỉnh các nút theo chiều dọc (tùy chọn) */
-                gap: 5px; /* Khoảng cách giữa các nút (tùy chỉnh) */
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 5px;
             }
-
 
             /* Basic table styling for better look */
             .employee-grid table {
@@ -781,30 +850,31 @@
             }
 
             .employee-grid tbody tr:nth-child(even) {
-                background-color: #f9f9f9; /* Optional: Even row highlight */
+                background-color: #f9f9f9;
             }
 
             .employee-grid tbody tr:hover {
-                background-color: #f0f0f0; /* Optional: Hover effect */
+                background-color: #f0f0f0;
             }
 
             .sidebar .nav-link {
-                font-size: 0.9rem; /* Hoặc 16px, tùy vào AdminDashboard.jsp */
+                font-size: 0.9rem;
             }
 
-            .sidebar h4{
+            .sidebar h4 {
                 font-size: 1.5rem;
             }
 
             .table-bordered {
-                border-radius: 20px; /* Bo tròn viền ngoài của bảng */
+                border-radius: 20px;
             }
+
             .rounded-image {
-                width: 100px;  /* Giữ nguyên kích thước, hoặc điều chỉnh nếu cần */
+                width: 100px;
                 height: 100px;
-                border-radius: 50%; /* Làm tròn ảnh */
-                object-fit: cover; /* Đảm bảo ảnh lấp đầy khung tròn */
-                object-position: center; /* Căn giữa ảnh */
+                border-radius: 50%;
+                object-fit: cover;
+                object-position: center;
             }
 
             /* Style phân trang */
@@ -833,6 +903,30 @@
                 color: white;
             }
 
+            .custom-file-upload {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .btn.btn-secondary {
+                padding: 8px 16px;
+                background-color: #007bff;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+
+            .btn.btn-secondary:hover {
+                background-color: #0056b3;
+            }
+
+            #createFileNameDisplay, #updateFileNameDisplay {
+                font-size: 14px;
+                color: #555;
+            }
+
         </style>
     </head>
     <body>
@@ -859,190 +953,144 @@
             </div>
 
             <!-- Main Content -->
-            <div class="col-md-10 bg-white p-3 main-content-area">
-                <section class="main-content">
-                    <div class="container-fluid">
-                        <div class="text-left mb-4">
-                            <h4>Employee Management</h4>
-                        </div>
-                        <div class="content-header">
-                            <div class="search-filter">
-                                <div class="search-bar">
-                                    <input type="text" id="searchInput" placeholder="Search">  <!-- Thêm id="searchInput" -->
-                                </div>
-                                <div class="filter-bar">
-                                    <select id="roleFilter">
-                                        <option value="">All Roles</option>  <!-- Thêm option "All Roles" -->
-                                        <option value="Admin">Admin</option>
-                                        <option value="Waiter">Waiter</option>
-                                        <option value="Manager">Manager</option>
-                                        <option value="Kitchen staff">Kitchen staff</option>
-                                        <option value="Cashier">Cashier</option>
-                                    </select>
-                                </div>
+            <div class="col-md-10 bg-white p-3 content-area">
+                <div class="container-fluid">
+                    <div class="text-left mb-4">
+                        <h4>Employee Management</h4>
+                    </div>
+                    <div class="content-header">
+                        <div class="search-filter">
+                            <div class="search-bar">
+                                <input type="text" id="searchInput" placeholder="Search">
                             </div>
-                            <div class="header-buttons">
-                                <button class="add-employee-btn"><i class="far fa-plus"></i> Employee </button>
+                            <div class="filter-bar">
+                                <select id="roleFilter">
+                                    <option value="">All Roles</option>
+                                    <option value="Admin">Admin</option>
+                                    <option value="Manager">Manager</option>
+                                    <option value="Cashier">Cashier</option>
+                                    <option value="Waiter">Waiter</option>
+                                    <option value="Kitchen staff">Kitchen staff</option>
+                                </select>
                             </div>
                         </div>
-                        <div class="employee-grid">
-                            <table class="table table-striped table-bordered table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>No.</th>
-                                        <th>ID</th>
-                                        <th>Image</th>
-                                        <th>Account Email</th>
-                                        <th>Account Password</th>
-                                        <th>Account Name</th>
-                                        <th>Account Role</th>
-                                        <th>Identity Card</th>
-                                        <th>User Address</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <%
-                                        List<Account> accounts = (List<Account>) request.getAttribute("accountList");
-                                        int pageSize = 4; // Số tài khoản trên mỗi trang
-                                        int totalAccounts = (accounts != null) ? accounts.size() : 0;
-                                        int totalPages = (int) Math.ceil((double) totalAccounts / pageSize);
-                                        int currentPage = 1; // Mặc định là trang 1
+                        <div class="header-buttons">
+                            <button class="add-employee-btn"><i class="far fa-plus"></i> Employee</button>
+                        </div>
+                    </div>
+                    <div class="employee-grid">
+                        <table class="table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>No.</th>
+                                    <th>User ID</th>
+                                    <th>User Name</th>
+                                    <th>User Email</th>
+                                    <th>User Role</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <%
+                                    List<Account> accounts = (List<Account>) request.getAttribute("accountList");
+                                    int pageSize = 4;
+                                    int totalAccounts = (accounts != null) ? accounts.size() : 0;
+                                    int totalPages = (int) Math.ceil((double) totalAccounts / pageSize);
+                                    int currentPage = 1;
 
-                                        // Lấy trang hiện tại từ request
-                                        String pageParam = request.getParameter("page");
-                                        if (pageParam != null && !pageParam.isEmpty()) {
-                                            try {
-                                                currentPage = Integer.parseInt(pageParam);
-                                                if (currentPage < 1) {
-                                                    currentPage = 1;
-                                                }
-                                                if (currentPage > totalPages) {
-                                                    currentPage = totalPages;
-                                                }
-                                            } catch (NumberFormatException e) {
+                                    String pageParam = request.getParameter("page");
+                                    if (pageParam != null && !pageParam.isEmpty()) {
+                                        try {
+                                            currentPage = Integer.parseInt(pageParam);
+                                            if (currentPage < 1) {
                                                 currentPage = 1;
                                             }
+                                            if (currentPage > totalPages) {
+                                                currentPage = totalPages;
+                                            }
+                                        } catch (NumberFormatException e) {
+                                            currentPage = 1;
                                         }
+                                    }
 
-                                        // Xác định phạm vi hiển thị
-                                        int startIndex = (currentPage - 1) * pageSize;
-                                        int endIndex = Math.min(startIndex + pageSize, totalAccounts);
-                                        List<Account> paginatedAccounts = (accounts != null) ? accounts.subList(startIndex, endIndex) : null;
+                                    int startIndex = (currentPage - 1) * pageSize;
+                                    int endIndex = Math.min(startIndex + pageSize, totalAccounts);
+                                    List<Account> paginatedAccounts = (accounts != null) ? accounts.subList(startIndex, endIndex) : null;
 
-                                        if (paginatedAccounts != null && !paginatedAccounts.isEmpty()) {
-                                            int counter = startIndex + 1;
-                                            for (Account account : paginatedAccounts) {
-                                    %>
-                                    <tr>
-                                        <td><%= counter++%></td>
-                                        <td><%= account.getUserId()%></td>
-                                        <td>
-                                            <%
-                                                String imagePath = account.getUserImage();
-                                                if (imagePath != null && !imagePath.trim().isEmpty()) {
-                                            %>
-                                            <img src="<%= imagePath%>" alt="<%= account.getUserName()%> " class="rounded-image">
-                                            <%
-                                            } else {
-                                            %>
-                                            No Image
-                                            <%
-                                                }
-                                            %>
-                                        </td>
-                                        <td><%= account.getUserEmail()%></td>
-                                        <td><%= account.getUserPassword()%></td> 
-                                        <td><%= account.getUserName()%></td>
-                                        <td><%= account.getUserRole()%></td>
-                                        <td><%= account.getIdentityCard()%></td>
-                                        <td><%= account.getUserAddress()%></td>
-                                        <td >
-                                            <% if (!account.getUserRole().equalsIgnoreCase("admin")) {%>
-                                            <div class="button-container"> <%-- Thêm div container với class="button-container" --%>
-                                                <a href="#" class="edit-employee-btn btn-edit"
-                                                   data-userid="<%=account.getUserId()%>"
-                                                   data-useremail="<%=account.getUserEmail()%>"
-                                                   data-username="<%=account.getUserName()%>"
-                                                   data-userpassword="<%=account.getUserPassword()%>"
-                                                   data-userrole="<%=account.getUserRole()%>"
-                                                   data-identitycard="<%=account.getIdentityCard()%>"
-                                                   data-useraddress="<%=account.getUserAddress()%>"
-                                                   data-userimage="<%=account.getUserImage()%>">
-                                                    <i class="fas fa-edit"></i> Edit
-                                                </a>
-                                                <a href="#" onclick="confirmDelete('<%= account.getUserId()%>', '<%= account.getUserName()%>')" class="btn-delete">
-                                                    <i class="fas fa-trash-alt"></i> Delete
-                                                </a>
-                                            </div> <%-- Đóng div container --%>
-                                            <% } %>
-                                        </td>
-                                    </tr>
-                                    <%
-                                        }
-                                    } else {
-                                    %>
-                                    <tr>
-                                        <td colspan="10">
-                                            <div class="no-data">
-                                                <i class="fal fa-user"></i>
-                                                <span>
-                                                    <% if (request.getParameter("search") != null) { %>
-                                                    Can not find result.
-                                                    <% } else { %>
-                                                    NOT ACCOUNT HERE. CLICK <a href="#">HERE</a> TO ADD NEW EMPLOYEE.
-                                                    <% } %>
-                                                </span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <%
-                                        }
-                                    %>
-                                </tbody>
-                            </table>
-                        </div>  
+                                    if (paginatedAccounts != null && !paginatedAccounts.isEmpty()) {
+                                        int counter = startIndex + 1;
+                                        for (Account account : paginatedAccounts) {
+                                %>
+                                <tr>
+                                    <td><%= counter++%></td>
+                                    <td><%= account.getUserId()%></td>
+                                    <td><%= account.getUserName()%></td>
+                                    <td><%= account.getUserEmail()%></td>
+                                    <td><%= account.getUserRole()%></td>
+                                    <td>
+                                        <a href="#" class="btn-detail view-detail-btn"
+                                           data-userid="<%= account.getUserId()%>"
+                                           data-useremail="<%= account.getUserEmail()%>"
+                                           data-userpassword="<%= account.getUserPassword()%>"
+                                           data-username="<%= account.getUserName()%>"
+                                           data-userrole="<%= account.getUserRole()%>"
+                                           data-identitycard="<%= account.getIdentityCard()%>"
+                                           data-useraddress="<%= account.getUserAddress()%>"
+                                           data-userphone="<%= account.getUserPhone()%>"
+                                           data-userimage="<%= account.getUserImage()%>">View Profile</a>
+                                        <% if (!account.getUserRole().equalsIgnoreCase("Admin")) {%>
+                                        <a href="#" onclick="confirmDelete('<%= account.getUserId()%>', '<%= account.getUserName()%>')" class="btn-delete">Delete</a>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                                <%
+                                    }
+                                } else {
+                                %>
+                                <tr><td colspan="6">No accounts found.</td></tr>
+                                <%
+                                    }
+                                %>
+                            </tbody>
+                        </table>
+                    </div>
 
-                        <%-- Phân trang --%>
-                        <% if (totalPages > 1) { %>
-                        <ul class="pagination">
-                            <%-- Nút Previous --%>
-                            <% if (currentPage > 1) {%>
-                            <li><a href="?page=<%= currentPage - 1%>">Back</a></li>
-                                <% } %>
-
-                            <%-- Các số trang --%>
+                    <!-- Pagination -->
+                    <% if (totalPages > 1) { %>
+                    <ul class="pagination">
+                        <% if (currentPage > 1) {%>
+                        <li><a href="?page=<%= currentPage - 1%>">Back</a></li>
+                            <% } %>
                             <% for (int i = 1; i <= totalPages; i++) {%>
-                            <li><a href="?page=<%= i%>" <% if (currentPage == i) { %>class="active"<% }%>><%= i%></a></li>
-                                <% } %>
-
-                            <%-- Nút Next --%>
+                        <li><a href="?page=<%= i%>" <% if (currentPage == i) { %>class="active"<% }%>><%= i%></a></li>
+                            <% } %>
                             <% if (currentPage < totalPages) {%>
-                            <li><a href="?page=<%= currentPage + 1%>">Next</a></li>
-                                <% } %>
-                        </ul>
-                        <% }%>                
-                </section>
+                        <li><a href="?page=<%= currentPage + 1%>">Next</a></li>
+                            <% } %>
+                    </ul>
+                    <% }%>
+                </div>
             </div>
         </div>
+
         <!-- Modal Create Employee Account -->
         <div id="createEmployeeModal" class="modal">
             <div class="modal-content">
-                <span class="close-button">×</span>
+                <span class="close-button" onclick="$('#createEmployeeModal').hide();">×</span>
                 <h2>Create New Employee Account</h2>
                 <div class="modal-form-container">
-                    <form id="createAccountForm" enctype="multipart/form-data" onsubmit="return submitCreateForm(event)">
+                    <form id="createAccountForm" enctype="multipart/form-data">
                         <div>
                             <label for="UserEmail">Email Address</label>
-                            <input type="email" id="UserEmail" name="UserEmail" value="" placeholder="Enter email" required>
+                            <input type="email" id="UserEmail" name="UserEmail" placeholder="Enter email" required>
                         </div>
                         <div>
                             <label for="UserPassword">Password</label>
-                            <input type="password" id="UserPassword" name="UserPassword" value="" placeholder="Password" required>
+                            <input type="password" id="UserPassword" name="UserPassword" placeholder="Enter password" required>
                         </div>
                         <div>
                             <label for="UserName">Full Name</label>
-                            <input type="text" id="UserName" name="UserName" value="" placeholder="Enter full name" required>
+                            <input type="text" id="UserName" name="UserName" placeholder="Enter full name" required>
                         </div>
                         <div>
                             <label for="UserRole">Role</label>
@@ -1055,61 +1103,77 @@
                         </div>
                         <div>
                             <label for="IdentityCard">Identity Card (12 digits)</label>
-                            <input type="text" id="IdentityCard" name="IdentityCard" value="" placeholder="Enter 12-digit ID Card number" required>
+                            <input type="text" id="IdentityCard" name="IdentityCard" placeholder="Enter 12-digit ID card number" required>
                         </div>
                         <div>
                             <label for="UserAddress">Address</label>
-                            <input type="text" id="UserAddress" name="UserAddress" value="" placeholder="Enter address" required>
+                            <input type="text" id="UserAddress" name="UserAddress" placeholder="Enter address" required>
+                        </div>
+                        <div>
+                            <label for="UserPhone">Phone</label>
+                            <input type="text" id="UserPhone" name="UserPhone" placeholder="Enter phone number" required>
                         </div>
                         <div>
                             <label for="UserImage">Profile Image</label>
-                            <input type="file" id="UserImage" name="UserImage">
+                            <img id="createCurrentImage" src="" alt="Profile Image" class="rounded-image" style="display:none;">
+                            <p id="createNoImageMessage" style="color: gray;">No image selected</p>
+                            <div class="custom-file-upload">
+                                <input type="file" id="UserImage" name="UserImage" onchange="checkImageSelected('create')" accept="image/*" style="display: none;">
+                                <button type="button" id="createCustomFileButton" class="btn btn-secondary">Choose File</button>
+                                <span id="createFileNameDisplay">No file chosen</span>
+                            </div>
                         </div>
                         <div class="modal-actions">
                             <input type="submit" value="Create Account">
-                            <button type="button" class="close-button">Cancel</button>
+                            <button type="button" class="close-button" onclick="$('#createEmployeeModal').hide();">Cancel</button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
 
-        <!-- Modal Edit Employee Account -->
-        <div id="editEmployeeModal" class="modal">
+        <!-- Modal View Account Detail -->
+        <div id="viewAccountDetailModal" class="modal">
             <div class="modal-content">
-                <span class="close-button">×</span>
-                <h2>Edit Employee Account</h2>
+                <span class="close-button" onclick="$('#viewAccountDetailModal').hide();">×</span>
+                <h2>Account Detail</h2>
                 <div class="modal-form-container">
-                    <form id="updateAccountForm" enctype="multipart/form-data" onsubmit="return submitUpdateForm(event)">
-                        <input type="hidden" id="EditUserIdHidden" name="UserIdHidden" value="">
+                    <form id="updateAccountDetailForm" enctype="multipart/form-data">
+                        <input type="hidden" id="DetailUserIdHidden" name="UserIdHidden">
+                        <input type="hidden" id="DetailUserRoleHidden" name="UserRoleHidden">
                         <div>
                             <label>Current Image</label>
-                            <img id="EditCurrentImage" src="" alt="Current Image" class="rounded-image">
+                            <img id="DetailCurrentImage" src="" alt="Current Image" class="rounded-image">
+                            <p id="noImageMessage" style="display:none; color: gray;">No image selected</p>
                         </div>
                         <div>
-                            <label for="EditUserImage">Update Profile Image</label>
-                            <input type="file" id="EditUserImage" name="UserImage">
-                            <input type="hidden" name="oldImagePath" id="EditOldImagePath" value="">
+                            <label for="DetailUserImage">Update Image</label>
+                            <div class="custom-file-upload">
+                                <input type="file" id="DetailUserImage" name="UserImage" onchange="checkImageSelected('update')" accept="image/*" style="display: none;">
+                                <button type="button" id="updateCustomFileButton" class="btn btn-secondary">Choose File</button>
+                                <span id="updateFileNameDisplay">No file chosen</span>
+                            </div>
+                            <input type="hidden" name="oldImagePath" id="DetailOldImagePath">
                         </div>
                         <div>
-                            <label for="EditUserId">User ID</label>
-                            <input type="text" id="EditUserId" name="UserId" value="" readonly>
+                            <label for="DetailUserId">User ID</label>
+                            <input type="text" id="DetailUserId" name="UserId" readonly>
                         </div>
                         <div>
-                            <label for="EditUserEmail">Email Address</label>
-                            <input type="email" id="EditUserEmail" name="UserEmail" value="" required>
+                            <label for="DetailUserEmail">Email Address</label>
+                            <input type="email" id="DetailUserEmail" name="UserEmail" placeholder="Enter email address" required>
                         </div>
                         <div>
-                            <label for="EditUserPassword">Password</label>
-                            <input type="password" id="EditUserPassword" name="UserPassword" value="" required>
+                            <label for="DetailUserPassword">Password</label>
+                            <input type="password" id="DetailUserPassword" name="UserPassword" placeholder="Enter password" required>
                         </div>
                         <div>
-                            <label for="EditUserName">Full Name</label>
-                            <input type="text" id="EditUserName" name="UserName" value="" required>
+                            <label for="DetailUserName">Full Name</label>
+                            <input type="text" id="DetailUserName" name="UserName" placeholder="Enter full name" required>
                         </div>
                         <div>
-                            <label for="EditUserRole">Role</label>
-                            <select id="EditUserRole" name="UserRole" required>
+                            <label for="DetailUserRole">Role</label>
+                            <select id="DetailUserRole" name="UserRole" required>
                                 <option value="Manager">Manager</option>
                                 <option value="Cashier">Cashier</option>
                                 <option value="Waiter">Waiter</option>
@@ -1117,16 +1181,19 @@
                             </select>
                         </div>
                         <div>
-                            <label for="EditIdentityCard">Identity Card (12 digits)</label>
-                            <input type="text" id="EditIdentityCard" name="IdentityCard" value="" required>
+                            <label for="DetailIdentityCard">Identity Card</label>
+                            <input type="text" id="DetailIdentityCard" name="IdentityCard" placeholder="Enter identity card" required>
                         </div>
                         <div>
-                            <label for="EditUserAddress">Address</label>
-                            <input type="text" id="EditUserAddress" name="UserAddress" value="" required>
+                            <label for="DetailUserAddress">Address</label>
+                            <input type="text" id="DetailUserAddress" name="UserAddress" placeholder="Enter address" required>
                         </div>
-                        <div class="modal-actions">
-                            <input type="submit" value="Save Changes">
-                            <button type="button" class="close-button">Cancel</button>
+                        <div>
+                            <label for="DetailUserPhone">Phone</label>
+                            <input type="text" id="DetailUserPhone" name="UserPhone" placeholder="Enter phone number" required>
+                        </div>
+                        <div class="modal-actions" id="modalActions">
+                            <!-- Dynamic buttons added via JavaScript -->
                         </div>
                     </form>
                 </div>
@@ -1134,59 +1201,271 @@
         </div>
 
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                var createModal = document.getElementById("createEmployeeModal");
-                var editModal = document.getElementById("editEmployeeModal");
-                var createBtn = document.querySelector(".add-employee-btn");
-                var editButtons = document.querySelectorAll(".edit-employee-btn");
-                var closeButtons = document.querySelectorAll(".close-button");
-
-                if (createBtn) {
-                    createBtn.onclick = function () {
-                        createModal.style.display = "block";
-                        document.getElementById("createAccountForm").reset();
-                    };
+            function confirmDelete(userId, userName) {
+                if (confirm('Are you sure you want to delete the account with ID: ' + userId + ' - User Name: ' + userName + '?')) {
+                    $.ajax({
+                        url: 'DeleteAccount',
+                        type: 'GET',
+                        data: {UserId: userId},
+                        success: function () {
+                            location.reload();
+                        },
+                        error: function (xhr, status, error) {
+                            alert("Error deleting account: " + error);
+                        }
+                    });
                 }
+            }
 
-                attachEditButtonEvents();
+            function validateCreateForm() {
+                let email = $("#UserEmail").val().trim();
+                let password = $("#UserPassword").val().trim();
+                let name = $("#UserName").val().trim();
+                let role = $("#UserRole").val();
+                let idCard = $("#IdentityCard").val().trim();
+                let address = $("#UserAddress").val().trim();
+                let phone = $("#UserPhone").val().trim();
 
-                closeButtons.forEach(function (btn) {
-                    btn.onclick = function () {
-                        createModal.style.display = "none";
-                        editModal.style.display = "none";
-                    };
+                if (!email || !password || !name || !role || !idCard || !address || !phone) {
+                    alert("Please complete all fields.");
+                    return false;
+                }
+                if (!email.endsWith("@gmail.com")) {
+                    alert("Email must end with '@gmail.com'.");
+                    return false;
+                }
+                if (!/^\d{12}$/.test(idCard)) {
+                    alert("ID card/CCCD number must be exactly 12 digits.");
+                    return false;
+                }
+                return true;
+            }
+
+            function validateUpdateDetailForm() {
+                let email = $("#DetailUserEmail").val().trim();
+                let password = $("#DetailUserPassword").val().trim();
+                let name = $("#DetailUserName").val().trim();
+                let role = $("#DetailUserRole").val();
+                let idCard = $("#DetailIdentityCard").val().trim();
+                let address = $("#DetailUserAddress").val().trim();
+                let phone = $("#DetailUserPhone").val().trim();
+
+                if (!email || !password || !name || !role || !idCard || !address || !phone) {
+                    alert("Please complete all fields.");
+                    return false;
+                }
+                if (!email.endsWith("@gmail.com")) {
+                    alert("Email must end with '@gmail.com'.");
+                    return false;
+                }
+                if (!/^\d{12}$/.test(idCard)) {
+                    alert("Identity Card must be exactly 12 digits.");
+                    return false;
+                }
+                return true;
+            }
+
+            function submitCreateForm(event) {
+                event.preventDefault();
+                if (!validateCreateForm())
+                    return;
+
+                var formData = new FormData($("#createAccountForm")[0]);
+                $.ajax({
+                    url: "CreateAccount",
+                    type: "POST",
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    dataType: "json",
+                    success: function (response) {
+                        if (response.success) {
+                            if (response.action === "closeAndReload") {
+                                $("#createEmployeeModal").hide();
+                                location.reload();
+                            }
+                        } else {
+                            alert(response.message || "Failed to create account.");
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        alert("Error creating account: " + error);
+                    }
+                });
+            }
+
+            function submitUpdateDetailForm(event) {
+                event.preventDefault();
+                if (!validateUpdateDetailForm())
+                    return;
+
+                var formData = new FormData($("#updateAccountDetailForm")[0]);
+                $.ajax({
+                    url: "UpdateAccount",
+                    type: "POST",
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    dataType: "json",
+                    success: function (response) {
+                        if (response.success) {
+                            if (response.action === "closeAndReload") {
+                                $("#viewAccountDetailModal").hide();
+                                location.reload();
+                            }
+                        } else {
+                            alert(response.message || "Failed to update account.");
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        alert("Error updating account: " + error);
+                    }
+                });
+            }
+
+            function checkImageSelected(mode) {
+                if (mode === 'create') {
+                    var imageInput = $("#UserImage")[0];
+                    var noImageMessage = $("#createNoImageMessage");
+                    var currentImage = $("#createCurrentImage");
+                    var fileNameDisplay = $("#createFileNameDisplay");
+
+                    if (imageInput.files.length === 0) {
+                        fileNameDisplay.text("No file chosen");
+                        noImageMessage.show();
+                        currentImage.hide();
+                    } else {
+                        fileNameDisplay.text(imageInput.files[0].name);
+                        noImageMessage.hide();
+                        currentImage.show();
+                        // Display the preview of the selected image
+                        var reader = new FileReader();
+                        reader.onload = function (e) {
+                            currentImage.attr('src', e.target.result);
+                        };
+                        reader.readAsDataURL(imageInput.files[0]);
+                    }
+                } else if (mode === 'update') {
+                    var imageInput = $("#DetailUserImage")[0];
+                    var noImageMessage = $("#noImageMessage");
+                    var currentImage = $("#DetailCurrentImage");
+                    var fileNameDisplay = $("#updateFileNameDisplay");
+
+                    if (imageInput.files.length === 0) {
+                        fileNameDisplay.text("No file chosen");
+                        if (currentImage.attr('src') === '') {
+                            noImageMessage.show();
+                            currentImage.hide();
+                        }
+                    } else {
+                        fileNameDisplay.text(imageInput.files[0].name);
+                        noImageMessage.hide();
+                        currentImage.show();
+                        // Display the preview of the selected image
+                        var reader = new FileReader();
+                        reader.onload = function (e) {
+                            currentImage.attr('src', e.target.result);
+                        };
+                        reader.readAsDataURL(imageInput.files[0]);
+                    }
+                }
+            }
+
+            $(document).ready(function () {
+                var createModal = $("#createEmployeeModal");
+                var detailModal = $("#viewAccountDetailModal");
+                var createBtn = $(".add-employee-btn");
+                var detailButtons = $(".view-detail-btn");
+
+                // Show create modal and reset form
+                createBtn.on("click", function () {
+                    createModal.show();
+                    $("#createAccountForm")[0].reset();
+                    $("#createNoImageMessage").show();
+                    $("#createCurrentImage").hide().attr('src', ''); // Clear the image preview
+                    $("#createFileNameDisplay").text("No file chosen"); // Reset file name display
+                    checkImageSelected('create');
+                    $("#createCustomFileButton").off("click").on("click", function () {
+                        $("#UserImage").click();
+                    });
                 });
 
-                window.onclick = function (event) {
-                    if (event.target == createModal)
-                        createModal.style.display = "none";
-                    if (event.target == editModal)
-                        editModal.style.display = "none";
-                };
+                // Handle create form submission
+                $("#createAccountForm").submit(submitCreateForm);
 
-                const searchInput = document.getElementById('searchInput');
-                const roleFilter = document.getElementById('roleFilter');
-                const rows = document.querySelectorAll('.table tbody tr');
+                // Handle detail view and update form
+                detailButtons.on("click", function (e) {
+                    e.preventDefault();
+                    var btn = $(this);
+                    var isAdmin = btn.data("userrole").toLowerCase() === "admin";
+
+                    $("#DetailUserIdHidden").val(btn.data("userid"));
+                    $("#DetailUserRoleHidden").val(btn.data("userrole"));
+                    $("#DetailUserId").val(btn.data("userid"));
+                    $("#DetailUserEmail").val(btn.data("useremail"));
+                    $("#DetailUserPassword").val(btn.data("userpassword"));
+                    $("#DetailUserName").val(btn.data("username"));
+                    $("#DetailUserRole").val(btn.data("userrole"));
+                    $("#DetailIdentityCard").val(btn.data("identitycard"));
+                    $("#DetailUserAddress").val(btn.data("useraddress"));
+                    $("#DetailUserPhone").val(btn.data("userphone") || '');
+                    $("#DetailCurrentImage").attr("src", btn.data("userimage") || '');
+                    $("#DetailOldImagePath").val(btn.data("userimage") || '');
+
+                    $("#DetailUserEmail, #DetailUserPassword, #DetailUserName, #DetailUserRole, #DetailIdentityCard, #DetailUserAddress, #DetailUserPhone, #DetailUserImage")
+                            .prop("disabled", isAdmin);
+
+                    var modalActions = $("#modalActions");
+                    modalActions.empty();
+                    if (isAdmin) {
+                        modalActions.append('<button type="button" class="close-button" onclick="$(\'#viewAccountDetailModal\').hide();">Close</button>');
+                    } else {
+                        modalActions.append('<input type="submit" value="Update">');
+                        modalActions.append('<button type="button" class="delete-button" id="deleteAccountBtn">Delete</button>');
+                        modalActions.append('<button type="button" class="close-button" onclick="$(\'#viewAccountDetailModal\').hide();">Close</button>');
+
+                        $("#deleteAccountBtn").off("click").on("click", function () {
+                            confirmDelete(btn.data("userid"), btn.data("username"));
+                        });
+                    }
+
+                    detailModal.show();
+                    checkImageSelected('update');
+                    $("#updateCustomFileButton").off("click").on("click", function () {
+                        $("#DetailUserImage").click();
+                    });
+                });
+
+                // Handle update form submission
+                $("#updateAccountDetailForm").submit(submitUpdateDetailForm);
+
+                // Close modal when clicking outside
+                $(window).on("click", function (event) {
+                    if (event.target == createModal[0])
+                        createModal.hide();
+                    if (event.target == detailModal[0])
+                        detailModal.hide();
+                });
+
+                // Search and filter functionality
+                $("#searchInput").on("keyup", filterTable);
+                $("#roleFilter").on("change", filterTable);
 
                 function filterTable() {
-                    const searchText = searchInput.value.toLowerCase();
-                    const selectedRole = roleFilter.value;
-
-                    rows.forEach(row => {
-                        const id = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-                        const name = row.querySelector('td:nth-child(6)').textContent.toLowerCase();
-                        const email = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
-                        const role = row.querySelector('td:nth-child(7)').textContent;
+                    const searchText = $("#searchInput").val().toLowerCase();
+                    const selectedRole = $("#roleFilter").val();
+                    $("table tbody tr").each(function () {
+                        const id = $(this).find("td:nth-child(2)").text().toLowerCase();
+                        const name = $(this).find("td:nth-child(3)").text().toLowerCase();
+                        const email = $(this).find("td:nth-child(4)").text().toLowerCase();
+                        const role = $(this).find("td:nth-child(5)").text();
 
                         let matchesSearch = id.includes(searchText) || name.includes(searchText) || email.includes(searchText);
                         let matchesRole = selectedRole === '' || role === selectedRole;
 
-                        row.style.display = (matchesSearch && matchesRole) ? '' : 'none';
+                        $(this).css("display", (matchesSearch && matchesRole) ? '' : 'none');
                     });
                 }
-
-                searchInput.addEventListener('keyup', filterTable);
-                roleFilter.addEventListener('change', filterTable);
             });
         </script>
     </body>

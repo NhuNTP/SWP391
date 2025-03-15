@@ -17,6 +17,7 @@ public class Account {
     private String UserRole;
     private String IdentityCard;
     private String UserAddress;
+    private String UserPhone;
     private String UserImage;
     private boolean IsDeleted;
 
@@ -24,18 +25,21 @@ public class Account {
     public Account() {
     }
 
-    public Account(String UserEmail, String UserPassword, String UserName, String UserRole, String IdentityCard, String UserAddress, String UserImage) {
+    public Account(String UserEmail, String UserPassword, String UserName, String UserRole, 
+                   String IdentityCard, String UserAddress, String UserPhone, String UserImage) {
         this.UserEmail = UserEmail;
         this.UserPassword = UserPassword;
         this.UserName = UserName;
         this.UserRole = UserRole;
         this.IdentityCard = IdentityCard;
         this.UserAddress = UserAddress;
+        this.UserPhone = UserPhone;
         this.UserImage = UserImage;
     }
 
     public Account(String UserId, String UserEmail, String UserPassword, String UserName,
-            String UserRole, String IdentityCard, String UserAddress, String UserImage, boolean IsDeleted) {
+                   String UserRole, String IdentityCard, String UserAddress, String UserPhone, 
+                   String UserImage, boolean IsDeleted) {
         this.UserId = UserId;
         this.UserEmail = UserEmail;
         this.UserPassword = UserPassword;
@@ -43,11 +47,14 @@ public class Account {
         this.UserRole = UserRole;
         this.IdentityCard = IdentityCard;
         this.UserAddress = UserAddress;
+        this.UserPhone = UserPhone;
         this.UserImage = UserImage;
         this.IsDeleted = IsDeleted;
     }
 
-    public Account(String UserId, String UserEmail, String UserPassword, String UserName, String UserRole, String IdentityCard, String UserAddress, String UserImage) {
+    public Account(String UserId, String UserEmail, String UserPassword, String UserName, 
+                   String UserRole, String IdentityCard, String UserAddress, String UserPhone, 
+                   String UserImage) {
         this.UserId = UserId;
         this.UserEmail = UserEmail;
         this.UserPassword = UserPassword;
@@ -55,17 +62,20 @@ public class Account {
         this.UserRole = UserRole;
         this.IdentityCard = IdentityCard;
         this.UserAddress = UserAddress;
+        this.UserPhone = UserPhone;
         this.UserImage = UserImage;
     }
 
     public Account(String UserEmail, String UserPassword, String UserName,
-            String UserRole, String IdentityCard, String UserAddress, String UserImage, boolean IsDeleted) {
+                   String UserRole, String IdentityCard, String UserAddress, String UserPhone, 
+                   String UserImage, boolean IsDeleted) {
         this.UserEmail = UserEmail;
         this.UserPassword = UserPassword;
         this.UserName = UserName;
         this.UserRole = UserRole;
         this.IdentityCard = IdentityCard;
         this.UserAddress = UserAddress;
+        this.UserPhone = UserPhone;
         this.UserImage = UserImage;
         this.IsDeleted = IsDeleted;
     }
@@ -140,5 +150,13 @@ public class Account {
 
     public void setIsDeleted(boolean IsDeleted) {
         this.IsDeleted = IsDeleted;
+    }
+
+    public String getUserPhone() {
+        return UserPhone;
+    }
+
+    public void setUserPhone(String UserPhone) {
+        this.UserPhone = UserPhone;
     }
 }

@@ -36,7 +36,7 @@ public class UpdateAccountController extends HttpServlet {
 
         try {
             AccountDAO dao = new AccountDAO();
-            // Sử dụng hàm gộp với fullDetails = true để lấy toàn bộ thông tin
+            // Use fullDetails = true to fetch all details
             Account account = dao.getAccountById(tableId, true);
             if (account == null) {
                 response.sendRedirect("ViewAccountList");
@@ -64,6 +64,7 @@ public class UpdateAccountController extends HttpServlet {
             String UserRole = request.getParameter("UserRole");
             String IdentityCard = request.getParameter("IdentityCard");
             String UserAddress = request.getParameter("UserAddress");
+            String UserPhone = request.getParameter("UserPhone"); // Get UserPhone from request
             String oldImagePath = request.getParameter("oldImagePath");
 
             Part filePart = request.getPart("UserImage");
@@ -104,18 +105,19 @@ public class UpdateAccountController extends HttpServlet {
             }
 
             AccountDAO dao = new AccountDAO();
-            Account account = new Account(UserId, UserEmail, UserPassword, UserName, UserRole, IdentityCard, UserAddress, UserImage);
-            // Sử dụng hàm gộp với fullDetails = false vì chỉ cần thông tin cơ bản
+            Account account = new Account(UserId, UserEmail, UserPassword, UserName, UserRole, IdentityCard, UserAddress, UserPhone, UserImage, false); // Include UserPhone in constructor
+
+            // Use fullDetails = false since only basic info is needed
             Account existingAccount = dao.getAccountById(UserId, false);
 
-            // Sử dụng hàm gộp, truyền UserId để loại trừ tài khoản hiện tại
+            // Check for email and identity card uniqueness, excluding the current account
             if (!UserEmail.equals(existingAccount.getUserEmail()) && dao.isEmailExists(UserEmail, UserId)) {
-                jsonResponse.append("{\"success\":false,\"message\":\"Email đã tồn tại cho tài khoản khác. Vui lòng nhập email khác.\"}");
+                jsonResponse.append("{\"success\":false,\"message\":\"Email already exists for another account. Please enter a different email.\"}");
                 out.print(jsonResponse.toString());
                 return;
             }
             if (IdentityCard != null && !IdentityCard.isEmpty() && !IdentityCard.equals(existingAccount.getIdentityCard()) && dao.isIdentityCardExists(IdentityCard, UserId)) {
-                jsonResponse.append("{\"success\":false,\"message\":\"Số CMND/CCCD đã tồn tại cho tài khoản khác. Vui lòng nhập số khác.\"}");
+                jsonResponse.append("{\"success\":false,\"message\":\"Identity card/CCCD already exists for another account. Please enter a different number.\"}");
                 out.print(jsonResponse.toString());
                 return;
             }
@@ -123,13 +125,16 @@ public class UpdateAccountController extends HttpServlet {
             int count = dao.updateAccount(UserId, account);
 
             if (count > 0) {
-                jsonResponse.append("{\"success\":true,\"message\":\"Tài khoản được cập nhật thành công!\"}");
+                // On success, return a response to close the modal and reload the page
+                jsonResponse.append("{\"success\":true,\"action\":\"closeAndReload\"}");
+                out.print(jsonResponse.toString());
             } else {
-                jsonResponse.append("{\"success\":false,\"message\":\"Có lỗi xảy ra trong quá trình cập nhật tài khoản.\"}");
+                jsonResponse.append("{\"success\":false,\"message\":\"An error occurred while updating the account.\"}");
+                out.print(jsonResponse.toString());
             }
-            out.print(jsonResponse.toString());
+             
         } catch (Exception e) {
-            jsonResponse.append("{\"success\":false,\"message\":\"Lỗi không xác định: ").append(escapeJson(e.getMessage())).append("\"}");
+            jsonResponse.append("{\"success\":false,\"message\":\"Unknown error: ").append(escapeJson(e.getMessage())).append("\"}");
             out.print(jsonResponse.toString());
         } finally {
             out.close();
