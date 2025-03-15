@@ -1,10 +1,12 @@
 package Controller.ManageOrder;
 
-import DAO.OrderDAO;
 import DAO.MenuDAO;
+import DAO.OrderDAO;
+import DAO.TableDAO;
 import Model.Order;
 import Model.OrderDetail;
 import Model.Dish;
+import Model.Table;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -21,7 +23,9 @@ public class UpdateOrderController extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         OrderDAO orderDAO = new OrderDAO();
+        TableDAO tableDAO;
         try {
+            tableDAO = new TableDAO();
             Order order = new Order();
             order.setOrderId(request.getParameter("orderId"));
             order.setUserId(request.getParameter("userId"));
@@ -52,6 +56,16 @@ public class UpdateOrderController extends HttpServlet {
             order.setOrderDetails(details);
 
             orderDAO.updateOrder(order);
+
+            // Cập nhật trạng thái bàn nếu đơn hàng bị hủy
+            if ("Cancelled".equals(order.getOrderStatus()) && order.getTableId() != null) {
+                Table table = tableDAO.getTableById(order.getTableId());
+                if (table != null) {
+                    table.setTableStatus("Empty");
+                    tableDAO.updateTable(order.getTableId(), table);
+                }
+            }
+
             response.getWriter().write("success");
         } catch (Exception e) {
             e.printStackTrace();

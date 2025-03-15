@@ -33,34 +33,82 @@ public class TableDAO {
         return rs;
     }
 
-    //Hàm lấy id lớn nhất hiện tại
+    // Thêm phương thức mới: lấy tất cả các bàn
+    public List<Table> getAllTables() {
+        List<Table> tables = new ArrayList<>();
+        String sql = "SELECT TableId, TableStatus, NumberOfSeats, FloorNumber FROM [Table] WHERE IsDeleted = 0";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+            while (rs.next()) {
+                Table table = new Table();
+                table.setTableId(rs.getString("TableId"));
+                table.setTableStatus(rs.getString("TableStatus"));
+                table.setNumberOfSeats(rs.getInt("NumberOfSeats"));
+                table.setFloorNumber(rs.getInt("FloorNumber"));
+                tables.add(table);
+            }
+            Logger.getLogger(TableDAO.class.getName()).log(Level.INFO, "Found {0} tables", tables.size());
+        } catch (SQLException ex) {
+            Logger.getLogger(TableDAO.class.getName()).log(Level.SEVERE, "Error fetching all tables", ex);
+        }
+        return tables;
+    }
+
+    public List<Table> getAvailableTables() {
+        List<Table> tables = new ArrayList<>();
+        String sql = "SELECT TableId, TableStatus, NumberOfSeats, FloorNumber FROM [Table] WHERE TableStatus = 'Available' AND IsDeleted = 0";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+            while (rs.next()) {
+                Table table = new Table();
+                table.setTableId(rs.getString("TableId"));
+                table.setTableStatus(rs.getString("TableStatus"));
+                table.setNumberOfSeats(rs.getInt("NumberOfSeats"));
+                table.setFloorNumber(rs.getInt("FloorNumber"));
+                tables.add(table);
+            }
+            Logger.getLogger(TableDAO.class.getName()).log(Level.INFO, "Found {0} available tables", tables.size());
+        } catch (SQLException ex) {
+            Logger.getLogger(TableDAO.class.getName()).log(Level.SEVERE, "Error fetching available tables", ex);
+        }
+        return tables;
+    }
+
+    public void updateTableStatus(String tableId, String status) throws SQLException {
+        String sql = "UPDATE [Table] SET TableStatus = ? WHERE TableId = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, status);
+            pstmt.setString(2, tableId);
+            pstmt.executeUpdate();
+            Logger.getLogger(TableDAO.class.getName()).log(Level.INFO, "Updated table {0} status to {1}", new Object[]{tableId, status});
+        } catch (SQLException ex) {
+            Logger.getLogger(TableDAO.class.getName()).log(Level.SEVERE, "Error updating table status", ex);
+            throw ex;
+        }
+    }
+
     private String getNextTableId(int floorNumber) throws SQLException {
         String maxId = null;
         String nextId = null;
         PreparedStatement getMaxId = null;
 
         try {
-            // Truy vấn SQL cần lọc theo FloorNumber để lấy MAX(TableId) của tầng cụ thể
             sql = "SELECT MAX(TableId) AS MaxId FROM [Table] WHERE FloorNumber = ?";
             getMaxId = conn.prepareStatement(sql);
-            getMaxId.setInt(1, floorNumber); // Set tham số FloorNumber vào câu truy vấn
+            getMaxId.setInt(1, floorNumber);
             ResultSet rs = getMaxId.executeQuery();
 
             if (rs.next()) {
                 maxId = rs.getString("MaxId");
             }
 
-            String prefix = "TA" + floorNumber; // Tạo prefix ID dựa trên tầng
-
+            String prefix = "TA" + floorNumber;
             if (maxId == null) {
-                nextId = prefix + "01"; // Nếu chưa có bàn nào ở tầng này, bắt đầu từ TA[Tầng]001 (sửa lại thành 001)
+                nextId = prefix + "01";
             } else {
-                // Lấy phần số từ ID hiện tại (ví dụ: "002" từ "TA002")
-                // Cắt bỏ phần prefix "TA[Tầng]" để lấy phần số
                 String numericPart = maxId.substring(prefix.length());
-                int nextNumber = Integer.parseInt(numericPart) + 1; // Tăng số lên 1
-                // Định dạng lại số thành chuỗi 2 chữ số (ví dụ: 003)
-                nextId = prefix + String.format("%02d", nextNumber); // Sửa lại thành %03d
+                int nextNumber = Integer.parseInt(numericPart) + 1;
+                nextId = prefix + String.format("%02d", nextNumber);
             }
         } catch (SQLException ex) {
             Logger.getLogger(TableDAO.class.getName()).log(Level.SEVERE, null, ex);
@@ -76,9 +124,7 @@ public class TableDAO {
         int count = 0;
         PreparedStatement pst = null;
         try {
-            // Lấy số tầng từ newInfo
             int floorNumber = newInfo.getFloorNumber();
-            // Gọi getNextTableId() với số tầng
             String newTableId = getNextTableId(floorNumber);
 
             sql = "INSERT INTO [Table] (TableId, TableStatus, NumberOfSeats, FloorNumber) VALUES (?, ?, ?, ?)";
@@ -107,46 +153,39 @@ public class TableDAO {
         int count = 0;
         PreparedStatement pst = null;
         ResultSet rs = null;
-        String newTableId = id; // Giữ ID cũ mặc định
+        String newTableId = id;
 
         try {
-            // 1. Lấy thông tin bàn hiện tại từ database dựa trên id (TableId)
             Table existingTable = getTableById(id);
             if (existingTable == null) {
-                return 0; // Hoặc throw exception, bàn không tồn tại
+                return 0;
             }
             int oldFloorNumber = existingTable.getFloorNumber();
             int newFloorNumber = newInfo.getFloorNumber();
 
-            // 2. Kiểm tra xem FloorNumber có thay đổi không
             if (oldFloorNumber != newFloorNumber) {
-                // 3. Tạo ID bàn mới tiềm năng dựa trên tầng mới
                 String potentialNewTableId = getNextTableId(newFloorNumber);
-
-                // 4. Kiểm tra xem ID mới tiềm năng đã tồn tại chưa
                 if (isTableIdExists(potentialNewTableId)) {
-                    // 5. Xử lý xung đột ID: Tạo ID mới khác bằng cách tăng số thứ tự
-                    int suffixNumber = Integer.parseInt(potentialNewTableId.substring(potentialNewTableId.length() - 3));
+                    int suffixNumber = Integer.parseInt(potentialNewTableId.substring(potentialNewTableId.length() - 2));
                     while (isTableIdExists("TA" + newFloorNumber + String.format("%02d", suffixNumber))) {
                         suffixNumber++;
-                        if (suffixNumber > 999) { // Đề phòng trường hợp hết số, cần xử lý lỗi khác nếu cần
+                        if (suffixNumber > 99) {
                             throw new SQLException("Không thể tạo ID bàn mới, hết số thứ tự trên tầng " + newFloorNumber);
                         }
                     }
-                    newTableId = "TA" + newFloorNumber + String.format("%03d", suffixNumber);
+                    newTableId = "TA" + newFloorNumber + String.format("%02d", suffixNumber);
                 } else {
-                    newTableId = potentialNewTableId; // ID tiềm năng chưa tồn tại, dùng nó
+                    newTableId = potentialNewTableId;
                 }
-            } // Nếu FloorNumber không đổi, giữ nguyên newTableId = id ban đầu
+            }
 
-            // 6. Cập nhật thông tin bàn vào database, sử dụng newTableId (có thể là ID mới hoặc ID cũ)
             sql = "UPDATE [Table] SET TableId=?, TableStatus=?, NumberOfSeats=?, FloorNumber=? WHERE TableId=?";
             pst = conn.prepareStatement(sql);
-            pst.setString(1, newTableId); // Set TableId mới (hoặc cũ)
+            pst.setString(1, newTableId);
             pst.setString(2, newInfo.getTableStatus());
             pst.setInt(3, newInfo.getNumberOfSeats());
             pst.setInt(4, newInfo.getFloorNumber());
-            pst.setString(5, id); // WHERE clause dùng ID ban đầu để tìm đúng bản ghi
+            pst.setString(5, id);
 
             count = pst.executeUpdate();
 
@@ -171,7 +210,6 @@ public class TableDAO {
         return count;
     }
 
-    // Hàm kiểm tra xem TableId đã tồn tại chưa
     private boolean isTableIdExists(String tableId) throws SQLException {
         PreparedStatement checkPst = null;
         ResultSet rs = null;
@@ -180,7 +218,7 @@ public class TableDAO {
             checkPst = conn.prepareStatement(sql);
             checkPst.setString(1, tableId);
             rs = checkPst.executeQuery();
-            return rs.next(); // Nếu có kết quả trả về, tức là ID đã tồn tại
+            return rs.next();
         } finally {
             if (rs != null) {
                 rs.close();
@@ -191,13 +229,12 @@ public class TableDAO {
         }
     }
 
-    // Hàm lấy thông tin bàn theo ID
     public Table getTableById(String tableId) throws SQLException {
         PreparedStatement getPst = null;
         ResultSet rs = null;
         Table table = null;
         try {
-            sql = "SELECT TableId, TableStatus, NumberOfSeats, FloorNumber FROM [Table] WHERE TableId = ?"; // Chỉ lấy các cột cần thiết
+            sql = "SELECT TableId, TableStatus, NumberOfSeats, FloorNumber FROM [Table] WHERE TableId = ?";
             getPst = conn.prepareStatement(sql);
             getPst.setString(1, tableId);
             rs = getPst.executeQuery();
@@ -225,7 +262,6 @@ public class TableDAO {
         ResultSet rs = null;
 
         try {
-            // Thêm WHERE clause để lọc IsDeleted = 0
             sql = "SELECT DISTINCT FloorNumber FROM [Table] WHERE IsDeleted = 0 ORDER BY FloorNumber ASC";
             pst = conn.prepareStatement(sql);
             rs = pst.executeQuery();
@@ -245,115 +281,7 @@ public class TableDAO {
         return floorNumbers;
     }
 
-    /*
-    //Hàm lấy id lớn nhất hiện tại
-    private String getNextTableId(int floorNumber) throws SQLException {
-        String maxId = null;
-        String nextId = null;
-        PreparedStatement getMaxId = null;
-
-        try {
-            // Truy vấn SQL cần lọc theo FloorNumber để lấy MAX(TableId) của tầng cụ thể
-            sql = "SELECT MAX(TableId) AS MaxId FROM [Table] WHERE FloorNumber = ?";
-            getMaxId = conn.prepareStatement(sql);
-            getMaxId.setInt(1, floorNumber); // Set tham số FloorNumber vào câu truy vấn
-            ResultSet rs = getMaxId.executeQuery();
-
-            if (rs.next()) {
-                maxId = rs.getString("MaxId");
-            }
-
-            String prefix = "TA" + floorNumber; // Tạo prefix ID dựa trên tầng
-
-            if (maxId == null) {
-                nextId = prefix + "101"; // Nếu chưa có bàn nào ở tầng này, bắt đầu từ TA[Tầng]101
-            } else {
-                // Lấy phần số từ ID hiện tại (ví dụ: "102" từ "TA102")
-                // Cắt bỏ phần prefix "TA[Tầng]" để lấy phần số
-                String numericPart = maxId.substring(prefix.length());
-                int nextNumber = Integer.parseInt(numericPart) + 1; // Tăng số lên 1
-                // Định dạng lại số thành chuỗi 3 chữ số (ví dụ: 103)
-                nextId = prefix + String.format("%02d", nextNumber);
-            }
-        } catch (SQLException ex) {
-            Logger.getLogger(TableDAO.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            if (getMaxId != null) {
-                getMaxId.close();
-            }
-        }
-        return nextId;
-    }
-
-    public int createTable(Table newInfo) {
-        int count = 0;
-        PreparedStatement pst = null;
-        try {
-            // Lấy số tầng từ newInfo
-            int floorNumber = newInfo.getFloorNumber();
-            // Gọi getNextTableId() với số tầng
-            String newTableId = getNextTableId(floorNumber);
-
-            sql = "INSERT INTO [Table] (TableId, TableStatus, NumberOfSeats, FloorNumber) VALUES (?, ?, ?, ?)";
-            pst = conn.prepareStatement(sql);
-            pst.setString(1, newTableId);
-            pst.setString(2, newInfo.getTableStatus());
-            pst.setInt(3, newInfo.getNumberOfSeats());
-            pst.setInt(4, newInfo.getFloorNumber());
-
-            count = pst.executeUpdate();
-        } catch (SQLException ex) {
-            Logger.getLogger(TableDAO.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            if (pst != null) {
-                try {
-                    pst.close();
-                } catch (SQLException ex) {
-                    Logger.getLogger(TableDAO.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-        }
-        return count;
-    }
-
-    public Table getTableById(String id) { // Sửa kiểu tham số thành String
-        Table obj = null;
-        try {
-            sql = "SELECT TableId, TableStatus, NumberOfSeats, FloorNumber FROM [Table] WHERE TableId = ?";
-            PreparedStatement pst = conn.prepareStatement(sql);
-            pst.setString(1, id);
-            ResultSet rs = pst.executeQuery();
-            if (rs.next()) {
-                obj = new Table();
-                obj.setTableId(rs.getString("TableId"));
-                obj.setTableStatus(rs.getString("TableStatus"));
-                obj.setNumberOfSeats(rs.getInt("NumberOfSeats"));
-                obj.setFloorNumber(rs.getInt("FloorNumber"));
-            }
-        } catch (SQLException ex) {
-            Logger.getLogger(TableDAO.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return obj;
-    }
-
-    public int updateTable(String id, Table newInfo) {
-        int count = 0;
-        try {
-            // Thêm FloorNumber vào, bỏ IsDeleted
-            sql = "UPDATE [Table] SET TableStatus=?, NumberOfSeats=?, FloorNumber=? WHERE TableId=?";
-            PreparedStatement pst = conn.prepareStatement(sql);
-            pst.setString(1, newInfo.getTableStatus());
-            pst.setInt(2, newInfo.getNumberOfSeats());
-            pst.setInt(3, newInfo.getFloorNumber()); // Không cần kiểm tra null
-            pst.setString(4, id);
-
-            count = pst.executeUpdate();
-        } catch (SQLException ex) {
-            Logger.getLogger(TableDAO.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return count;
-    } */
-    public int deleteTable(String id) { // Sửa kiểu tham số thành String
+    public int deleteTable(String id) {
         int count = 0;
         try {
             sql = "UPDATE [Table] SET IsDeleted = 1 WHERE TableId=?";
