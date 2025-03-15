@@ -67,27 +67,94 @@
             .tab-content {
                 padding: 20px;
             }
-            label {
-                display: inline-block;
-                width: 150px;
-                font-weight: bold;
-            }
-            input[type="text"], input[type="number"], select, textarea {
-                width: 70%;
-                padding: 8px;
-                margin-bottom: 15px;
-                border: 1px solid #ccc;
-                border-radius: 4px;
-            }
-            input[type="number"] {
-                width: 30%;
-                margin-left: 10px;
-            }
             .error {
                 color: red;
             }
             .success {
                 color: green;
+            }
+            /* Modal styles */
+            .modal-fullscreen {
+                width: 100vw;
+                height: 100vh;
+                max-width: none;
+                margin: 0;
+            }
+            .modal-content {
+                height: 100%;
+                border: none;
+                border-radius: 0;
+            }
+            .modal-body {
+                padding: 0;
+                height: calc(100% - 112px); /* Trừ chiều cao header và footer */
+                display: flex !important; /* Đảm bảo luôn áp dụng flex */
+                flex-direction: row !important;
+            }
+            .update-container {
+                width: 100%;
+                height: 100%;
+                display: flex !important; /* Đảm bảo luôn áp dụng flex */
+                flex-direction: row !important;
+                padding: 20px;
+                box-sizing: border-box;
+            }
+            .left-section {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                padding-right: 20px;
+            }
+            .right-section {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                padding-left: 20px;
+            }
+            .form-group {
+                display: flex;
+                align-items: center;
+                margin-bottom: 15px;
+            }
+            label {
+                width: 120px;
+                font-weight: bold;
+                margin-right: 10px;
+                flex-shrink: 0;
+            }
+            input[type="text"],
+            input[type="number"],
+            select,
+            textarea {
+                flex: 1;
+                padding: 8px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+            }
+            input[type="number"].quantity-input {
+                width: 80px;
+                margin-left: 5px;
+            }
+            .ingredient-list {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+            }
+            .ingredient-item {
+                display: flex;
+                align-items: center;
+                margin-bottom: 10px;
+            }
+            .ingredient-item label {
+                width: 200px;
+                font-size: 0.9em;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            img {
+                max-width: 150px;
+                margin: 10px 0;
             }
         </style>
     </head>
@@ -96,7 +163,7 @@
             <div class="sidebar col-md-2 p-3">
                 <h4 class="text-center mb-4">Admin</h4>
                 <ul class="nav flex-column">
-                     <li class="nav-item"><a href="${pageContext.request.contextPath}/dashboard" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/dashboard" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/view-revenue" class="nav-link"><i class="fas fa-chart-line me-2"></i>View Revenue</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-list-alt me-2"></i>Menu Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewAccountList" class="nav-link"><i class="fas fa-users me-2"></i>Employee Management</a></li>
@@ -106,9 +173,9 @@
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCouponController" class="nav-link"><i class="fas fa-tag me-2"></i>Coupon Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewInventoryController" class="nav-link"><i class="fas fa-boxes me-2"></i>Inventory Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/view-notifications" class="nav-link"><i class="fas fa-bell me-2"></i>View Notifications</a></li>
-                        <% if ("Admin".equals(UserRole) || "Manager".equals(UserRole)) { %>
+                    <% if ("Admin".equals(UserRole) || "Manager".equals(UserRole)) { %>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/create-notification" class="nav-link"><i class="fas fa-plus me-2"></i>Create Notification</a></li>
-                        <% } %>
+                    <% } %>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/logout" class="nav-link"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                 </ul>
             </div>
@@ -226,7 +293,7 @@
                     </div>
                 </div>
                 <div class="modal fade" id="editDishModal" tabindex="-1" aria-labelledby="editDishModalLabel" aria-hidden="true">
-                    <div class="modal-dialog">
+                    <div class="modal-dialog modal-fullscreen">
                         <div class="modal-content">
                             <div class="modal-header">
                                 <h5 class="modal-title" id="editDishModalLabel">Modify Dish</h5>
@@ -243,7 +310,7 @@
                     </div>
                 </div>
                 <div class="modal fade" id="dishDetailModal" tabindex="-1" aria-labelledby="dishDetailModalLabel" aria-hidden="true">
-                    <div class="modal-dialog">
+                    <div class="modal-dialog modal-fullscreen">
                         <div class="modal-content">
                             <div class="modal-header">
                                 <h5 class="modal-title" id="dishDetailModalLabel">Dish Detail</h5>
@@ -263,145 +330,140 @@
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
         <script>
-                                    function showAddQuantityInput(itemId) {
-                                        var quantityInput = document.getElementById("addQuantityUsed" + itemId);
-                                        var checkbox = document.getElementById("addItemId" + itemId);
-                                        console.log("Add Item ID:", itemId);
-                                        console.log("Checkbox found:", checkbox);
-                                        console.log("Quantity Input found:", quantityInput);
-                                        if (checkbox && quantityInput) {
-                                            if (checkbox.checked) {
-                                                quantityInput.style.display = "inline-block";
-                                            } else {
-                                                quantityInput.style.display = "none";
-                                                quantityInput.value = "";
-                                            }
-                                        } else {
-                                            console.error("Element not found for itemId:", itemId);
-                                        }
-                                    }
+            function showAddQuantityInput(itemId) {
+                var quantityInput = document.getElementById("addQuantityUsed" + itemId);
+                var checkbox = document.getElementById("addItemId" + itemId);
+                if (checkbox && quantityInput) {
+                    if (checkbox.checked) {
+                        quantityInput.style.display = "inline-block";
+                    } else {
+                        quantityInput.style.display = "none";
+                        quantityInput.value = "";
+                    }
+                } else {
+                    console.error("Element not found for itemId:", itemId);
+                }
+            }
 
-                                    function validateAddForm() {
-                                        var checkboxes = document.getElementsByName("itemId");
-                                        var isChecked = false;
-                                        var errorMessage = "";
+            function validateAddForm() {
+                var checkboxes = document.getElementsByName("itemId");
+                var isChecked = false;
+                var errorMessage = "";
+                for (var i = 0; i < checkboxes.length; i++) {
+                    var checkbox = checkboxes[i];
+                    if (checkbox.checked) {
+                        isChecked = true;
+                        var itemId = checkbox.value;
+                        var quantityInput = document.getElementById("addQuantityUsed" + itemId);
+                        var quantityValue = quantityInput.value.trim();
+                        if (!quantityValue) {
+                            errorMessage = "Please enter a quantity for " + document.querySelector('label[for="addItemId' + itemId + '"]').textContent;
+                            quantityInput.focus();
+                            break;
+                        } else if (isNaN(quantityValue) || Number(quantityValue) <= 0) {
+                            errorMessage = "Quantity for " + document.querySelector('label[for="addItemId' + itemId + '"]').textContent + " must be greater than 0.";
+                            quantityInput.focus();
+                            break;
+                        }
+                    }
+                }
+                if (!isChecked) {
+                    errorMessage = "Please select at least one ingredient.";
+                }
+                if (errorMessage) {
+                    alert(errorMessage);
+                    return false;
+                }
+                return true;
+            }
 
-                                        for (var i = 0; i < checkboxes.length; i++) {
-                                            var checkbox = checkboxes[i];
-                                            if (checkbox.checked) {
-                                                isChecked = true;
-                                                var itemId = checkbox.value;
-                                                var quantityInput = document.getElementById("addQuantityUsed" + itemId);
-                                                var quantityValue = quantityInput.value.trim();
+            $(document).ready(function () {
+                $('.edit-dish-btn').click(function () {
+                    var dishId = $(this).data('dish-id');
+                    var modalBody = $('#editDishModal .modal-body');
+                    $.ajax({
+                        url: 'updatedish',
+                        type: 'GET',
+                        data: {dishId: dishId},
+                        success: function (data) {
+                            modalBody.html(data);
+                            $('#editDishModal').modal('show');
+                        },
+                        error: function (xhr, status, error) {
+                            modalBody.html('<p class="text-danger">Error loading content.</p>');
+                            console.error(error);
+                        }
+                    });
+                });
 
-                                                console.log("Validating itemId:", itemId, "Quantity:", quantityValue);
+                $('#editDishModal').on('click', '#saveChangesBtn', function (event) {
+                    event.preventDefault();
+                    var form = $('#editDishModal form');
+                    $.ajax({
+                        url: form.attr('action'),
+                        type: 'POST',
+                        data: new FormData(form[0]),
+                        processData: false,
+                        contentType: false,
+                        success: function (response) {
+                            $('#editDishModal .modal-body').html(response);
+                            setTimeout(function () {
+                                $('#editDishModal').modal('hide');
+                                window.location.reload();
+                            }, 1000);
+                        },
+                        error: function (xhr, status, error) {
+                            console.error(error);
+                            alert('Error updating dish.');
+                        }
+                    });
+                });
 
-                                                if (!quantityValue) {
-                                                    errorMessage = "Please enter a quantity for " + document.querySelector('label[for="addItemId' + itemId + '"]').textContent;
-                                                    quantityInput.focus();
-                                                    break;
-                                                } else if (isNaN(quantityValue) || Number(quantityValue) <= 0) {
-                                                    errorMessage = "Quantity for " + document.querySelector('label[for="addItemId' + itemId + '"]').textContent + " must be greater than 0.";
-                                                    quantityInput.focus();
-                                                    break;
-                                                }
-                                            }
-                                        }
+                $('.view-dish-btn').click(function () {
+                    var dishId = $(this).data('dish-id');
+                    var modalBody = $('#dishDetailModal .modal-body');
+                    $.ajax({
+                        url: 'dishdetail',
+                        type: 'GET',
+                        data: {dishId: dishId},
+                        success: function (data) {
+                            modalBody.html(data);
+                            $('#dishDetailModal').modal('show');
+                        },
+                        error: function (xhr, status, error) {
+                            modalBody.html('<p class="text-danger">Error loading content.</p>');
+                            console.error(error);
+                        }
+                    });
+                });
 
-                                        if (!isChecked) {
-                                            errorMessage = "Please select at least one ingredient.";
-                                        }
-
-                                        if (errorMessage) {
-                                            alert(errorMessage);
-                                            return false;
-                                        }
-
-                                        return true;
-                                    }
-
-                                    $(document).ready(function () {
-                                        $('.edit-dish-btn').click(function () {
-                                            var dishId = $(this).data('dish-id');
-                                            var modalBody = $('#editDishModal .modal-body');
-                                            $.ajax({
-                                                url: 'updatedish',
-                                                type: 'GET',
-                                                data: {dishId: dishId},
-                                                success: function (data) {
-                                                    modalBody.html(data);
-                                                },
-                                                error: function (xhr, status, error) {
-                                                    modalBody.html('<p class="text-danger">Error loading content.</p>');
-                                                    console.error(error);
-                                                }
-                                            });
-                                        });
-                                        $('#editDishModal').on('click', '#saveChangesBtn', function (event) {
-                                            event.preventDefault();
-                                            var form = $('#editDishModal form');
-                                            $.ajax({
-                                                url: form.attr('action'),
-                                                type: 'POST',
-                                                data: new FormData(form[0]),
-                                                processData: false,
-                                                contentType: false,
-                                                success: function (response) {
-                                                    $('#editDishModal .modal-body').html(response);
-                                                    setTimeout(function () {
-                                                        $('#editDishModal').modal('hide');
-                                                        window.location.reload();
-                                                    }, 1000);
-                                                },
-                                                error: function (xhr, status, error) {
-                                                    console.error(error);
-                                                    alert('Error updating dish.');
-                                                }
-                                            });
-                                        });
-                                        $('.view-dish-btn').click(function () {
-                                            var dishId = $(this).data('dish-id');
-                                            var modalBody = $('#dishDetailModal .modal-body');
-                                            $.ajax({
-                                                url: 'dishdetail',
-                                                type: 'GET',
-                                                data: {dishId: dishId},
-                                                success: function (data) {
-                                                    modalBody.html(data);
-                                                },
-                                                error: function (xhr, status, error) {
-                                                    modalBody.html('<p class="text-danger">Error loading content.</p>');
-                                                    console.error(error);
-                                                }
-                                            });
-                                        });
-                                        const searchKeyword = document.getElementById('searchKeyword');
-                                        const filterStatus = document.getElementById('filterStatus');
-                                        const filterIngredientStatus = document.getElementById('filterIngredientStatus');
-                                        const dishListContainer = document.getElementById('dishListContainer');
-                                        const rows = dishListContainer.querySelectorAll('.dish-list li');
-                                        function filterTable() {
-                                            const searchText = searchKeyword.value.toLowerCase();
-                                            const selectedStatus = filterStatus.value;
-                                            const selectedIngredientStatus = filterIngredientStatus.value;
-                                            rows.forEach(row => {
-                                                const dishName = row.querySelector('.dish-info h5').textContent.toLowerCase();
-                                                const status = row.querySelector('.dish-info p:nth-child(3)').textContent;
-                                                const ingredientStatus = row.querySelector('.dish-info p:nth-child(4)').textContent;
-                                                let matchesSearch = dishName.includes(searchText);
-                                                let matchesStatus = selectedStatus === '' || status.includes(selectedStatus);
-                                                let matchesIngredientStatus = selectedIngredientStatus === '' || ingredientStatus.includes(selectedIngredientStatus);
-                                                if (matchesSearch && matchesStatus && matchesIngredientStatus) {
-                                                    row.style.display = '';
-                                                } else {
-                                                    row.style.display = 'none';
-                                                }
-                                            });
-                                        }
-                                        searchKeyword.addEventListener('keyup', filterTable);
-                                        filterStatus.addEventListener('change', filterTable);
-                                        filterIngredientStatus.addEventListener('change', filterTable);
-                                    });
+                const searchKeyword = document.getElementById('searchKeyword');
+                const filterStatus = document.getElementById('filterStatus');
+                const filterIngredientStatus = document.getElementById('filterIngredientStatus');
+                const dishListContainer = document.getElementById('dishListContainer');
+                const rows = dishListContainer.querySelectorAll('.dish-list li');
+                function filterTable() {
+                    const searchText = searchKeyword.value.toLowerCase();
+                    const selectedStatus = filterStatus.value;
+                    const selectedIngredientStatus = filterIngredientStatus.value;
+                    rows.forEach(row => {
+                        const dishName = row.querySelector('.dish-info h5').textContent.toLowerCase();
+                        const status = row.querySelector('.dish-info p:nth-child(3)').textContent;
+                        const ingredientStatus = row.querySelector('.dish-info p:nth-child(4)').textContent;
+                        let matchesSearch = dishName.includes(searchText);
+                        let matchesStatus = selectedStatus === '' || status.includes(selectedStatus);
+                        let matchesIngredientStatus = selectedIngredientStatus === '' || ingredientStatus.includes(selectedIngredientStatus);
+                        if (matchesSearch && matchesStatus && matchesIngredientStatus) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                }
+                searchKeyword.addEventListener('keyup', filterTable);
+                filterStatus.addEventListener('change', filterTable);
+                filterIngredientStatus.addEventListener('change', filterTable);
+            });
         </script>
     </body>
 </html>
