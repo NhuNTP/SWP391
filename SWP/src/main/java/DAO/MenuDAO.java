@@ -180,7 +180,7 @@ public class MenuDAO {
                 deleteDishInventoryStmt.executeUpdate();
 
                 // 3. Xóa Dish
-                String deleteDishSql = "DELETE FROM Dish WHERE DishId = ?";
+                    String deleteDishSql = "DELETE FROM Dish WHERE DishId = ?";
                 deleteDishStmt = connection.prepareStatement(deleteDishSql);
                 deleteDishStmt.setString(1, dishId);
                 int affectedRows = deleteDishStmt.executeUpdate();
