@@ -18,7 +18,9 @@
     </style>
     <script>
         function addDishToTable(dishId, dishName, price) {
-            var quantity = parseInt(document.getElementById("quantity_" + dishId).value) || 0;
+            var quantityInput = document.getElementById("quantity_" + dishId);
+            var quantity = parseInt(quantityInput.value) || 0;
+            console.log("Adding dish: " + dishId + ", Quantity from input: " + quantity);
             if (quantity > 0) {
                 var table = document.getElementById("overviewTable").getElementsByTagName('tbody')[0];
                 var existingRow = null;
@@ -30,52 +32,87 @@
                     }
                 }
 
+                var newQuantity;
                 if (existingRow) {
                     var currentQuantity = parseInt(existingRow.cells[1].innerText);
-                    var newQuantity = currentQuantity + quantity;
+                    newQuantity = currentQuantity + quantity;
                     var newSubtotal = price * newQuantity;
                     existingRow.cells[1].innerText = newQuantity;
                     existingRow.cells[2].innerText = newSubtotal;
-
-                    var hiddenQuantity = document.getElementById("tempQuantity_" + dishId);
-                    if (hiddenQuantity) {
-                        hiddenQuantity.value = newQuantity;
-                    } else {
-                        hiddenQuantity = document.createElement("input");
-                        hiddenQuantity.type = "hidden";
-                        hiddenQuantity.id = "tempQuantity_" + dishId;
-                        hiddenQuantity.name = "tempQuantity_" + dishId;
-                        hiddenQuantity.value = newQuantity;
-                        document.getElementById("confirmForm").appendChild(hiddenQuantity);
-                    }
+                    console.log("Updated existing dish: " + dishId + ", New Quantity: " + newQuantity);
                 } else {
+                    newQuantity = quantity;
                     var subtotal = price * quantity;
                     var row = table.insertRow();
                     row.setAttribute("data-dish-id", dishId);
                     row.innerHTML = "<td>" + dishName + "</td><td>" + quantity + "</td><td>" + subtotal + "</td>";
+                    console.log("Added new dish: " + dishId + ", Quantity: " + quantity);
+                }
 
-                    // Chỉ thêm tempDishId nếu chưa tồn tại
-                    var existingTempDish = document.querySelector("input[name='tempDishId'][value='" + dishId + "']");
-                    if (!existingTempDish) {
-                        var hiddenInput = document.createElement("input");
-                        hiddenInput.type = "hidden";
-                        hiddenInput.name = "tempDishId";
-                        hiddenInput.value = dishId;
-                        document.getElementById("confirmForm").appendChild(hiddenInput);
-                    }
+                // Gửi số lượng mới nhập qua tempQuantity
+                var hiddenQuantity = document.getElementById("tempQuantity_" + dishId);
+                if (!hiddenQuantity) {
+                    hiddenQuantity = document.createElement("input");
+                    hiddenQuantity.type = "hidden";
+                    hiddenQuantity.id = "tempQuantity_" + dishId;
+                    hiddenQuantity.name = "tempQuantity_" + dishId;
+                    document.getElementById("confirmForm").appendChild(hiddenQuantity);
+                }
+                hiddenQuantity.value = quantity;
+                console.log("Set tempQuantity for " + dishId + " to: " + quantity);
 
-                    var hiddenQuantity = document.getElementById("tempQuantity_" + dishId);
-                    if (hiddenQuantity) {
-                        hiddenQuantity.value = quantity;
-                    } else {
-                        hiddenQuantity = document.createElement("input");
-                        hiddenQuantity.type = "hidden";
-                        hiddenQuantity.id = "tempQuantity_" + dishId;
-                        hiddenQuantity.name = "tempQuantity_" + dishId;
-                        hiddenQuantity.value = quantity;
-                        document.getElementById("confirmForm").appendChild(hiddenQuantity);
+                // Thêm tempDishId nếu chưa tồn tại
+                var existingTempDish = document.querySelector("input[name='tempDishId'][value='" + dishId + "']");
+                if (!existingTempDish) {
+                    var hiddenInput = document.createElement("input");
+                    hiddenInput.type = "hidden";
+                    hiddenInput.name = "tempDishId";
+                    hiddenInput.value = dishId;
+                    document.getElementById("confirmForm").appendChild(hiddenInput);
+                }
+
+                // Cập nhật existingQuantity_<dishId> trong form
+                var existingQuantityInput = document.getElementById("existingQuantity_" + dishId);
+                if (existingQuantityInput) {
+                    existingQuantityInput.value = newQuantity;
+                } else {
+                    // Nếu chưa có existingQuantity, tạo mới
+                    var newExistingQuantity = document.createElement("input");
+                    newExistingQuantity.type = "hidden";
+                    newExistingQuantity.id = "existingQuantity_" + dishId;
+                    newExistingQuantity.name = "existingQuantity_" + dishId;
+                    newExistingQuantity.value = newQuantity;
+                    document.getElementById("confirmForm").appendChild(newExistingQuantity);
+                    // Thêm existingDishId nếu chưa có
+                    var existingDishInput = document.querySelector("input[name='existingDishId'][value='" + dishId + "']");
+                    if (!existingDishInput) {
+                        var newExistingDish = document.createElement("input");
+                        newExistingDish.type = "hidden";
+                        newExistingDish.name = "existingDishId";
+                        newExistingDish.value = dishId;
+                        document.getElementById("confirmForm").appendChild(newExistingDish);
                     }
                 }
+                console.log("Updated existingQuantity_" + dishId + " to: " + newQuantity);
+
+                // Reset input về 1
+                quantityInput.value = 1;
+                console.log("Reset quantity input for " + dishId + " to 1");
+
+                // Gửi AJAX để cập nhật database ngay lập tức
+                var orderId = document.querySelector("input[name='orderId']").value;
+                var xhr = new XMLHttpRequest();
+                xhr.open("POST", "order", true);
+                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        console.log("Updated database successfully: " + xhr.responseText);
+                    } else if (xhr.readyState === 4) {
+                        console.error("Error updating database: " + xhr.status);
+                    }
+                };
+                var data = "action=addDish&orderId=" + encodeURIComponent(orderId) + "&dishId=" + encodeURIComponent(dishId) + "&quantity=" + encodeURIComponent(quantity);
+                xhr.send(data);
             }
         }
     </script>
@@ -134,7 +171,7 @@
                     <input type="hidden" name="orderId" value="<%= order.getOrderId() %>">
                     <% for (OrderDetail detail : detailsToShow) { %>
                     <input type="hidden" name="existingDishId" value="<%= detail.getDishId() %>">
-                    <input type="hidden" name="existingQuantity_<%= detail.getDishId() %>" value="<%= detail.getQuantity() %>">
+                    <input type="hidden" name="existingQuantity_<%= detail.getDishId() %>" id="existingQuantity_<%= detail.getDishId() %>" value="<%= detail.getQuantity() %>">
                     <% } %>
                     <% } else {
                         for (OrderDetail detail : detailsToShow) {
