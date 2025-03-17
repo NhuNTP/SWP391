@@ -20,7 +20,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-@WebServlet(name = "OrderController", urlPatterns = {"/order"})
+@WebServlet(name = "OrderController", urlPatterns = {"/orderold"})
 public class OrderController extends HttpServlet {
 
     private final TableDAO tableDAO;
@@ -172,8 +172,8 @@ public class OrderController extends HttpServlet {
                     }
                 }
 
-                Order order = new Order(orderId, userId, null, new Date(), "Pending", "Dine-in", null, null, tableId, orderDetails, customerPhone);
-                orderDAO.CreateOrder(order);
+                //Order order = new Order(orderId, userId, null, new Date(), "Pending", "Dine-in", null, null, tableId, orderDetails, customerPhone);
+                //orderDAO.CreateOrder(order);
 
                 response.sendRedirect("order?action=viewOrder&orderId=" + orderId);
             } else if (action.equals("updateOrder")) {
