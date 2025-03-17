@@ -151,22 +151,13 @@ public class OrderController extends HttpServlet {
                         if (tempQuantity != null && !tempQuantity.isEmpty() && Integer.parseInt(tempQuantity) > 0) {
                             Dish dish = dishDAO.getDishById(tempDishId);
                             if (dish != null && "Available".equals(dish.getDishStatus()) && "Sufficient".equals(dish.getIngredientStatus())) {
-                                OrderDetail existingDetail = orderDetails.stream()
-                                    .filter(d -> d.getDishId().equals(tempDishId))
-                                    .findFirst()
-                                    .orElse(null);
-                                if (existingDetail != null) {
-                                    existingDetail.setQuantity(existingDetail.getQuantity() + Integer.parseInt(tempQuantity));
-                                    existingDetail.setSubtotal(dish.getDishPrice() * existingDetail.getQuantity());
-                                } else {
-                                    OrderDetail detail = new OrderDetail();
-                                    detail.setOrderId(orderId);
-                                    detail.setDishId(dish.getDishId());
-                                    detail.setQuantity(Integer.parseInt(tempQuantity));
-                                    detail.setSubtotal(dish.getDishPrice() * detail.getQuantity());
-                                    detail.setDishName(dish.getDishName());
-                                    orderDetails.add(detail);
-                                }
+                                OrderDetail detail = new OrderDetail();
+                                detail.setOrderId(orderId);
+                                detail.setDishId(dish.getDishId());
+                                detail.setQuantity(Integer.parseInt(tempQuantity));
+                                detail.setSubtotal(dish.getDishPrice() * detail.getQuantity());
+                                detail.setDishName(dish.getDishName());
+                                orderDetails.add(detail);
                             }
                         }
                     }
@@ -180,6 +171,24 @@ public class OrderController extends HttpServlet {
                 String orderId = request.getParameter("orderId");
                 String customerPhone = request.getParameter("customerPhone");
 
+                // Debug log
+                System.out.println("=== Updating Order ===");
+                System.out.println("OrderId: " + orderId);
+                String[] existingDishIds = request.getParameterValues("existingDishId");
+                System.out.println("Existing Dish IDs: " + java.util.Arrays.toString(existingDishIds));
+                if (existingDishIds != null) {
+                    for (String dishId : existingDishIds) {
+                        System.out.println("Existing Quantity for " + dishId + ": " + request.getParameter("existingQuantity_" + dishId));
+                    }
+                }
+                String[] tempDishIds = request.getParameterValues("tempDishId");
+                System.out.println("Temp Dish IDs: " + java.util.Arrays.toString(tempDishIds));
+                if (tempDishIds != null) {
+                    for (String tempDishId : tempDishIds) {
+                        System.out.println("Temp Quantity for " + tempDishId + ": " + request.getParameter("tempQuantity_" + tempDishId));
+                    }
+                }
+
                 // Lấy Order hiện tại từ DB
                 Order order = orderDAO.getOrderById(orderId);
                 if (order == null) {
@@ -190,18 +199,17 @@ public class OrderController extends HttpServlet {
                 // Danh sách món mới từ form
                 List<OrderDetail> orderDetails = new ArrayList<>();
 
-                // Xử lý món hiện tại từ existingDishId
-                String[] existingDishIds = request.getParameterValues("existingDishId");
-                if (existingDishIds != null) {
-                    for (String dishId : existingDishIds) {
-                        String quantityParam = request.getParameter("existingQuantity_" + dishId);
-                        if (quantityParam != null && !quantityParam.isEmpty() && Integer.parseInt(quantityParam) > 0) {
-                            Dish dish = dishDAO.getDishById(dishId);
-                            if (dish != null) {
+                // Xử lý món từ tempDishId (dùng tempQuantity làm số lượng cuối cùng)
+                if (tempDishIds != null) {
+                    for (String tempDishId : tempDishIds) {
+                        String tempQuantity = request.getParameter("tempQuantity_" + tempDishId);
+                        if (tempQuantity != null && !tempQuantity.isEmpty() && Integer.parseInt(tempQuantity) > 0) {
+                            Dish dish = dishDAO.getDishById(tempDishId);
+                            if (dish != null && "Available".equals(dish.getDishStatus()) && "Sufficient".equals(dish.getIngredientStatus())) {
                                 OrderDetail detail = new OrderDetail();
                                 detail.setOrderId(orderId);
                                 detail.setDishId(dish.getDishId());
-                                detail.setQuantity(Integer.parseInt(quantityParam));
+                                detail.setQuantity(Integer.parseInt(tempQuantity));
                                 detail.setSubtotal(dish.getDishPrice() * detail.getQuantity());
                                 detail.setDishName(dish.getDishName());
                                 orderDetails.add(detail);
@@ -210,28 +218,18 @@ public class OrderController extends HttpServlet {
                     }
                 }
 
-                // Xử lý món tạm thời từ tempDishId (ưu tiên số lượng từ temp nếu trùng)
-                String[] tempDishIds = request.getParameterValues("tempDishId");
-                if (tempDishIds != null) {
-                    for (String tempDishId : tempDishIds) {
-                        String tempQuantity = request.getParameter("tempQuantity_" + tempDishId);
-                        if (tempQuantity != null && !tempQuantity.isEmpty() && Integer.parseInt(tempQuantity) > 0) {
-                            Dish dish = dishDAO.getDishById(tempDishId);
-                            if (dish != null && "Available".equals(dish.getDishStatus()) && "Sufficient".equals(dish.getIngredientStatus())) {
-                                OrderDetail existingDetail = orderDetails.stream()
-                                    .filter(d -> d.getDishId().equals(tempDishId))
-                                    .findFirst()
-                                    .orElse(null);
-                                if (existingDetail != null) {
-                                    // Nếu món đã tồn tại, dùng số lượng từ tempQuantity
-                                    existingDetail.setQuantity(Integer.parseInt(tempQuantity));
-                                    existingDetail.setSubtotal(dish.getDishPrice() * existingDetail.getQuantity());
-                                } else {
-                                    // Thêm món mới từ tempDishId
+                // Nếu không có tempDishId cho món nào đó, giữ nguyên existingDishId
+                if (existingDishIds != null) {
+                    for (String dishId : existingDishIds) {
+                        if (tempDishIds == null || !java.util.Arrays.asList(tempDishIds).contains(dishId)) {
+                            String quantityParam = request.getParameter("existingQuantity_" + dishId);
+                            if (quantityParam != null && !quantityParam.isEmpty() && Integer.parseInt(quantityParam) > 0) {
+                                Dish dish = dishDAO.getDishById(dishId);
+                                if (dish != null) {
                                     OrderDetail detail = new OrderDetail();
                                     detail.setOrderId(orderId);
                                     detail.setDishId(dish.getDishId());
-                                    detail.setQuantity(Integer.parseInt(tempQuantity));
+                                    detail.setQuantity(Integer.parseInt(quantityParam));
                                     detail.setSubtotal(dish.getDishPrice() * detail.getQuantity());
                                     detail.setDishName(dish.getDishName());
                                     orderDetails.add(detail);
@@ -247,6 +245,51 @@ public class OrderController extends HttpServlet {
                 orderDAO.updateOrder(order);
 
                 response.sendRedirect("order?action=viewOrder&orderId=" + orderId);
+            } else if (action.equals("addDish")) {
+                String orderId = request.getParameter("orderId");
+                String dishId = request.getParameter("dishId");
+                String quantityParam = request.getParameter("quantity");
+
+                System.out.println("=== Adding Dish ===");
+                System.out.println("OrderId: " + orderId + ", DishId: " + dishId + ", Quantity: " + quantityParam);
+
+                Order order = orderDAO.getOrderById(orderId);
+                if (order == null) {
+                    response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Order not found");
+                    return;
+                }
+
+                Dish dish = dishDAO.getDishById(dishId);
+                if (dish == null || !"Available".equals(dish.getDishStatus()) || !"Sufficient".equals(dish.getIngredientStatus())) {
+                    response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Dish not available");
+                    return;
+                }
+
+                int quantity = Integer.parseInt(quantityParam);
+                List<OrderDetail> orderDetails = order.getOrderDetails() != null ? order.getOrderDetails() : new ArrayList<>();
+                OrderDetail existingDetail = orderDetails.stream()
+                    .filter(d -> d.getDishId().equals(dishId))
+                    .findFirst()
+                    .orElse(null);
+
+                if (existingDetail != null) {
+                    existingDetail.setQuantity(existingDetail.getQuantity() + quantity);
+                    existingDetail.setSubtotal(dish.getDishPrice() * existingDetail.getQuantity());
+                } else {
+                    OrderDetail detail = new OrderDetail();
+                    detail.setOrderId(orderId);
+                    detail.setDishId(dishId);
+                    detail.setQuantity(quantity);
+                    detail.setSubtotal(dish.getDishPrice() * quantity);
+                    detail.setDishName(dish.getDishName());
+                    orderDetails.add(detail);
+                }
+
+                order.setOrderDetails(orderDetails);
+                orderDAO.updateOrder(order);
+
+                response.setContentType("text/plain");
+                response.getWriter().write("Success");
             }
         } catch (SQLException | ClassNotFoundException e) {
             throw new ServletException(e);
