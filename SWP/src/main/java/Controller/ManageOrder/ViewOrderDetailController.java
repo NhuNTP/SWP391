@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,6 +27,8 @@ public class ViewOrderDetailController extends HttpServlet {
         try {
             order = orderDAO.getOrderById(orderId);
         } catch (ClassNotFoundException ex) {
+            Logger.getLogger(ViewOrderDetailController.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SQLException ex) {
             Logger.getLogger(ViewOrderDetailController.class.getName()).log(Level.SEVERE, null, ex);
         }
 
