@@ -11,13 +11,8 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author HuynhPhuBinh
- */
 @WebServlet("/DeleteCustomer")
 public class DeleteCustomerController extends HttpServlet {
-    private static final long serialVersionUID = 1L;
     private CustomerDAO customerDAO;
 
     @Override
@@ -28,17 +23,19 @@ public class DeleteCustomerController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String customerId = request.getParameter("customerId");
-        System.out.println("Deleting customer with ID: " + customerId);
-
         boolean success = false;
         try {
             success = customerDAO.deleteCustomer(customerId);
-        } catch (SQLException ex) {
+        } catch (SQLException | ClassNotFoundException ex) {
             Logger.getLogger(DeleteCustomerController.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(DeleteCustomerController.class.getName()).log(Level.SEVERE, null, ex);
+            request.getSession().setAttribute("errorMessage", "Database error: " + ex.getMessage());
         }
 
-        response.sendRedirect("ViewCustomerList"); // Redirect regardless of success/failure
+        if (success) {
+            request.getSession().setAttribute("message", "Customer deleted successfully!");
+        } else {
+            request.getSession().setAttribute("errorMessage", "Failed to delete customer.");
+        }
+        response.sendRedirect(request.getContextPath() + "/ViewCustomerList");
     }
 }

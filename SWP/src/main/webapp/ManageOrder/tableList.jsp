@@ -48,6 +48,7 @@
     </style>
 </head>
 <body>
+    <div class="nav-item"><a href="${pageContext.request.contextPath}/logout" class="nav-link"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></div>
     <div class="container">
         <h1>Danh sách bàn</h1>
         <%
@@ -76,6 +77,7 @@
                     </a>
                 </td>
             </tr>
+            
             <%
                 }
             %>
