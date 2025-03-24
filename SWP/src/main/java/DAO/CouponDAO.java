@@ -200,4 +200,76 @@ public class CouponDAO extends DB.DBContext {
             Logger.getLogger(CouponDAO.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    public List<Coupon> getAvailableCoupons() throws SQLException, ClassNotFoundException {
+    List<Coupon> coupons = new ArrayList<>();
+    String query = "SELECT * FROM Coupon WHERE isDeleted = 0 AND expirationDate > GETDATE()";
+    try (Connection conn = getConnection();
+         PreparedStatement ps = conn.prepareStatement(query);
+         ResultSet rs = ps.executeQuery()) {
+        System.out.println("Executing query: " + query);
+        try (PreparedStatement psDate = conn.prepareStatement("SELECT GETDATE()");
+             ResultSet rsDate = psDate.executeQuery()) {
+            if (rsDate.next()) {
+                System.out.println("Current server date: " + rsDate.getString(1));
+            }
+        }
+        int rowCount = 0;
+        while (rs.next()) {
+            Coupon coupon = new Coupon(
+                rs.getString("couponId"),
+                rs.getBigDecimal("discountAmount"),
+                rs.getDate("expirationDate"),
+                rs.getInt("timesUsed"),
+                rs.getInt("isDeleted"),
+                rs.getString("description")
+            );
+            coupons.add(coupon);
+            System.out.println("Found coupon: " + coupon.getCouponId() + ", Discount: " + coupon.getDiscountAmount()
+                             + ", Expire: " + coupon.getExpirationDate() + ", isDeleted: " + coupon.getIsDeleted());
+            rowCount++;
+        }
+        System.out.println("Total rows fetched: " + rowCount + ", Fetched " + coupons.size() + " available coupons");
+    } catch (SQLException e) {
+        System.err.println("SQL Error in getAvailableCoupons: " + e.getMessage());
+        e.printStackTrace();
+        throw e;
+    }
+    return coupons;
+}
+
+public Coupon getCouponById(String couponId) throws SQLException, ClassNotFoundException {
+    String query = "SELECT * FROM Coupon WHERE couponId = ? AND isDeleted = 0";
+    try (Connection conn = getConnection();
+         PreparedStatement ps = conn.prepareStatement(query)) {
+        ps.setString(1, couponId);
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                Coupon coupon = new Coupon(
+                    rs.getString("couponId"),
+                    rs.getBigDecimal("discountAmount"),
+                    rs.getDate("expirationDate"),
+                    rs.getInt("timesUsed"),
+                    rs.getInt("isDeleted"),
+                    rs.getString("description")
+                );
+                System.out.println("Fetched coupon: " + couponId);
+                return coupon;
+            }
+        }
+        System.out.println("No coupon found: " + couponId);
+        return null;
+    }
+}
+
+public void incrementTimesUsed(String couponId) throws SQLException, ClassNotFoundException {
+    String query = "UPDATE Coupon SET timesUsed = timesUsed + 1 WHERE couponId = ?";
+    try (Connection conn = getConnection();
+         PreparedStatement ps = conn.prepareStatement(query)) {
+        ps.setString(1, couponId);
+        int rowsUpdated = ps.executeUpdate();
+        if (rowsUpdated > 0) {
+            System.out.println("Incremented timesUsed for coupon: " + couponId);
+        }
+    }
+}
 }

@@ -46,6 +46,9 @@
         <%
             }
         %>
+<div style="text-align: center; margin-top: 20px;">
+            <a href="dashboard"><button class="button back">Quay lại Dashboard</button></a>
+        </div>
     </div>
 </body>
 </html>

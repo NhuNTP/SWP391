@@ -15,6 +15,7 @@
         .button.complete { background-color: #4CAF50; }
         .button.edit { background-color: #FFC107; padding: 5px 10px; }
         .button.delete { background-color: #F44336; padding: 5px 10px; }
+        .button.back { background-color: #9E9E9E; } /* Thêm màu xám cho nút Quay lại */
         .button:hover { opacity: 0.9; }
         .customer-section { margin-top: 20px; padding: 15px; background-color: #f9f9f9; border-radius: 5px; }
         .customer-section select, .customer-section input[type="text"] { padding: 8px; margin: 5px 0; width: 200px; }
@@ -129,6 +130,7 @@
             <%
                 }
             %>
+            <a href="order?action=cancelOrder"><button class="button back">Quay lại</button></a>
         </div>
         <%
             }
