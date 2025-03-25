@@ -313,6 +313,7 @@
                     </div>
                     <div class="modal-body">
                         <form id="addInventoryForm">
+                           
                             <div class="mb-3 row">
                                 <label for="itemName" class="col-sm-4 col-form-label">Name:</label>
                                 <div class="col-sm-8">

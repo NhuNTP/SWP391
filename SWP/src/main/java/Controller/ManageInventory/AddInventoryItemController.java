@@ -101,10 +101,21 @@ public class AddInventoryItemController extends HttpServlet {
             double itemQuantity = Double.parseDouble(quantityStr);
             // 5. Thêm vào database
             InventoryDAO inventoryDAO = new InventoryDAO();
-            String itemID = inventoryDAO.generateNextInventoryId();
-            System.out.println(itemID);
-            InventoryItem newItem = new InventoryItem(itemID, itemName, itemType, itemPrice, itemQuantity, itemUnit, itemDescription, 0);
-            inventoryDAO.addNewInventoryItem(newItem);
+            String isItemExist = inventoryDAO.isInventoryItemExist(itemName);
+
+            if (!"None".equals(isItemExist)) {
+                InventoryItem upItem = new InventoryItem(isItemExist, itemName, itemType, itemPrice, itemQuantity, itemUnit, itemDescription);
+              
+                inventoryDAO.updateInventoryItem(upItem);
+            } else {
+                String itemID = inventoryDAO.generateNextInventoryId();
+                System.out.println(itemID);
+                InventoryItem newItem = new InventoryItem(itemID, itemName, itemType, itemPrice, itemQuantity, itemUnit, itemDescription, 0);
+               
+                System.out.println("OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
+                System.out.println(newItem);
+                inventoryDAO.addNewInventoryItem(newItem);
+            }
 
             // 6. Chuyển hướng
             response.sendRedirect("ViewInventoryController");
