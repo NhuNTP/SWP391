@@ -390,13 +390,11 @@
         <script>
             function formatDiscountDisplay(discountAmount) {
                 const discountStr = String(discountAmount); // Chuyển số thành chuỗi
-                if (discountStr.length > 3) {
+               
                     // Định dạng số lớn hơn 999 thành tiền tệ với dấu phẩy và 'đ'
                     return formatCurrency(discountAmount) + 'đ';
-                } else {
-                    // Định dạng số nhỏ hơn hoặc bằng 999 thành phần trăm với '%'
-                    return discountAmount + '%';
-                }
+              
+                
             }
 
             function formatCurrency(number) {
