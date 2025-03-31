@@ -46,7 +46,7 @@
                 <td><%= table.isHasOrder() ? "Có (Pending)" : "Không" %></td>
                 <td>
                     <% if ("Available".equals(table.getTableStatus())) { %>
-                        <a href="order?action=tableOverview&tableId=<%= table.getTableId() %>">
+                        <a href="${pageContext.request.contextPath}/order?action=tableOverview&tableId=<%= table.getTableId() %>">
                             <button class="button">Chọn bàn</button>
                         </a>
                     <% } else { %>
