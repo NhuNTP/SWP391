@@ -32,7 +32,8 @@ public class UpdateDishController extends HttpServlet {
             String dishId = request.getParameter("dishId");
             Dish dish = menuDAO.getDishById(dishId);
             if (dish == null) {
-                response.getWriter().write("<p class='text-danger'>Dish not found with ID: " + dishId + "</p>");
+                request.getSession().setAttribute("errorMessage", "Dish not found with ID: " + dishId);
+                response.sendRedirect(request.getContextPath() + "/viewalldish");
                 return;
             }
             List<DishInventory> dishIngredients = menuDAO.getDishIngredients(dishId);
@@ -44,7 +45,8 @@ public class UpdateDishController extends HttpServlet {
             dispatcher.forward(request, response);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error in doGet", e);
-            response.getWriter().write("<p class='text-danger'>An unexpected error occurred.</p>");
+            request.getSession().setAttribute("errorMessage", "An unexpected error occurred.");
+            response.sendRedirect(request.getContextPath() + "/viewalldish");
         }
     }
 
@@ -105,17 +107,23 @@ public class UpdateDishController extends HttpServlet {
             menuDAO.updateIngredientStatus(dishId);
 
             if (isUpdated && errorMessage.length() == 0) {
-                response.getWriter().write("<p class='alert alert-success'>Dish updated successfully!</p>");
+                request.getSession().setAttribute("message", "Dish updated successfully!");
             } else if (isUpdated) {
-                response.getWriter().write("<p class='alert alert-warning'>Dish updated, but some ingredients failed: " + errorMessage.toString() + "</p>");
+                request.getSession().setAttribute("message", "Dish updated, but some ingredients failed: " + errorMessage.toString());
             } else {
-                response.getWriter().write("<p class='alert alert-danger'>Failed to update dish.</p>");
+                request.getSession().setAttribute("errorMessage", "Failed to update dish.");
             }
+
+            // Redirect to viewalldish
+            response.sendRedirect(request.getContextPath() + "/viewalldish");
+
         } catch (NumberFormatException e) {
-            response.getWriter().write("<p class='alert alert-danger'>Invalid data provided.</p>");
+            request.getSession().setAttribute("errorMessage", "Invalid data provided.");
+            response.sendRedirect(request.getContextPath() + "/viewalldish");
             LOGGER.log(Level.SEVERE, "Invalid number format", e);
         } catch (Exception e) {
-            response.getWriter().write("<p class='alert alert-danger'>An error occurred during update.</p>");
+            request.getSession().setAttribute("errorMessage", "An error occurred during update.");
+            response.sendRedirect(request.getContextPath() + "/viewalldish");
             LOGGER.log(Level.SEVERE, "Error in doPost", e);
         }
     }

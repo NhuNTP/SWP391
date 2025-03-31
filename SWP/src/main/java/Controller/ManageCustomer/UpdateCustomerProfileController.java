@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 
 @WebServlet("/UpdateCustomer")
 public class UpdateCustomerProfileController extends HttpServlet {
+
     private CustomerDAO customerDAO;
 
     @Override
@@ -41,17 +42,24 @@ public class UpdateCustomerProfileController extends HttpServlet {
         String customerPhone = request.getParameter("CustomerPhone");
         String numberOfPaymentStr = request.getParameter("NumberOfPayment");
 
-        int numberOfPayment;
-        try {
-            numberOfPayment = Integer.parseInt(numberOfPaymentStr);
-        } catch (NumberFormatException e) {
-            request.getSession().setAttribute("errorMessage", "Invalid Number of Payments.");
-            response.sendRedirect(request.getContextPath() + "/ViewCustomerList");
-            return;
-        }
+        int numberOfPayment= Integer.parseInt(numberOfPaymentStr);;
+//        try {
+//            numberOfPayment = Integer.parseInt(numberOfPaymentStr);
+//        } catch (NumberFormatException e) {
+//            request.getSession().setAttribute("errorMessage", "Invalid Number of Payments.");
+//            response.sendRedirect(request.getContextPath() + "/ViewCustomerList");
+//            return;
+//        }
 
         Customer customer = new Customer(customerId, customerName, customerPhone, numberOfPayment);
         try {
+            if (customerDAO.isPhoneExists(customerPhone, null)) {
+                System.out.println(customerDAO.isPhoneExists(customerPhone, null));
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                response.getWriter().write("Customer phone already exists. Please check agains.");
+
+                return;
+            }
             customerDAO.updateCustomer(customer);
             request.getSession().setAttribute("message", "Customer updated successfully!");
         } catch (SQLException | ClassNotFoundException ex) {
