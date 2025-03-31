@@ -118,6 +118,43 @@
             .highlight {
                 background-color: yellow !important; /* Thêm !important */
             }
+             .table {
+            width: 100%;
+            margin-bottom: 1rem;
+            background-color: #fff;
+        }
+        .table th,
+        .table td {
+            padding: 12px;
+            vertical-align: middle;
+            text-align: left;
+        }
+        .table thead th {
+            background-color: #343a40;
+            color: white;
+            border-color: #454d55;
+        }
+        .table-hover tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+        .table-bordered {
+            border: 1px solid #dee2e6;
+        }
+        .table-bordered th,
+        .table-bordered td {
+            border: 1px solid #dee2e6;
+        }
+           .text-left.mb-4 {
+
+                overflow: hidden; /* Đảm bảo background và border-radius hoạt động đúng với nội dung bên trong */
+                /* Các tùy chỉnh tùy chọn để làm đẹp thêm (có thể bỏ nếu không cần) */
+                background: linear-gradient(to right, #2C3E50, #42A5F5);
+                padding: 1rem; /* Thêm padding bên trong để tạo khoảng cách, tùy chọn */
+                color:white;
+                margin-left : -24px !important;
+                margin-top: -25px !important;
+                margin-right: -25px !important;
+            }
         </style>
     </head>
     <body>
@@ -157,7 +194,7 @@
                                 </div>
 
                                 <div class="header-buttons">
-                                    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#addCustomerModal"> Add New</button>
+                                    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#addCustomerModal"> <i class="fas fa-plus"></i>Add New</button>
                                 </div>
 
                             </div>

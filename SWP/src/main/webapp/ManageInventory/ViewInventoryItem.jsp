@@ -33,13 +33,11 @@
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
         <style>
-            /* CSS Reset and Font */
             body {
                 font-family: 'Roboto', sans-serif;
-                background-color: #fcfcf7
+                background-color: #f8f9fa;
             }
 
-            /* Sidebar Styles */
             .sidebar {
                 background: linear-gradient(to bottom, #2C3E50, #34495E);
                 color: white;
@@ -55,14 +53,26 @@
                 background-color: #1A252F;
             }
 
-            .modal-header{
-                background-color: #f7f7f0
+            .card-stats {
+                background: linear-gradient(to right, #4CAF50, #81C784);
+                color: white;
             }
-            /* Main Content */
+
+            .card-stats i {
+                font-size: 2rem;
+            }
+
+            .chart-container {
+                position: relative;
+                height: 300px;
+            }
+
+            /* Main Content Area */
             .main-content-area {
                 padding: 20px;
             }
 
+            /* Content Header */
             .content-header {
                 display: flex;
                 justify-content: space-between;
@@ -75,60 +85,22 @@
                 font-size: 24px;
             }
 
-            .header-buttons .btn-info {
-                background-color: #007bff;
-                color: white;
-                border: none;
-                padding: 8px 15px;
-                border-radius: 5px;
-            }
-
-            .header-buttons .btn-info:hover {
-                background-color: #0056b3;
-            }
-
             /* Search Bar */
-            .search-bar {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-            }
-
             .search-bar input {
                 padding: 8px 12px;
                 border: 1px solid #ccc;
                 border-radius: 3px;
                 width: 250px;
             }
-
-
-            /* Inventory Table */
-            .employee-grid .table {
-                width: 100%;
-                border-collapse: collapse;
-                margin-top: 10px;
+            .modal-header{
+                background-color: #f7f7f0
+            }
+            /* Table Styles */
+            .table-responsive {
+                overflow-x: auto;
             }
 
-            .employee-grid .table th, .employee-grid .table td {
-                border: 1px solid #ddd;
-                padding: 8px;
-                text-align: left;
-            }
-
-            .employee-grid .table th {
-                background-color: #f4f4f4;
-                font-weight: bold;
-            }
-
-            .employee-grid .table tbody tr:nth-child(even) {
-                background-color: #f9f9f9;
-            }
-
-            .employee-grid .table tbody tr:hover {
-                background-color: #f0f0f0;
-            }
-
-            /* Table Buttons */
+            /* Nút trong bảng */
             .btn-edit, .btn-delete {
                 padding: 5px 10px;
                 border-radius: 5px;
@@ -141,7 +113,6 @@
 
             .btn-edit {
                 background-color: #007bff;
-                border: none;
             }
 
             .btn-edit:hover {
@@ -150,12 +121,29 @@
 
             .btn-delete {
                 background-color: #dc3545;
-                border: none;
                 margin-left: 5px;
             }
-
+            #couponIdUpdateDisplay{
+                background-color: #fcfcf7
+            }
             .btn-delete:hover {
                 background-color: #c82333;
+            }
+
+            .btn-edit i, .btn-delete i {
+                margin-right: 5px;
+            }
+            .header-buttons .btn-info {
+                background-color: #007bff;
+                color: white;
+                border: none;
+                padding: 8px 15px;
+                border-radius: 5px;
+                cursor: pointer;
+            }
+
+            .header-buttons .btn-info:hover {
+                background-color: #0056b3;
             }
 
             /* No Data Message */
@@ -164,12 +152,6 @@
                 text-align: center;
                 color: #777;
             }
-
-
-            /* Highlight CSS */
-            .highlight {
-                background-color: yellow;
-            }
             .sidebar .nav-link {
                 font-size: 0.9rem; /* Hoặc 16px, tùy vào AdminDashboard.jsp */
             }
@@ -177,9 +159,78 @@
             .sidebar h4{
                 font-size: 1.5rem;
             }
-            #itemIdUpdateDisplay{
-                background-color: #f7f7f0
+            .highlight {
+                background-color: yellow !important; /* Thêm !important */
             }
+            .table {
+                width: 100%;
+                margin-bottom: 1rem;
+                background-color: #fff;
+            }
+
+            .table thead th {
+                background-color: #343a40;
+                color: white;
+                border-color: #454d55;
+            }
+            .table-hover tbody tr:hover {
+                background-color: #f1f1f1;
+            }
+            .text-left.mb-4 {
+
+                overflow: hidden; /* Đảm bảo background và border-radius hoạt động đúng với nội dung bên trong */
+                /* Các tùy chỉnh tùy chọn để làm đẹp thêm (có thể bỏ nếu không cần) */
+                background: linear-gradient(to right, #2C3E50, #42A5F5);
+                padding: 1rem; /* Thêm padding bên trong để tạo khoảng cách, tùy chọn */
+                color:white;
+                margin-left : -40px !important;
+                margin-top: -25px !important;
+                margin-right: -25px !important;
+            }
+
+            .btn-warning {
+                background-color: #ffca28; /* Chọn màu vàng ấm áp: #ffca28 (hoặc #ffb300, #ffc107, tùy bạn thích) */
+                border-color: #ffca28;    /* Viền cùng màu nền */
+                color: white;         /* Chữ tối màu */
+                transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; /* Transition mượt mà */
+            }
+
+            .btn-warning:hover {
+                background-color: #ffda6a; /* Vàng sáng hơn một chút khi hover: #ffda6a (hoặc #ffe082, tùy màu nền) */
+                border-color: #ffda6a;    /* Viền cùng màu nền hover */
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Bóng đổ nhẹ */
+            }
+
+            .btn-danger {
+                background-color: #f44336; /* Màu đỏ "đỏ hơn", ví dụ: #f44336 (hoặc #e53935, #d32f2f, tùy chọn) */
+                border-color: #f44336;    /* Viền cùng màu nền */
+                color: white;             /* Chữ trắng */
+                transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; /* Transition mượt mà */
+            }
+
+            .btn-danger:hover {
+                background-color: #e53935; /* Đỏ đậm hơn một chút khi hover, ví dụ: #e53935 (hoặc #d32f2f, tùy màu nền) */
+                border-color: #e53935;    /* Viền cùng màu nền hover */
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Bóng đổ nhẹ */
+                color: black;
+            }
+
+/*            .btn-add-new {  Đặt một lớp CSS riêng để dễ tùy chỉnh, ví dụ: .btn-add-new 
+                background-color: #64b5f6;  Xanh dương nhạt: #64b5f6 (hoặc chọn màu khác từ gợi ý) 
+                border: none;              Loại bỏ viền mặc định 
+                color: white;              Chữ trắng 
+                padding: 8px 15px;         Điều chỉnh padding nếu cần 
+                border-radius: 0.5rem;     Góc bo tròn 
+                cursor: pointer;          Con trỏ tay khi hover 
+                transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;  Transition mượt mà 
+            }
+
+            .btn-add-new:hover {
+                background-color: #42a5f5;  Xanh dương đậm hơn một chút khi hover 
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);  Bóng đổ nhẹ 
+                transform: scale(1.02);    Phóng to nhẹ khi hover 
+            }*/
+
         </style>
     </head>
 
@@ -187,7 +238,7 @@
         <div class="d-flex">
             <div class="sidebar col-md-2 p-3">
                 <h4 class="text-center mb-4">Admin</h4>
-                 <ul class="nav flex-column">
+                <ul class="nav flex-column">
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/dashboard" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/view-revenue" class="nav-link"><i class="fas fa-chart-line me-2"></i>View Revenue</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-list-alt me-2"></i>Menu Management</a></li>
@@ -209,7 +260,7 @@
                 <section class="main-content">
                     <div class="container-fluid">
                         <div class="text-left mb-4">
-                            <h3>Inventory Management</h3>
+                            <h4>Inventory Management</h4>
                         </div>
                         <main class="content-area">
                             <div class="content-header">
@@ -218,7 +269,7 @@
                                 </div>
 
                                 <div class="header-buttons">
-                                    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#addInventoryModal">Add New</button>
+                                    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#addInventoryModal"><i class="fas fa-plus"></i>Add New</button>
                                 </div>
                             </div>
                             <div class="employee-grid"> <%-- Reusing employee-grid class for layout consistency --%>
@@ -261,7 +312,7 @@
                                                 <Td valign="middle"><% out.print(listItem.getItemUnit()); %></td>
                                                 <Td valign="middle"><% out.print(listItem.getItemDescription());%></td>
                                                 <Td valign="middle">
-                                                    <button type="button" class="btn btn-edit btn-update-inventory"
+                                                    <button type="button" class="btn btn-warning btn-update-inventory"
                                                             data-bs-toggle="modal" data-bs-target="#updateInventoryModal"
                                                             data-item-id="<%= listItem.getItemId()%>"
                                                             data-item-name="<%= listItem.getItemName()%>"
@@ -272,7 +323,7 @@
                                                             data-item-description="<%= listItem.getItemDescription()%>">
                                                         <i class="fas fa-edit"></i> Update
                                                     </button>
-                                                    <button type="button" class="btn btn-delete btn-delete-inventory"
+                                                    <button type="button" class="btn btn-danger btn-delete-inventory"
                                                             data-bs-toggle="modal" data-bs-target="#deleteInventoryModal"
                                                             data-item-id="<%= listItem.getItemId()%>">
                                                         <i class="fas fa-trash-alt"></i> Delete
@@ -313,7 +364,7 @@
                     </div>
                     <div class="modal-body">
                         <form id="addInventoryForm">
-                           
+
                             <div class="mb-3 row">
                                 <label for="itemName" class="col-sm-4 col-form-label">Name:</label>
                                 <div class="col-sm-8">

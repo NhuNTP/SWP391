@@ -155,6 +155,78 @@
             .highlight {
                 background-color: yellow !important; /* Thêm !important */
             }
+            .table {
+                width: 100%;
+                margin-bottom: 1rem;
+                background-color: #fff;
+            }
+
+            .table thead th {
+                background-color: #343a40;
+                color: white;
+                border-color: #454d55;
+            }
+            .table-hover tbody tr:hover {
+                background-color: #f1f1f1;
+            }
+            .text-left.mb-4 {
+
+                overflow: hidden; /* Đảm bảo background và border-radius hoạt động đúng với nội dung bên trong */
+                /* Các tùy chỉnh tùy chọn để làm đẹp thêm (có thể bỏ nếu không cần) */
+                background: linear-gradient(to right, #2C3E50, #42A5F5);
+                padding: 1rem; /* Thêm padding bên trong để tạo khoảng cách, tùy chọn */
+                color:white;
+                margin-left : -24px !important;
+                margin-top: -25px !important;
+                margin-right: -25px !important;
+            }
+               .btn-warning {
+        background-color: #ffca28; /* Chọn màu vàng ấm áp: #ffca28 (hoặc #ffb300, #ffc107, tùy bạn thích) */
+        border-color: #ffca28;    /* Viền cùng màu nền */
+        color: white;         /* Chữ tối màu */
+        transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; /* Transition mượt mà */
+    }
+
+    .btn-warning:hover {
+        background-color: #ffda6a; /* Vàng sáng hơn một chút khi hover: #ffda6a (hoặc #ffe082, tùy màu nền) */
+        border-color: #ffda6a;    /* Viền cùng màu nền hover */
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Bóng đổ nhẹ */
+    }
+
+         .btn-danger {
+        background-color: #f44336; /* Màu đỏ "đỏ hơn", ví dụ: #f44336 (hoặc #e53935, #d32f2f, tùy chọn) */
+        border-color: #f44336;    /* Viền cùng màu nền */
+        color: white;             /* Chữ trắng */
+        transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; /* Transition mượt mà */
+    }
+
+    .btn-danger:hover {
+        background-color: #e53935; /* Đỏ đậm hơn một chút khi hover, ví dụ: #e53935 (hoặc #d32f2f, tùy màu nền) */
+        border-color: #e53935;    /* Viền cùng màu nền hover */
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Bóng đổ nhẹ */
+        color: black;
+    }
+/*
+ .btn-add-new {
+        background-color: #64b5f6;
+        border: none;
+        color: white;
+        padding: 8px 15px;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);  Bóng đổ nhẹ ban đầu 
+        transition: box-shadow 0.3s ease, transform 0.3s ease;  Transition mượt mà 
+    }
+
+    .btn-add-new:hover {
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);  Bóng đổ đậm hơn khi hover 
+        transform: scale(1.05);  Phóng to nhẹ khi hover 
+    }
+
+    .btn-add-new:active {  Hiệu ứng khi nút được nhấn 
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);  Bóng đổ nhỏ hơn khi nhấn 
+        transform: scale(0.98);  Thu nhỏ nhẹ khi nhấn 
+    }*/
         </style>
     </head>
     <body>
@@ -197,7 +269,7 @@
                                 </div>
 
                                 <div class="header-buttons">
-                                    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#addCouponModal"> Add New</button>
+                                    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#addCouponModal">  <i class="fas fa-plus"></i> Add New</button>
                                 </div>
 
                             </div>
@@ -234,7 +306,7 @@
                                             <td><%= coupon.getTimesUsed()%></td>
                                             <td><%= coupon.getDescription()%></td>
                                             <td>
-                                                <button type="button" class="btn btn-edit btn-update-coupon"
+                                                <button type="button" class="btn btn-warning btn-update-coupon"
                                                         data-bs-toggle="modal" data-bs-target="#updateCouponModal"
                                                         data-coupon-id="<%= coupon.getCouponId()%>"
                                                         data-discount-amount="<%= coupon.getDiscountAmount()%>"
@@ -243,7 +315,7 @@
                                                         data-description="<%= coupon.getDescription()%>">
                                                     <i class="fas fa-edit"></i> Update
                                                 </button>
-                                                <button type="button" class="btn btn-delete btn-delete-coupon"
+                                                <button type="button" class="btn btn-danger btn-delete-coupon"
                                                         data-bs-toggle="modal" data-bs-target="#deleteCouponModal"
                                                         data-coupon-id="<%= coupon.getCouponId()%>">
                                                     <i class="fas fa-trash-alt"></i> Delete
