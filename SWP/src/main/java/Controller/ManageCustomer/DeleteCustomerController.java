@@ -24,17 +24,19 @@ public class DeleteCustomerController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String customerId = request.getParameter("customerId");
         boolean success = false;
+        System.out.println("Customer deleted successfullyyyyyyyyyyyyyy!");
         try {
             success = customerDAO.deleteCustomer(customerId);
+            System.out.println("Customer deleted successfullyyyyyyyyyyyyyy!");
         } catch (SQLException | ClassNotFoundException ex) {
             Logger.getLogger(DeleteCustomerController.class.getName()).log(Level.SEVERE, null, ex);
             request.getSession().setAttribute("errorMessage", "Database error: " + ex.getMessage());
         }
 
         if (success) {
-            request.getSession().setAttribute("message", "Customer deleted successfully!");
+          System.out.println("Customer deleted successfully!");
         } else {
-            request.getSession().setAttribute("errorMessage", "Failed to delete customer.");
+            System.out.println("Failed to delete customer.");
         }
         response.sendRedirect(request.getContextPath() + "/ViewCustomerList");
     }

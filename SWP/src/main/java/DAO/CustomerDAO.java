@@ -19,8 +19,7 @@ public class CustomerDAO {
     // Thêm khách hàng mới
     public void addCustomer(Customer customer) throws SQLException, ClassNotFoundException {
         String sql = "INSERT INTO Customer (CustomerId, CustomerName, CustomerPhone, NumberOfPayment) VALUES (?, ?, ?, ?)";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, customer.getCustomerId());
             stmt.setString(2, customer.getCustomerName());
             stmt.setString(3, customer.getCustomerPhone());
@@ -36,9 +35,7 @@ public class CustomerDAO {
     public String generateNextCustomerId() throws SQLException, ClassNotFoundException {
         String nextId = "CU001"; // Giá trị mặc định
         String sql = "SELECT MAX(CustomerId) as MaxId FROM Customer";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
             if (rs.next() && rs.getString("MaxId") != null) {
                 String maxId = rs.getString("MaxId"); // Ví dụ: "CU005"
                 int numericPart = Integer.parseInt(maxId.substring(2)); // Lấy "005" -> 5
@@ -56,9 +53,7 @@ public class CustomerDAO {
     public List<Customer> getAllCustomers() throws SQLException, ClassNotFoundException {
         List<Customer> customers = new ArrayList<>();
         String sql = "SELECT CustomerId, CustomerName, CustomerPhone, NumberOfPayment FROM Customer";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 Customer customer = new Customer();
                 customer.setCustomerId(rs.getString("CustomerId"));
@@ -77,8 +72,7 @@ public class CustomerDAO {
     // Lấy khách hàng theo ID
     public Customer getCustomerById(String customerId) throws SQLException, ClassNotFoundException {
         String query = "SELECT CustomerId, CustomerName, CustomerPhone, NumberOfPayment FROM Customer WHERE CustomerId = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {
             ps.setString(1, customerId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -100,8 +94,7 @@ public class CustomerDAO {
     // Cập nhật thông tin khách hàng
     public boolean updateCustomer(Customer customer) throws SQLException, ClassNotFoundException {
         String query = "UPDATE Customer SET CustomerName = ?, CustomerPhone = ?, NumberOfPayment = ? WHERE CustomerId = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {
             ps.setString(1, customer.getCustomerName());
             ps.setString(2, customer.getCustomerPhone());
             ps.setInt(3, customer.getNumberOfPayment());
@@ -116,8 +109,7 @@ public class CustomerDAO {
     // Xóa khách hàng
     public boolean deleteCustomer(String customerId) throws SQLException, ClassNotFoundException {
         String query = "DELETE FROM Customer WHERE CustomerId = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {
             ps.setString(1, customerId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -128,11 +120,11 @@ public class CustomerDAO {
 
     // Tăng NumberOfPayment của khách hàng
     public void incrementNumberOfPayment(String customerId) throws SQLException, ClassNotFoundException {
-        if (customerId == null || customerId.isEmpty()) return; // Không tăng nếu không có CustomerId
-
+        if (customerId == null || customerId.isEmpty()) {
+            return; // Không tăng nếu không có CustomerId
+        }
         String sql = "UPDATE Customer SET NumberOfPayment = NumberOfPayment + 1 WHERE CustomerId = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, customerId);
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -140,19 +132,36 @@ public class CustomerDAO {
             throw e;
         }
     }
-   public boolean isPhoneExists(String phone, String excludeCustomerId) throws SQLException, ClassNotFoundException {
-    String sql = "SELECT COUNT(*) FROM Customer WHERE CustomerPhone = ? AND (CustomerId != ? OR ? IS NULL)";
-    try (Connection conn = DBContext.getConnection(); // Giả định có phương thức getConnection
-         PreparedStatement stmt = conn.prepareStatement(sql)) {
-        stmt.setString(1, phone);
-        stmt.setString(2, excludeCustomerId != null ? excludeCustomerId : "");
-        stmt.setString(3, excludeCustomerId);
-        try (ResultSet rs = stmt.executeQuery()) {
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
+
+    public boolean isPhoneExists(String phone, String excludeCustomerId) throws SQLException, ClassNotFoundException {
+        String sql;
+        if (excludeCustomerId == null || excludeCustomerId.isEmpty()) {
+            // Trường hợp thêm mới hoặc kiểm tra chung: Chỉ cần kiểm tra số điện thoại tồn tại
+            sql = "SELECT COUNT(*) FROM Customer WHERE CustomerPhone = ?";
+        } else {
+            // Trường hợp cập nhật: Kiểm tra số điện thoại tồn tại nhưng loại trừ CustomerId hiện tại
+            sql = "SELECT COUNT(*) FROM Customer WHERE CustomerPhone = ? AND CustomerId != ?";
+        }
+
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, phone); // Set số điện thoại (parameter 1 luôn là số điện thoại)
+
+            if (excludeCustomerId != null && !excludeCustomerId.isEmpty()) {
+                try {
+                    stmt.setInt(2, Integer.parseInt(excludeCustomerId)); // Set CustomerId (parameter 2 chỉ khi excludeCustomerId không null)
+                } catch (NumberFormatException e) {
+                    // Xử lý nếu excludeCustomerId không phải là số hợp lệ (ví dụ: log lỗi, throw exception)
+                    e.printStackTrace(); // In lỗi ra console để debug
+                    return false; // Hoặc throw exception, tùy vào xử lý lỗi của bạn
+                }
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
             }
         }
+        return false;
     }
-    return false;
-}
 }
