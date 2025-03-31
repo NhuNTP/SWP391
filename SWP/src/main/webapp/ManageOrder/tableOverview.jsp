@@ -15,126 +15,116 @@
         .button.complete { background-color: #4CAF50; }
         .button.edit { background-color: #FFC107; padding: 5px 10px; }
         .button.delete { background-color: #F44336; padding: 5px 10px; }
-        .button.back { background-color: #9E9E9E; } /* Thêm màu xám cho nút Quay lại */
-        .button:hover { opacity: 0.9; }
+        .button.back { background-color: #9E9E9E; }
+        .button:disabled { background-color: #ccc; cursor: not-allowed; }
+        .button:hover:not(:disabled) { opacity: 0.9; }
         .customer-section { margin-top: 20px; padding: 15px; background-color: #f9f9f9; border-radius: 5px; }
-        .customer-section select, .customer-section input[type="text"] { padding: 8px; margin: 5px 0; width: 200px; }
         .message { color: #888; font-style: italic; }
-        .edit-form input[type="number"] { width: 50px; padding: 5px; }
+        .error { color: red; text-align: center; }
+        .success { color: green; text-align: center; }
     </style>
 </head>
 <body>
     <div class="container">
         <%
-            Table table = (Table) request.getAttribute("table");
+            String tableId = request.getParameter("tableId");
             Order order = (Order) request.getAttribute("order");
             Boolean hasDishes = (Boolean) request.getAttribute("hasDishes");
-            if (table == null) {
-        %>
-        <p>Không tìm thấy bàn. Vui lòng chọn lại.</p>
-        <a href="order?action=listTables"><button class="button complete">Quay lại</button></a>
-        <%
-            } else {
-                String tableId = table.getTableId();
-                Order tempOrder = (Order) session.getAttribute("tempOrder");
-                order = order != null ? order : tempOrder;
-        %>
-        <h1>Bàn <%=tableId%> - <%=order != null && order.getOrderStatus() != null ? order.getOrderStatus() : "Chưa có đơn"%></h1>
+            String error = (String) request.getAttribute("error");
+            String success = (String) request.getAttribute("success");
+            boolean isEditable = order != null && "Pending".equals(order.getOrderStatus());
 
-        <%
-            List<OrderDetail> details = order != null && order.getOrderDetails() != null ? order.getOrderDetails() : null;
-            if (details != null && !details.isEmpty()) {
+            if (tableId == null) {
         %>
+        <p class="error">Không tìm thấy bàn. Vui lòng chọn lại.</p>
+        <a href="order?action=listTables"><button class="button back">Quay lại</button></a>
+        <% } else { %>
+        <h1>Bàn <%= tableId %> - <%= order != null && order.getOrderStatus() != null ? order.getOrderStatus() : "Chưa có đơn" %></h1>
+        <% if (error != null) { %>
+            <p class="error"><%= error %></p>
+        <% } %>
+        <% if (success != null) { %>
+            <p class="success"><%= success %></p>
+        <% } %>
+
+        <% if (order != null && hasDishes != null && hasDishes) { %>
         <table class="order-table">
             <tr><th>Tên món</th><th>Số lượng</th><th>Thành tiền</th><th>Hành động</th></tr>
-            <%
-                for (OrderDetail detail : details) {
-            %>
+            <% for (OrderDetail detail : order.getOrderDetails()) { %>
             <tr>
-                <td><%=detail.getDishName()%></td>
-                <td><%=detail.getQuantity()%></td>
-                <td><%=String.format("%.2f", detail.getSubtotal())%> VND</td>
+                <td><%= detail.getDishName() %></td>
+                <td><%= detail.getQuantity() %></td>
+                <td><%= String.format("%.2f", detail.getSubtotal()) %> VND</td>
                 <td>
-                    <form action="order" method="post" class="edit-form" style="display:inline;">
+                    <% if (isEditable) { %>
+                    <form action="order" method="post" style="display:inline;">
                         <input type="hidden" name="action" value="editDishQuantity">
-                        <input type="hidden" name="orderDetailId" value="<%=detail.getOrderDetailId()%>">
-                        <input type="hidden" name="tableId" value="<%=tableId%>">
-                        <input type="number" name="newQuantity" value="<%=detail.getQuantity()%>" min="1" required>
+                        <input type="hidden" name="orderDetailId" value="<%= detail.getOrderDetailId() %>">
+                        <input type="hidden" name="tableId" value="<%= tableId %>">
+                        <input type="number" name="newQuantity" value="<%= detail.getQuantity() %>" min="1" required>
                         <button type="submit" class="button edit">Sửa</button>
                     </form>
                     <form action="order" method="post" style="display:inline;">
                         <input type="hidden" name="action" value="deleteDish">
-                        <input type="hidden" name="orderDetailId" value="<%=detail.getOrderDetailId()%>">
-                        <input type="hidden" name="tableId" value="<%=tableId%>">
+                        <input type="hidden" name="orderDetailId" value="<%= detail.getOrderDetailId() %>">
+                        <input type="hidden" name="tableId" value="<%= tableId %>">
                         <button type="submit" class="button delete" onclick="return confirm('Xóa món này?');">Xóa</button>
                     </form>
+                    <% } %>
                 </td>
             </tr>
-            <%
-                }
-            %>
-            <tr><td colspan="3"><strong>Tổng cộng</strong></td><td><strong><%=String.format("%.2f", details.stream().mapToDouble(OrderDetail::getSubtotal).sum())%> VND</strong></td></tr>
+            <% } %>
+            <tr><td colspan="3"><strong>Tổng cộng</strong></td><td><strong><%= String.format("%.2f", order.getTotal()) %> VND</strong></td></tr>
         </table>
-        <%
-            } else {
-        %>
+        <% } else { %>
         <p class="message">Chưa có món nào. Vui lòng thêm món để tiếp tục.</p>
-        <%
-            }
-        %>
+        <% } %>
 
-        <%
-            if (hasDishes != null && hasDishes) {
-        %>
+        <% if (hasDishes != null && hasDishes && isEditable) { %>
         <div class="customer-section">
-            <h2>Khách hàng</h2>
-            <form action="order" method="post">
-                <input type="hidden" name="action" value="updateCustomer">
-                <input type="hidden" name="tableId" value="<%=tableId%>">
-                <label><input type="radio" name="customerOption" value="existing" checked> Chọn khách hàng</label><br>
-                <select name="customerId">
+            <h2>Quản lý khách hàng</h2>
+            <% Customer currentCustomer = (Customer) request.getAttribute("currentCustomer"); %>
+            <% if (currentCustomer != null) { %>
+            <p><strong>Khách hàng:</strong> <%= currentCustomer.getCustomerName() %> (SĐT: <%= currentCustomer.getCustomerPhone() %>)</p>
+            <% } %>
+            <h3>Chọn khách hàng</h3>
+            <form action="order" method="get">
+                <input type="hidden" name="action" value="selectCustomer">
+                <input type="hidden" name="tableId" value="<%= tableId %>">
+                <select name="customerId" required>
                     <option value="">-- Chọn khách hàng --</option>
-                    <%
-                        List<Customer> customers = (List<Customer>) request.getAttribute("customers");
-                        if (customers != null) {
-                            for (Customer customer : customers) {
-                    %>
-                    <option value="<%=customer.getCustomerId()%>" <%=order != null && customer.getCustomerId().equals(order.getCustomerId()) ? "selected" : ""%>>
-                        <%=customer.getCustomerName()%> (<%=customer.getCustomerPhone()%>)
+                    <% List<Customer> customers = (List<Customer>) request.getAttribute("customers"); %>
+                    <% for (Customer customer : customers) { %>
+                    <option value="<%= customer.getCustomerId() %>">
+                        <%= customer.getCustomerName() %> (SĐT: <%= customer.getCustomerPhone() %>)
                     </option>
-                    <%
-                            }
-                        }
-                    %>
-                </select><br>
-                <label><input type="radio" name="customerOption" value="new"> Thêm khách mới</label><br>
-                <input type="text" name="customerName" placeholder="Tên khách hàng"><br>
-                <input type="text" name="customerPhone" placeholder="Số điện thoại" maxlength="10"><br>
-                <button type="submit" class="button complete">Cập nhật khách hàng</button>
+                    <% } %>
+                </select>
+                <button type="submit" class="button complete">Chọn</button>
+            </form>
+            <h3>Thêm khách hàng mới</h3>
+            <form action="order" method="get">
+                <input type="hidden" name="action" value="addCustomer">
+                <input type="hidden" name="tableId" value="<%= tableId %>">
+                <input type="text" name="customerName" placeholder="Tên khách hàng" required>
+                <input type="text" name="customerPhone" placeholder="Số điện thoại" maxlength="10" pattern="[0-9]{10}" required>
+                <button type="submit" class="button complete">Thêm</button>
             </form>
         </div>
-        <%
-            }
-        %>
+        <% } %>
 
         <div>
-            <a href="order?action=selectDishes&tableId=<%=tableId%>"><button class="button add-dish">Thêm món</button></a>
-            <%
-                if (hasDishes != null && hasDishes) {
-            %>
-            <form action="order" method="post" style="display:inline;">
+            <a href="order?action=selectDish&tableId=<%= tableId %>"><button class="button add-dish" <%= !isEditable ? "disabled" : "" %>>Thêm món</button></a>
+            <% if (hasDishes != null && hasDishes && isEditable) { %>
+            <form action="order" method="get" style="display:inline;">
                 <input type="hidden" name="action" value="completeOrder">
-                <input type="hidden" name="tableId" value="<%=tableId%>">
+                <input type="hidden" name="tableId" value="<%= tableId %>">
                 <button type="submit" class="button complete">Hoàn tất đơn</button>
             </form>
-            <%
-                }
-            %>
+            <% } %>
             <a href="order?action=cancelOrder"><button class="button back">Quay lại</button></a>
         </div>
-        <%
-            }
-        %>
+        <% } %>
     </div>
 </body>
 </html>

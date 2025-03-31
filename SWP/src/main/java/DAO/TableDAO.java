@@ -14,30 +14,31 @@ import java.util.logging.Logger;
 
 public class TableDAO {
 
-    private Connection conn;
     private String sql;
 
-    public TableDAO() throws ClassNotFoundException, SQLException {
-        conn = DBContext.getConnection();
+    public TableDAO() {
+        // Không khởi tạo Connection ở đây nữa
     }
 
-    public ResultSet getAllTable() {
+    public ResultSet getAllTable() throws SQLException, ClassNotFoundException {
         ResultSet rs = null;
-        try {
-            Statement st = conn.createStatement();
+        try (Connection conn = DBContext.getConnection();
+             Statement st = conn.createStatement()) {
             sql = "SELECT * FROM [Table] WHERE IsDeleted = 0";
             rs = st.executeQuery(sql);
+            // Không đóng ResultSet ở đây vì nó sẽ được sử dụng bên ngoài
+            return rs;
         } catch (SQLException ex) {
-            Logger.getLogger(TableDAO.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(TableDAO.class.getName()).log(Level.SEVERE, "Error fetching all tables", ex);
+            throw ex;
         }
-        return rs;
     }
 
-    // Thêm phương thức mới: lấy tất cả các bàn
-    public List<Table> getAllTables() {
+    public List<Table> getAllTables() throws SQLException, ClassNotFoundException {
         List<Table> tables = new ArrayList<>();
         String sql = "SELECT TableId, TableStatus, NumberOfSeats, FloorNumber FROM [Table] WHERE IsDeleted = 0";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql);
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
             while (rs.next()) {
                 Table table = new Table();
@@ -50,14 +51,16 @@ public class TableDAO {
             Logger.getLogger(TableDAO.class.getName()).log(Level.INFO, "Found {0} tables", tables.size());
         } catch (SQLException ex) {
             Logger.getLogger(TableDAO.class.getName()).log(Level.SEVERE, "Error fetching all tables", ex);
+            throw ex;
         }
         return tables;
     }
 
-    public List<Table> getAvailableTables() {
+    public List<Table> getAvailableTables() throws SQLException, ClassNotFoundException {
         List<Table> tables = new ArrayList<>();
         String sql = "SELECT TableId, TableStatus, NumberOfSeats, FloorNumber FROM [Table] WHERE TableStatus = 'Available' AND IsDeleted = 0";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql);
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
             while (rs.next()) {
                 Table table = new Table();
@@ -70,13 +73,15 @@ public class TableDAO {
             Logger.getLogger(TableDAO.class.getName()).log(Level.INFO, "Found {0} available tables", tables.size());
         } catch (SQLException ex) {
             Logger.getLogger(TableDAO.class.getName()).log(Level.SEVERE, "Error fetching available tables", ex);
+            throw ex;
         }
         return tables;
     }
 
-    public void updateTableStatus(String tableId, String status) throws SQLException {
+    public void updateTableStatus(String tableId, String status) throws SQLException, ClassNotFoundException {
         String sql = "UPDATE [Table] SET TableStatus = ? WHERE TableId = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, status);
             pstmt.setString(2, tableId);
             pstmt.executeUpdate();
@@ -87,19 +92,16 @@ public class TableDAO {
         }
     }
 
-    private String getNextTableId(int floorNumber) throws SQLException {
+    private String getNextTableId(int floorNumber) throws SQLException, ClassNotFoundException {
         String maxId = null;
         String nextId = null;
-        PreparedStatement getMaxId = null;
-
-        try {
-            sql = "SELECT MAX(TableId) AS MaxId FROM [Table] WHERE FloorNumber = ?";
-            getMaxId = conn.prepareStatement(sql);
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement getMaxId = conn.prepareStatement("SELECT MAX(TableId) AS MaxId FROM [Table] WHERE FloorNumber = ?")) {
             getMaxId.setInt(1, floorNumber);
-            ResultSet rs = getMaxId.executeQuery();
-
-            if (rs.next()) {
-                maxId = rs.getString("MaxId");
+            try (ResultSet rs = getMaxId.executeQuery()) {
+                if (rs.next()) {
+                    maxId = rs.getString("MaxId");
+                }
             }
 
             String prefix = "TA" + floorNumber;
@@ -111,51 +113,38 @@ public class TableDAO {
                 nextId = prefix + String.format("%02d", nextNumber);
             }
         } catch (SQLException ex) {
-            Logger.getLogger(TableDAO.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            if (getMaxId != null) {
-                getMaxId.close();
-            }
+            Logger.getLogger(TableDAO.class.getName()).log(Level.SEVERE, "Error generating next table ID", ex);
+            throw ex;
         }
         return nextId;
     }
 
-    public int createTable(Table newInfo) {
+    public int createTable(Table newInfo) throws SQLException, ClassNotFoundException {
         int count = 0;
-        PreparedStatement pst = null;
-        try {
+        try (Connection conn = DBContext.getConnection()) {
             int floorNumber = newInfo.getFloorNumber();
             String newTableId = getNextTableId(floorNumber);
 
             sql = "INSERT INTO [Table] (TableId, TableStatus, NumberOfSeats, FloorNumber) VALUES (?, ?, ?, ?)";
-            pst = conn.prepareStatement(sql);
-            pst.setString(1, newTableId);
-            pst.setString(2, newInfo.getTableStatus());
-            pst.setInt(3, newInfo.getNumberOfSeats());
-            pst.setInt(4, newInfo.getFloorNumber());
-
-            count = pst.executeUpdate();
-        } catch (SQLException ex) {
-            Logger.getLogger(TableDAO.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            if (pst != null) {
-                try {
-                    pst.close();
-                } catch (SQLException ex) {
-                    Logger.getLogger(TableDAO.class.getName()).log(Level.SEVERE, null, ex);
-                }
+            try (PreparedStatement pst = conn.prepareStatement(sql)) {
+                pst.setString(1, newTableId);
+                pst.setString(2, newInfo.getTableStatus());
+                pst.setInt(3, newInfo.getNumberOfSeats());
+                pst.setInt(4, newInfo.getFloorNumber());
+                count = pst.executeUpdate();
             }
+        } catch (SQLException ex) {
+            Logger.getLogger(TableDAO.class.getName()).log(Level.SEVERE, "Error creating table", ex);
+            throw ex;
         }
         return count;
     }
 
-    public int updateTable(String id, Table newInfo) {
+    public int updateTable(String id, Table newInfo) throws SQLException, ClassNotFoundException {
         int count = 0;
-        PreparedStatement pst = null;
-        ResultSet rs = null;
         String newTableId = id;
 
-        try {
+        try (Connection conn = DBContext.getConnection()) {
             Table existingTable = getTableById(id);
             if (existingTable == null) {
                 return 0;
@@ -180,117 +169,87 @@ public class TableDAO {
             }
 
             sql = "UPDATE [Table] SET TableId=?, TableStatus=?, NumberOfSeats=?, FloorNumber=? WHERE TableId=?";
-            pst = conn.prepareStatement(sql);
-            pst.setString(1, newTableId);
-            pst.setString(2, newInfo.getTableStatus());
-            pst.setInt(3, newInfo.getNumberOfSeats());
-            pst.setInt(4, newInfo.getFloorNumber());
-            pst.setString(5, id);
-
-            count = pst.executeUpdate();
-
+            try (PreparedStatement pst = conn.prepareStatement(sql)) {
+                pst.setString(1, newTableId);
+                pst.setString(2, newInfo.getTableStatus());
+                pst.setInt(3, newInfo.getNumberOfSeats());
+                pst.setInt(4, newInfo.getFloorNumber());
+                pst.setString(5, id);
+                count = pst.executeUpdate();
+            }
         } catch (SQLException ex) {
-            Logger.getLogger(TableDAO.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException ex) {
-                    Logger.getLogger(TableDAO.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-            if (pst != null) {
-                try {
-                    pst.close();
-                } catch (SQLException ex) {
-                    Logger.getLogger(TableDAO.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
+            Logger.getLogger(TableDAO.class.getName()).log(Level.SEVERE, "Error updating table", ex);
+            throw ex;
         }
         return count;
     }
 
-    private boolean isTableIdExists(String tableId) throws SQLException {
-        PreparedStatement checkPst = null;
-        ResultSet rs = null;
-        try {
-            sql = "SELECT 1 FROM [Table] WHERE TableId = ?";
-            checkPst = conn.prepareStatement(sql);
+    private boolean isTableIdExists(String tableId) throws SQLException, ClassNotFoundException {
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement checkPst = conn.prepareStatement("SELECT 1 FROM [Table] WHERE TableId = ?")) {
             checkPst.setString(1, tableId);
-            rs = checkPst.executeQuery();
-            return rs.next();
-        } finally {
-            if (rs != null) {
-                rs.close();
-            }
-            if (checkPst != null) {
-                checkPst.close();
+            try (ResultSet rs = checkPst.executeQuery()) {
+                return rs.next();
             }
         }
     }
 
-    public Table getTableById(String tableId) throws SQLException {
-        PreparedStatement getPst = null;
-        ResultSet rs = null;
-        Table table = null;
-        try {
-            sql = "SELECT TableId, TableStatus, NumberOfSeats, FloorNumber FROM [Table] WHERE TableId = ?";
-            getPst = conn.prepareStatement(sql);
+    public Table getTableById(String tableId) throws SQLException, ClassNotFoundException {
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement getPst = conn.prepareStatement("SELECT TableId, TableStatus, NumberOfSeats, FloorNumber FROM [Table] WHERE TableId = ?")) {
             getPst.setString(1, tableId);
-            rs = getPst.executeQuery();
-            if (rs.next()) {
-                table = new Table();
-                table.setTableId(rs.getString("TableId"));
-                table.setTableStatus(rs.getString("TableStatus"));
-                table.setNumberOfSeats(rs.getInt("NumberOfSeats"));
-                table.setFloorNumber(rs.getInt("FloorNumber"));
-            }
-        } finally {
-            if (rs != null) {
-                rs.close();
-            }
-            if (getPst != null) {
-                getPst.close();
+            try (ResultSet rs = getPst.executeQuery()) {
+                if (rs.next()) {
+                    Table table = new Table();
+                    table.setTableId(rs.getString("TableId"));
+                    table.setTableStatus(rs.getString("TableStatus"));
+                    table.setNumberOfSeats(rs.getInt("NumberOfSeats"));
+                    table.setFloorNumber(rs.getInt("FloorNumber"));
+                    return table;
+                }
             }
         }
-        return table;
+        return null;
     }
 
-    public List<Integer> getFloorNumbers() throws SQLException {
+    public List<Integer> getFloorNumbers() throws SQLException, ClassNotFoundException {
         List<Integer> floorNumbers = new ArrayList<>();
-        PreparedStatement pst = null;
-        ResultSet rs = null;
-
-        try {
-            sql = "SELECT DISTINCT FloorNumber FROM [Table] WHERE IsDeleted = 0 ORDER BY FloorNumber ASC";
-            pst = conn.prepareStatement(sql);
-            rs = pst.executeQuery();
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement pst = conn.prepareStatement("SELECT DISTINCT FloorNumber FROM [Table] WHERE IsDeleted = 0 ORDER BY FloorNumber ASC");
+             ResultSet rs = pst.executeQuery()) {
             while (rs.next()) {
                 floorNumbers.add(rs.getInt("FloorNumber"));
             }
         } catch (SQLException ex) {
-            Logger.getLogger(TableDAO.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            if (rs != null) {
-                rs.close();
-            }
-            if (pst != null) {
-                pst.close();
-            }
+            Logger.getLogger(TableDAO.class.getName()).log(Level.SEVERE, "Error fetching floor numbers", ex);
+            throw ex;
         }
         return floorNumbers;
     }
 
-    public int deleteTable(String id) {
+    public int deleteTable(String id) throws SQLException, ClassNotFoundException {
         int count = 0;
-        try {
-            sql = "UPDATE [Table] SET IsDeleted = 1 WHERE TableId=?";
-            PreparedStatement pst = conn.prepareStatement(sql);
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement pst = conn.prepareStatement("UPDATE [Table] SET IsDeleted = 1 WHERE TableId=?")) {
             pst.setString(1, id);
             count = pst.executeUpdate();
         } catch (SQLException ex) {
-            Logger.getLogger(TableDAO.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(TableDAO.class.getName()).log(Level.SEVERE, "Error deleting table", ex);
+            throw ex;
         }
         return count;
+    }
+
+    public boolean hasOrder(String tableId) throws SQLException, ClassNotFoundException {
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("SELECT COUNT(*) FROM [Order] WHERE TableId = ? AND OrderStatus = 'Pending'")) {
+            stmt.setString(1, tableId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        }
+        return false;
     }
 }
