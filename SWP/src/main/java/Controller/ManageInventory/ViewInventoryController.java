@@ -62,7 +62,6 @@ public class ViewInventoryController extends HttpServlet {
             throws ServletException, IOException {
           InventoryDAO dao = new InventoryDAO();
         List<InventoryItem> ItemList = dao.getAllInventoryItem();
-        System.out.println("List Item Inventory check: " + ItemList);
         request.setAttribute("InventoryItemList", ItemList);
         request.getRequestDispatcher("/ManageInventory/ViewInventoryItem.jsp").forward(request, response);
     }

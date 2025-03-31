@@ -81,21 +81,58 @@ public class OrderDAO {
 
     // Tạo đơn hàng mới
     public void CreateOrder(Order order) throws SQLException, ClassNotFoundException {
-        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(
-                "INSERT INTO [Order] (OrderId, UserId, CustomerId, OrderDate, OrderStatus, OrderType, TableId, Total) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
-            stmt.setString(1, order.getOrderId());
-            stmt.setString(2, order.getUserId());
-            stmt.setString(3, order.getCustomerId());
-            stmt.setTimestamp(4, new Timestamp(order.getOrderDate().getTime()));
-            stmt.setString(5, order.getOrderStatus());
-            stmt.setString(6, order.getOrderType());
-            stmt.setString(7, order.getTableId());
-            stmt.setDouble(8, order.getTotal());
-            stmt.executeUpdate();
-        }
-    }
+    Connection conn = null;
+    PreparedStatement pstmtOrder = null;
+    PreparedStatement pstmtOrderDetail = null;
+    try {
+        conn = DBContext.getConnection();
+        conn.setAutoCommit(false); // Sử dụng transaction để đảm bảo tính toàn vẹn dữ liệu
 
+        // Chèn vào bảng Order
+        String sqlOrder = "INSERT INTO [Order] (OrderId, UserId, CustomerId, OrderDate, OrderStatus, OrderType, TableId, Total) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        pstmtOrder = conn.prepareStatement(sqlOrder);
+        pstmtOrder.setString(1, order.getOrderId());
+        pstmtOrder.setString(2, order.getUserId());
+        pstmtOrder.setString(3, order.getCustomerId());
+        pstmtOrder.setTimestamp(4, new Timestamp(order.getOrderDate().getTime()));
+        pstmtOrder.setString(5, order.getOrderStatus());
+        pstmtOrder.setString(6, order.getOrderType());
+        pstmtOrder.setString(7, order.getTableId());
+        pstmtOrder.setDouble(8, order.getTotal());
+        pstmtOrder.executeUpdate();
+
+        // Chèn vào bảng OrderDetail nếu có
+        if (order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) {
+            String sqlOrderDetail = "INSERT INTO OrderDetail (OrderDetailId, OrderId, DishId, Quantity, Subtotal, DishName) "
+                    + "VALUES (?, ?, ?, ?, ?, ?)";
+            pstmtOrderDetail = conn.prepareStatement(sqlOrderDetail);
+            int detailCounter = 1;
+            for (OrderDetail detail : order.getOrderDetails()) {
+                String orderDetailId = order.getOrderId() + String.format("%03d", detailCounter++); // Sinh OrderDetailId
+                pstmtOrderDetail.setString(1, orderDetailId);
+                pstmtOrderDetail.setString(2, order.getOrderId());
+                pstmtOrderDetail.setString(3, detail.getDishId());
+                pstmtOrderDetail.setInt(4, detail.getQuantity());
+                pstmtOrderDetail.setDouble(5, detail.getSubtotal());
+                pstmtOrderDetail.setString(6, detail.getDishName());
+                pstmtOrderDetail.addBatch();
+            }
+            pstmtOrderDetail.executeBatch();
+        }
+
+        conn.commit(); // Commit transaction
+    } catch (SQLException e) {
+        if (conn != null) {
+            conn.rollback(); // Rollback nếu có lỗi
+        }
+        throw new SQLException("Lỗi khi tạo Order: " + e.getMessage(), e);
+    } finally {
+        if (pstmtOrderDetail != null) pstmtOrderDetail.close();
+        if (pstmtOrder != null) pstmtOrder.close();
+        if (conn != null) conn.close();
+    }
+}
     // Tạo mã OrderId mới
     public String generateNextOrderId() throws SQLException, ClassNotFoundException {
         try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(
@@ -112,28 +149,33 @@ public class OrderDAO {
 
     // Thêm OrderDetail
     public void addOrderDetail(String orderId, OrderDetail detail) throws SQLException, ClassNotFoundException {
-        try (Connection conn = DBContext.getConnection()) {
-            conn.setAutoCommit(false);
-            try {
-                String sql = "INSERT INTO OrderDetail (OrderDetailId, OrderId, DishId, Quantity, Subtotal, DishName) "
-                        + "VALUES (?, ?, ?, ?, ?, ?)";
-                PreparedStatement stmt = conn.prepareStatement(sql);
-                stmt.setString(1, detail.getOrderDetailId());
-                stmt.setString(2, orderId);
-                stmt.setString(3, detail.getDishId());
-                stmt.setInt(4, detail.getQuantity());
-                stmt.setDouble(5, detail.getSubtotal());
-                stmt.setString(6, detail.getDishName());
-                stmt.executeUpdate();
+    try (Connection conn = DBContext.getConnection()) {
+        conn.setAutoCommit(false);
+        try {
+            String sql = "INSERT INTO OrderDetail (OrderId, DishId, Quantity, Subtotal, DishName) "
+                    + "VALUES (?, ?, ?, ?, ?)";
+            PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
+            stmt.setString(1, orderId);
+            stmt.setString(2, detail.getDishId());
+            stmt.setInt(3, detail.getQuantity());
+            stmt.setDouble(4, detail.getSubtotal());
+            stmt.setString(5, detail.getDishName());
+            stmt.executeUpdate();
 
-                updateOrderTotal(orderId, conn);
-                conn.commit();
-            } catch (SQLException e) {
-                conn.rollback();
-                throw e;
+            // Lấy orderDetailId tự sinh (nếu cần)
+            ResultSet generatedKeys = stmt.getGeneratedKeys();
+            if (generatedKeys.next()) {
+                detail.setOrderDetailId(generatedKeys.getString(1)); // Cập nhật ID tự sinh
             }
+
+            updateOrderTotal(orderId, conn);
+            conn.commit();
+        } catch (SQLException e) {
+            conn.rollback();
+            throw e;
         }
     }
+}
 
     // Tạo mã OrderDetailId mới
     public String generateNextOrderDetailId() throws SQLException, ClassNotFoundException {
@@ -161,15 +203,21 @@ public class OrderDAO {
 
     // Cập nhật đơn hàng
     public void updateOrder(Order order) throws SQLException, ClassNotFoundException {
-        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(
-                "UPDATE [Order] SET OrderStatus = ?, CustomerId = ?, Total = ? WHERE OrderId = ?")) {
-            stmt.setString(1, order.getOrderStatus());
-            stmt.setString(2, order.getCustomerId());
-            stmt.setDouble(3, order.getTotal());
-            stmt.setString(4, order.getOrderId());
-            stmt.executeUpdate();
+    String sql = "UPDATE [Order] SET orderStatus = ?, couponId = ?, total = ? WHERE orderId = ?";
+    try (Connection conn = DBContext.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setString(1, order.getOrderStatus());
+        ps.setString(2, order.getCouponId());
+        ps.setDouble(3, order.getTotal());
+        ps.setString(4, order.getOrderId());
+        int rowsUpdated = ps.executeUpdate();
+        if (rowsUpdated > 0) {
+            System.out.println("Updated order " + order.getOrderId() + " with total: " + order.getTotal());
+        } else {
+            System.out.println("Order " + order.getOrderId() + " not found");
         }
     }
+}
 
     // Cập nhật CustomerId cho đơn hàng
     public void updateOrderCustomer(String orderId, String customerId) throws SQLException, ClassNotFoundException {
@@ -419,18 +467,19 @@ public class OrderDAO {
     }
 
     public void updateCustomerPhone(String orderId, String customerPhone) throws SQLException, ClassNotFoundException {
-        try (Connection conn = DBContext.getConnection()) {
-            String sql = "UPDATE [Order] SET CustomerPhone = ? WHERE OrderId = ?";
-            PreparedStatement pstmt = conn.prepareStatement(sql);
-            pstmt.setString(1, customerPhone);
-            pstmt.setString(2, orderId);
-            pstmt.executeUpdate();
-            logger.log(Level.INFO, "Updated customer phone for order {0} to {1}", new Object[]{orderId, customerPhone});
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Error updating customer phone", e);
-            throw e;
-        }
+    try (Connection conn = DBContext.getConnection()) {
+        String sql = "UPDATE [Order] SET CustomerPhone = ? WHERE OrderId = ?";
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        pstmt.setString(1, customerPhone);
+        pstmt.setString(2, orderId);
+        pstmt.executeUpdate();
+        // Kiểm tra xem có thêm OrderDetail không
+        logger.log(Level.INFO, "Updated customer phone for order {0} to {1}", new Object[]{orderId, customerPhone});
+    } catch (SQLException e) {
+        logger.log(Level.SEVERE, "Error updating customer phone", e);
+        throw e;
     }
+}
 
     // Thêm phương thức updateOrderCustomer
     // Helper method để lấy OrderId từ OrderDetailId

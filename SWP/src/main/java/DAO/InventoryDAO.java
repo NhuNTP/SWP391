@@ -219,4 +219,28 @@ public class InventoryDAO extends DB.DBContext {
             Logger.getLogger(CouponDAO.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
+    public String isInventoryItemExist(String itemName) {
+        String sql = "SELECT ItemID FROM Inventory WHERE LOWER(ItemName) = LOWER(?) AND isDeleted=0";
+        try (PreparedStatement st = getConnection().prepareStatement(sql)) {
+            st.setString(1, itemName);
+            try (ResultSet rs = st.executeQuery()) {
+                if (rs.next()) {
+                    // Nếu tìm thấy item, trả về ItemID
+                     System.out.println("NGUYEN THANH PHAT");
+                    return rs.getString("ItemID");
+                   
+                } else {
+
+                    return "None";
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi kiểm tra Inventory Item theo tên: " + e.getMessage());
+            e.printStackTrace();
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(InventoryDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return "None";
+    }
 }

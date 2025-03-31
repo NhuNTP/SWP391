@@ -25,6 +25,7 @@ public class Order {
     private List<OrderDetail> orderDetails; // Keep this
     private String customerPhone;
     private double total;
+    
 
     // Constructors (Optional, but good practice)
 
