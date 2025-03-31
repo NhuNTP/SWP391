@@ -8,26 +8,27 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author HuynhPhuBinh
- */
 public class CustomerDAO {
 
     private static final Logger LOGGER = Logger.getLogger(CustomerDAO.class.getName());
 
-    // Thêm khách hàng mới
-    public void addCustomer(Customer customer) throws SQLException, ClassNotFoundException {
-        String sql = "INSERT INTO Customer (CustomerId, CustomerName, CustomerPhone, NumberOfPayment) VALUES (?, ?, ?, ?)";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, customer.getCustomerId());
-            stmt.setString(2, customer.getCustomerName());
-            stmt.setString(3, customer.getCustomerPhone());
-            stmt.setInt(4, customer.getNumberOfPayment());
-            stmt.executeUpdate();
+    // Tạo khách hàng mới và trả về CustomerId
+    public String createCustomer(Customer customer) throws SQLException, ClassNotFoundException {
+        try (Connection conn = DBContext.getConnection()) {
+            // Sinh CustomerId mới
+            String customerId = generateNextCustomerId();
+            String sql = "INSERT INTO Customer (CustomerId, CustomerName, CustomerPhone, NumberOfPayment) VALUES (?, ?, ?, ?)";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, customerId);
+                stmt.setString(2, customer.getCustomerName());
+                stmt.setString(3, customer.getCustomerPhone());
+                stmt.setInt(4, customer.getNumberOfPayment() != 0 ? customer.getNumberOfPayment() : 0); // Mặc định là 0 nếu không có giá trị
+                stmt.executeUpdate();
+                LOGGER.log(Level.INFO, "Created customer with CustomerId: " + customerId);
+                return customerId;
+            }
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error adding customer: " + e.getMessage(), e);
+            LOGGER.log(Level.SEVERE, "Error creating customer: " + e.getMessage(), e);
             throw e;
         }
     }
@@ -140,19 +141,20 @@ public class CustomerDAO {
             throw e;
         }
     }
-   public boolean isPhoneExists(String phone, String excludeCustomerId) throws SQLException, ClassNotFoundException {
-    String sql = "SELECT COUNT(*) FROM Customer WHERE CustomerPhone = ? AND (CustomerId != ? OR ? IS NULL)";
-    try (Connection conn = DBContext.getConnection(); // Giả định có phương thức getConnection
-         PreparedStatement stmt = conn.prepareStatement(sql)) {
-        stmt.setString(1, phone);
-        stmt.setString(2, excludeCustomerId != null ? excludeCustomerId : "");
-        stmt.setString(3, excludeCustomerId);
-        try (ResultSet rs = stmt.executeQuery()) {
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
+
+    public boolean isPhoneExists(String phone, String excludeCustomerId) throws SQLException, ClassNotFoundException {
+        String sql = "SELECT COUNT(*) FROM Customer WHERE CustomerPhone = ? AND (CustomerId != ? OR ? IS NULL)";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, phone);
+            stmt.setString(2, excludeCustomerId != null ? excludeCustomerId : "");
+            stmt.setString(3, excludeCustomerId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
             }
         }
+        return false;
     }
-    return false;
-}
 }

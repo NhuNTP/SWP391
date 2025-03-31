@@ -114,7 +114,7 @@ public class AddCustomerController extends HttpServlet {
             // If all validations pass, add the customer
             String customerId = customerDAO.generateNextCustomerId();
             Customer customer = new Customer(customerId, customerName, customerPhone, numberOfPayment);
-            customerDAO.addCustomer(customer);
+            customerDAO.createCustomer(customer);
             session.setAttribute("message", "Customer added successfully!");
         } catch (SQLException | ClassNotFoundException ex) {
             Logger.getLogger(AddCustomerController.class.getName()).log(Level.SEVERE, null, ex);
