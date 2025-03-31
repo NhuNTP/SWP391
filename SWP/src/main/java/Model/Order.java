@@ -24,6 +24,7 @@ public class Order {
     private String tableId;   // Changed to String to match NVARCHAR(50) in DB, nullable
     private List<OrderDetail> orderDetails; // Keep this
     private String customerPhone;
+    private String customerName;
     private double total;
     
 
@@ -32,7 +33,7 @@ public class Order {
     public Order() {
     }
 
-    public Order(String orderId, String userId, String customerId, Date orderDate, String orderStatus, String orderType, String orderDescription, String couponId, String tableId, List<OrderDetail> orderDetails, String customerPhone, double total) {
+    public Order(String orderId, String userId, String customerId, Date orderDate, String orderStatus, String orderType, String orderDescription, String couponId, String tableId, List<OrderDetail> orderDetails, String customerPhone,String customerName, double total) {
         this.orderId = orderId;
         this.userId = userId;
         this.customerId = customerId;
@@ -44,6 +45,7 @@ public class Order {
         this.tableId = tableId;
         this.orderDetails = orderDetails;
         this.customerPhone = customerPhone;
+        this.customerName = customerName;
         this.total = total;
     }
 
@@ -141,6 +143,14 @@ public class Order {
 
     public void setTotal(double total) {
         this.total = total;
+    }
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
     }
     
 }

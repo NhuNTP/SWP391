@@ -21,20 +21,26 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import java.util.Enumeration;
 
-@WebServlet(name = "OrderController", urlPatterns = {"/orderold"})
+@WebServlet(name = "OrderController", urlPatterns = {"/order"})
 public class OrderController extends HttpServlet {
 
-    private final TableDAO tableDAO;
-    private final MenuDAO dishDAO;
-    private final OrderDAO orderDAO;
-    private final CustomerDAO customerDAO;
+    private OrderDAO orderDAO;
+    private TableDAO tableDAO;
+    private MenuDAO menuDAO;
+    private CustomerDAO customerDAO;
 
-    public OrderController() {
-        this.tableDAO = new TableDAO();
-        this.dishDAO = new MenuDAO();
-        this.orderDAO = new OrderDAO();
-        this.customerDAO = new CustomerDAO();
+    @Override
+    public void init() throws ServletException {
+        try {
+            orderDAO = new OrderDAO();
+            tableDAO = new TableDAO();
+            menuDAO = new MenuDAO();
+            customerDAO = new CustomerDAO();
+        } catch (Exception e) {
+            throw new ServletException("Failed to initialize DAOs: " + e.getMessage(), e);
+        }
     }
 
     @Override
@@ -46,31 +52,39 @@ public class OrderController extends HttpServlet {
             return;
         }
 
-        Account account = (Account) session.getAttribute("account");
-        String userRole = account.getUserRole();
-
         String action = request.getParameter("action");
-
+        if (action == null) {
+            action = "listTables";
+        }
         try {
-            if (action == null || action.equals("selectTable")) {
-                listTables(request, response);
-            } else if (action.equals("tableOverview")) {
-                showTableOverview(request, response);
-            } else if (action.equals("viewOrder")) {
-                viewOrder(request, response);
-            } else if (action.equals("cancelOrder")) {
-                cancelOrder(request, response);
-            } else if (action.equals("completeOrder")) {
-                completeOrder(request, response);
-            } else if (action.equals("addCustomer")) {
-                addCustomer(request, response);
-            } else if (action.equals("selectCustomer")) {
-                selectCustomer(request, response);
-            } else {
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid action: " + action);
+            switch (action) {
+                case "listTables":
+                case "selectTable":
+                    listTables(request, response);
+                    break;
+                case "tableOverview":
+                    showTableOverview(request, response);
+                    break;
+                case "selectDish":
+                    selectDish(request, response);
+                    break;
+                case "cancelOrder":
+                    cancelOrder(request, response);
+                    break;
+                case "completeOrder":
+                    completeOrder(request, response);
+                    break;
+                case "addCustomer":
+                    addCustomer(request, response);
+                    break;
+                case "selectCustomer":
+                    selectCustomer(request, response);
+                    break;
+                default:
+                    response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid action: " + action);
             }
         } catch (SQLException | ClassNotFoundException e) {
-            throw new ServletException(e);
+            throw new ServletException("Database error: " + e.getMessage(), e);
         }
     }
 
@@ -83,27 +97,31 @@ public class OrderController extends HttpServlet {
             return;
         }
 
-        Account account = (Account) session.getAttribute("account");
-        String userRole = account.getUserRole();
-
         String action = request.getParameter("action");
+        if (action == null) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing action parameter");
+            return;
+        }
 
         try {
-            if (action.equals("submitOrder")) {
-                submitOrder(request, response);
-            } else if (action.equals("updateOrder")) {
-                updateOrder(request, response);
-            } else if (action.equals("addDish")) {
-                addDish(request, response);
-            } else if (action.equals("editDishQuantity")) {
-                editDishQuantity(request, response);
-            } else if (action.equals("deleteDish")) {
-                deleteDish(request, response);
-            } else {
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid action: " + action);
+            switch (action) {
+                case "submitOrder":
+                    submitOrder(request, response);
+                    break;
+                case "editDishQuantity":
+                    editDishQuantity(request, response);
+                    break;
+                case "deleteDish":
+                    deleteDish(request, response);
+                    break;
+                case "addDish":
+                    addDish(request, response);
+                    break;
+                default:
+                    response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid action: " + action);
             }
         } catch (SQLException | ClassNotFoundException e) {
-            throw new ServletException(e);
+            throw new ServletException("Database error: " + e.getMessage(), e);
         }
     }
 
@@ -119,126 +137,86 @@ public class OrderController extends HttpServlet {
     }
 
     private void showTableOverview(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException, SQLException, ClassNotFoundException {
-        String tableId = request.getParameter("tableId");
-        if (tableId == null || tableId.trim().isEmpty()) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing tableId");
-            return;
-        }
-
-        HttpSession session = request.getSession();
-        Account account = (Account) session.getAttribute("account");
-        if (account == null) {
-            response.sendRedirect("LoginPage.jsp");
-            return;
-        }
-
-        String orderId = orderDAO.getOrderIdByTableId(tableId);
-        Order order = orderId != null ? orderDAO.getOrderById(orderId) : (Order) session.getAttribute("tempOrder");
-
-        if (order == null && orderId == null) {
-            order = new Order();
-            order.setOrderId(orderDAO.generateNextOrderId());
-            order.setUserId(account.getUserId());
-            order.setTableId(tableId);
-            order.setOrderStatus("Pending");
-            order.setOrderType("Dine-in");
-            order.setOrderDate(new Date());
-            order.setTotal(0);
-            order.setOrderDetails(new ArrayList<>());
-            session.setAttribute("tempOrder", order);
-        }
-
-        List<OrderDetail> orderDetails = (order != null && order.getOrderDetails() != null) ? order.getOrderDetails() : new ArrayList<>();
-        boolean hasDishes = !orderDetails.isEmpty();
-
-        // Lấy danh sách món để hiển thị trong tableOverview.jsp
-        List<Dish> dishes = dishDAO.getAvailableDishes();
-
-        // Lấy danh sách khách hàng để hiển thị trong dropdown
-        List<Customer> customers = customerDAO.getAllCustomers();
-
-        // Lấy thông tin khách hàng hiện tại (nếu có)
-        Customer currentCustomer = null;
-        if (order != null && order.getCustomerId() != null) {
-            currentCustomer = customerDAO.getCustomerById(order.getCustomerId());
-        }
-
-        request.setAttribute("tableId", tableId);
-        request.setAttribute("order", order);
-        request.setAttribute("orderDetails", orderDetails);
-        request.setAttribute("hasDishes", hasDishes);
-        request.setAttribute("dishes", dishes);
-        request.setAttribute("customers", customers);
-        request.setAttribute("currentCustomer", currentCustomer);
-        request.getRequestDispatcher("ManageOrder/tableOverview.jsp").forward(request, response);
+        throws ServletException, IOException, SQLException, ClassNotFoundException {
+    String tableId = request.getParameter("tableId");
+    if (tableId == null || tableId.trim().isEmpty()) {
+        response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing tableId");
+        return;
     }
 
-    private void viewOrder(HttpServletRequest request, HttpServletResponse response)
+    HttpSession session = request.getSession();
+    Account account = (Account) session.getAttribute("account");
+
+    String orderId = orderDAO.getOrderIdByTableId(tableId);
+    Order order = orderId != null ? orderDAO.getOrderById(orderId) : (Order) session.getAttribute("tempOrder");
+
+    if (order == null && orderId == null) {
+        order = new Order();
+        order.setOrderId(orderDAO.generateNextOrderId());
+        order.setUserId(account.getUserId());
+        order.setTableId(tableId);
+        order.setOrderStatus("Pending");
+        order.setOrderType("Dine-in");
+        order.setOrderDate(new Date());
+        order.setTotal(0);
+        order.setOrderDetails(new ArrayList<>());
+        session.setAttribute("tempOrder", order);
+    }
+
+    boolean hasDishes = order != null && order.getOrderDetails() != null && !order.getOrderDetails().isEmpty();
+    List<Customer> customers = customerDAO.getAllCustomers();
+    Customer currentCustomer = order != null && order.getCustomerId() != null ? customerDAO.getCustomerById(order.getCustomerId()) : null;
+
+    // Kiểm tra danh sách món ăn
+    List<Dish> dishes = menuDAO.getAvailableDishes();
+    System.out.println("Dishes size: " + (dishes != null ? dishes.size() : "null"));
+    if (dishes != null) {
+        for (Dish dish : dishes) {
+            System.out.println("Dish: " + dish.getDishName() + ", Status: " + dish.getDishStatus() + ", Ingredient: " + dish.getIngredientStatus());
+        }
+    }
+
+    request.setAttribute("tableId", tableId);
+    request.setAttribute("order", order);
+    request.setAttribute("hasDishes", hasDishes);
+    request.setAttribute("customers", customers);
+    request.setAttribute("currentCustomer", currentCustomer);
+    request.setAttribute("dishes", dishes);
+    request.getRequestDispatcher("ManageOrder/tableOverview.jsp").forward(request, response);
+}
+
+    private void selectDish(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException, SQLException, ClassNotFoundException {
-        String orderId = request.getParameter("orderId");
-        Order order = orderDAO.getOrderById(orderId);
-        if (order == null) {
-            response.sendRedirect("orderold?action=selectTable");
+        String tableId = request.getParameter("tableId");
+        if (tableId == null) {
+            request.setAttribute("error", "Thiếu mã bàn.");
+            request.getRequestDispatcher("ManageOrder/selectDish.jsp").forward(request, response);
             return;
         }
-        List<OrderDetail> orderDetails = order.getOrderDetails();
-        boolean hasDishes = orderDetails != null && !orderDetails.isEmpty();
-
-        // Lấy danh sách món để hiển thị trong tableOverview.jsp
-        List<Dish> dishes = dishDAO.getAvailableDishes();
-
-        // Lấy danh sách khách hàng để hiển thị trong dropdown
-        List<Customer> customers = customerDAO.getAllCustomers();
-
-        // Lấy thông tin khách hàng hiện tại (nếu có)
-        Customer currentCustomer = null;
-        if (order.getCustomerId() != null) {
-            currentCustomer = customerDAO.getCustomerById(order.getCustomerId());
-        }
-
-        request.setAttribute("tableId", order.getTableId());
-        request.setAttribute("order", order);
-        request.setAttribute("orderDetails", orderDetails);
-        request.setAttribute("hasDishes", hasDishes);
+        List<Dish> dishes = menuDAO.getAvailableDishes();
         request.setAttribute("dishes", dishes);
-        request.setAttribute("customers", customers);
-        request.setAttribute("currentCustomer", currentCustomer);
-        request.getRequestDispatcher("ManageOrder/tableOverview.jsp").forward(request, response);
+        request.setAttribute("tableId", tableId);
+        request.getRequestDispatcher("ManageOrder/selectDish.jsp").forward(request, response);
     }
 
     private void submitOrder(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException, SQLException, ClassNotFoundException {
         String tableId = request.getParameter("tableId");
-        String[] dishIds = request.getParameterValues("dishId");
-        String[] quantities = new String[dishIds != null ? dishIds.length : 0];
-
-        if (dishIds != null) {
-            for (int i = 0; i < dishIds.length; i++) {
-                quantities[i] = request.getParameter("quantity_" + dishIds[i]);
-            }
-        }
-
-        if (tableId == null || dishIds == null || quantities == null || dishIds.length != quantities.length) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing or mismatched parameters");
+        if (tableId == null) {
+            request.setAttribute("error", "Thiếu mã bàn.");
+            request.getRequestDispatcher("ManageOrder/selectDish.jsp").forward(request, response);
             return;
         }
 
         HttpSession session = request.getSession();
-        Account account = (Account) session.getAttribute("account");
-        if (account == null) {
-            response.sendRedirect("LoginPage.jsp");
-            return;
-        }
-
         Order order = (Order) session.getAttribute("tempOrder");
         String orderId = orderDAO.getOrderIdByTableId(tableId);
-
-        if (order == null && orderId != null) {
+        if (orderId != null) {
             order = orderDAO.getOrderById(orderId);
         }
 
         if (order == null) {
+            Account account = (Account) session.getAttribute("account");
             order = new Order();
             order.setOrderId(orderDAO.generateNextOrderId());
             order.setUserId(account.getUserId());
@@ -250,113 +228,38 @@ public class OrderController extends HttpServlet {
             order.setOrderDetails(new ArrayList<>());
         }
 
-        List<Dish> dishes = dishDAO.getAvailableDishes();
-        if (dishes == null) {
-            dishes = new ArrayList<>();
-        }
-
-        for (int i = 0; i < dishIds.length; i++) {
-            try {
-                int qty = Integer.parseInt(quantities[i].trim());
-                if (qty > 0) {
-                    String dishId = dishIds[i];
-                    Dish dish = dishes.stream().filter(d -> d.getDishId().equals(dishId)).findFirst().orElse(null);
+        Enumeration<String> paramNames = request.getParameterNames();
+        while (paramNames.hasMoreElements()) {
+            String paramName = paramNames.nextElement();
+            if (paramName.startsWith("quantity_")) {
+                String dishId = paramName.substring("quantity_".length());
+                int quantity = Integer.parseInt(request.getParameter(paramName));
+                if (quantity > 0) {
+                    Dish dish = menuDAO.getDishById(dishId);
                     if (dish != null) {
-                        OrderDetail existingDetail = order.getOrderDetails().stream()
-                                .filter(d -> d.getDishId().equals(dishId))
-                                .findFirst()
-                                .orElse(null);
+                        OrderDetail detail = new OrderDetail();
+                        detail.setOrderId(order.getOrderId());
+                        detail.setDishId(dishId);
+                        detail.setQuantity(quantity);
+                        detail.setSubtotal(dish.getDishPrice() * quantity);
+                        detail.setDishName(dish.getDishName());
 
-                        if (existingDetail != null) {
-                            existingDetail.setQuantity(existingDetail.getQuantity() + qty);
-                            existingDetail.setSubtotal(existingDetail.getQuantity() * dish.getDishPrice());
-                        } else {
-                            OrderDetail detail = new OrderDetail();
-                            detail.setOrderId(order.getOrderId());
-                            detail.setDishId(dish.getDishId());
-                            detail.setQuantity(qty);
-                            detail.setSubtotal(dish.getDishPrice() * qty);
-                            detail.setDishName(dish.getDishName());
-                            String orderDetailId = orderDAO.generateUniqueOrderDetailId();
-                            detail.setOrderDetailId(orderDetailId);
+                        if (orderId == null) {
                             order.getOrderDetails().add(detail);
+                            order.setTotal(order.getTotal() + detail.getSubtotal());
+                        } else {
+                            orderDAO.addOrderDetail(detail);
+                            orderDAO.updateOrderTotal(order.getOrderId());
                         }
                     }
                 }
-            } catch (NumberFormatException e) {
-                System.err.println("Invalid quantity format for dishId " + dishIds[i] + ": " + e.getMessage());
             }
         }
 
-        double total = order.getOrderDetails().stream().mapToDouble(OrderDetail::getSubtotal).sum();
-        order.setTotal(total);
-
-        session.setAttribute("tempOrder", order);
-        response.sendRedirect("orderold?action=tableOverview&tableId=" + tableId);
-    }
-
-    private void updateOrder(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException, SQLException, ClassNotFoundException {
-        String orderId = request.getParameter("orderId");
-        String customerPhone = request.getParameter("customerPhone");
-
-        Order order = orderDAO.getOrderById(orderId);
-        if (order == null) {
-            response.sendRedirect("orderold?action=selectTable");
-            return;
+        if (orderId == null) {
+            session.setAttribute("tempOrder", order);
         }
-
-        order.setCustomerPhone(customerPhone);
-        orderDAO.updateOrder(order);
-
-        response.sendRedirect("orderold?action=viewOrder&orderId=" + orderId);
-    }
-
-    private void addDish(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException, SQLException, ClassNotFoundException {
-        String orderId = request.getParameter("orderId");
-        String dishId = request.getParameter("dishId");
-        String quantityParam = request.getParameter("quantity");
-
-        Order order = orderDAO.getOrderById(orderId);
-        if (order == null) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Order not found");
-            return;
-        }
-
-        Dish dish = dishDAO.getDishById(dishId);
-        if (dish == null || !"Available".equals(dish.getDishStatus()) || !"Sufficient".equals(dish.getIngredientStatus())) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Dish not available");
-            return;
-        }
-
-        int quantity = Integer.parseInt(quantityParam);
-        List<OrderDetail> orderDetails = order.getOrderDetails() != null ? order.getOrderDetails() : new ArrayList<>();
-        OrderDetail existingDetail = orderDetails.stream()
-                .filter(d -> d.getDishId().equals(dishId))
-                .findFirst()
-                .orElse(null);
-
-        if (existingDetail != null) {
-            existingDetail.setQuantity(existingDetail.getQuantity() + quantity);
-            existingDetail.setSubtotal(dish.getDishPrice() * existingDetail.getQuantity());
-        } else {
-            OrderDetail detail = new OrderDetail();
-            detail.setOrderId(orderId);
-            detail.setDishId(dishId);
-            detail.setQuantity(quantity);
-            detail.setSubtotal(dish.getDishPrice() * quantity);
-            detail.setDishName(dish.getDishName());
-            String orderDetailId = orderDAO.generateUniqueOrderDetailId();
-            detail.setOrderDetailId(orderDetailId);
-            orderDetails.add(detail);
-        }
-
-        order.setOrderDetails(orderDetails);
-        orderDAO.updateOrder(order);
-
-        response.setContentType("text/plain");
-        response.getWriter().write("Success");
+        response.sendRedirect("order?action=tableOverview&tableId=" + tableId);
     }
 
     private void editDishQuantity(HttpServletRequest request, HttpServletResponse response)
@@ -364,15 +267,33 @@ public class OrderController extends HttpServlet {
         String orderDetailId = request.getParameter("orderDetailId");
         String newQuantityParam = request.getParameter("newQuantity");
         String tableId = request.getParameter("tableId");
-
         int newQuantity = Integer.parseInt(newQuantityParam);
-        if (newQuantity <= 0) {
-            orderDAO.deleteOrderDetail(orderDetailId);
-        } else {
-            orderDAO.updateOrderDetailQuantity(orderDetailId, newQuantity);
+
+        HttpSession session = request.getSession();
+        Order order = (Order) session.getAttribute("tempOrder");
+        String orderId = orderDAO.getOrderIdByTableId(tableId);
+        if (order == null && orderId != null) {
+            order = orderDAO.getOrderById(orderId);
         }
 
-        response.sendRedirect("orderold?action=tableOverview&tableId=" + tableId);
+        if (order != null) {
+            OrderDetail detail = order.getOrderDetails().stream()
+                    .filter(d -> d.getOrderDetailId() != null && d.getOrderDetailId().equals(orderDetailId))
+                    .findFirst().orElse(null);
+            if (detail != null) {
+                double dishPrice = menuDAO.getDishById(detail.getDishId()).getDishPrice();
+                detail.setQuantity(newQuantity);
+                detail.setSubtotal(newQuantity * dishPrice);
+                order.setTotal(order.getOrderDetails().stream().mapToDouble(OrderDetail::getSubtotal).sum());
+                if (orderId != null) {
+                    orderDAO.updateOrderDetailQuantity(orderDetailId, newQuantity);
+                    orderDAO.updateOrder(order);
+                } else {
+                    session.setAttribute("tempOrder", order);
+                }
+            }
+        }
+        response.sendRedirect("order?action=tableOverview&tableId=" + tableId);
     }
 
     private void deleteDish(HttpServletRequest request, HttpServletResponse response)
@@ -380,55 +301,70 @@ public class OrderController extends HttpServlet {
         String orderDetailId = request.getParameter("orderDetailId");
         String tableId = request.getParameter("tableId");
 
-        orderDAO.deleteOrderDetail(orderDetailId);
-        response.sendRedirect("orderold?action=tableOverview&tableId=" + tableId);
+        HttpSession session = request.getSession();
+        Order order = (Order) session.getAttribute("tempOrder");
+        String orderId = orderDAO.getOrderIdByTableId(tableId);
+        if (order == null && orderId != null) {
+            order = orderDAO.getOrderById(orderId);
+        }
+
+        if (order != null) {
+            order.getOrderDetails().removeIf(d -> d.getOrderDetailId() != null && d.getOrderDetailId().equals(orderDetailId));
+            order.setTotal(order.getOrderDetails().stream().mapToDouble(OrderDetail::getSubtotal).sum());
+            if (orderId != null) {
+                orderDAO.deleteOrderDetail(orderDetailId);
+                orderDAO.updateOrder(order);
+            } else {
+                session.setAttribute("tempOrder", order);
+            }
+        }
+        response.sendRedirect("order?action=tableOverview&tableId=" + tableId);
     }
 
     private void cancelOrder(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
         session.removeAttribute("tempOrder");
-        response.sendRedirect("orderold?action=selectTable");
+        response.sendRedirect("order?action=listTables");
     }
 
     private void completeOrder(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException, SQLException, ClassNotFoundException {
+            throws ServletException, IOException {
         String tableId = request.getParameter("tableId");
-        if (tableId == null || tableId.trim().isEmpty()) {
+        if (tableId == null) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing tableId");
             return;
         }
 
         HttpSession session = request.getSession();
         Order tempOrder = (Order) session.getAttribute("tempOrder");
-        String orderId = orderDAO.getOrderIdByTableId(tableId);
-        Order order = orderId != null ? orderDAO.getOrderById(orderId) : tempOrder;
+        String orderId = null;
+        try {
+            orderId = orderDAO.getOrderIdByTableId(tableId);
+            Order order = orderId != null ? orderDAO.getOrderById(orderId) : tempOrder;
 
-        if (order == null || order.getOrderDetails() == null || order.getOrderDetails().isEmpty()) {
-            response.sendRedirect("orderold?action=selectTable");
-            return;
-        }
-
-        for (OrderDetail detail : order.getOrderDetails()) {
-            if (detail.getOrderDetailId() == null || detail.getOrderDetailId().isEmpty()) {
-                String orderDetailId = orderDAO.generateUniqueOrderDetailId();
-                detail.setOrderDetailId(orderDetailId);
+            if (order == null || order.getOrderDetails() == null || order.getOrderDetails().isEmpty()) {
+                response.sendRedirect("order?action=listTables");
+                return;
             }
+
+            order.setTotal(order.getOrderDetails().stream().mapToDouble(OrderDetail::getSubtotal).sum());
+
+            if (orderId == null) {
+                orderDAO.CreateOrder(order);
+                tableDAO.updateTableStatus(tableId, "Occupied");
+            } else {
+                order.setOrderStatus("Pending");
+                orderDAO.updateOrder(order);
+            }
+            session.removeAttribute("tempOrder");
+
+            response.sendRedirect("order?action=listTables");
+        } catch (SQLException | ClassNotFoundException e) {
+            request.setAttribute("error", "Lỗi khi hoàn tất đơn hàng: " + e.getMessage());
+            request.setAttribute("tableId", tableId);
+            request.getRequestDispatcher("ManageOrder/tableOverview.jsp").forward(request, response);
         }
-
-        double total = order.getOrderDetails().stream().mapToDouble(OrderDetail::getSubtotal).sum();
-        order.setTotal(total);
-
-        if (orderId == null) {
-            orderDAO.CreateOrder(order);
-            tableDAO.updateTableStatus(tableId, "Occupied");
-        } else {
-            order.setOrderStatus("Pending");
-            orderDAO.updateOrder(order);
-        }
-
-        session.removeAttribute("tempOrder");
-        response.sendRedirect("orderold?action=selectTable");
     }
 
     private void addCustomer(HttpServletRequest request, HttpServletResponse response)
@@ -445,7 +381,6 @@ public class OrderController extends HttpServlet {
         HttpSession session = request.getSession();
         Order order = (Order) session.getAttribute("tempOrder");
         String orderId = orderDAO.getOrderIdByTableId(tableId);
-
         if (order == null && orderId != null) {
             order = orderDAO.getOrderById(orderId);
         }
@@ -463,8 +398,7 @@ public class OrderController extends HttpServlet {
                 session.setAttribute("tempOrder", order);
             }
         }
-
-        response.sendRedirect("orderold?action=tableOverview&tableId=" + tableId);
+        response.sendRedirect("order?action=tableOverview&tableId=" + tableId);
     }
 
     private void selectCustomer(HttpServletRequest request, HttpServletResponse response)
@@ -480,7 +414,6 @@ public class OrderController extends HttpServlet {
         HttpSession session = request.getSession();
         Order order = (Order) session.getAttribute("tempOrder");
         String orderId = orderDAO.getOrderIdByTableId(tableId);
-
         if (order == null && orderId != null) {
             order = orderDAO.getOrderById(orderId);
         }
@@ -497,7 +430,93 @@ public class OrderController extends HttpServlet {
                 }
             }
         }
-
-        response.sendRedirect("orderold?action=tableOverview&tableId=" + tableId);
+        response.sendRedirect("order?action=tableOverview&tableId=" + tableId);
     }
+
+   private void addDish(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException, SQLException, ClassNotFoundException {
+    String orderId = request.getParameter("orderId");
+    String dishId = request.getParameter("dishId");
+    String quantityParam = request.getParameter("quantity");
+    String tableId = request.getParameter("tableId");
+
+    System.out.println("addDish - orderId: " + orderId + ", dishId: " + dishId + ", quantity: " + quantityParam + ", tableId: " + tableId);
+
+    int quantity;
+    try {
+        quantity = Integer.parseInt(quantityParam);
+    } catch (NumberFormatException e) {
+        response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid quantity: " + quantityParam);
+        return;
+    }
+
+    if (tableId == null || tableId.trim().isEmpty()) {
+        response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing or invalid tableId");
+        return;
+    }
+
+    HttpSession session = request.getSession();
+    Order order = null;
+    if (orderId != null && !orderId.trim().isEmpty()) {
+        order = orderDAO.getOrderById(orderId);
+        if (order == null) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Order not found in database for orderId: " + orderId);
+            return;
+        }
+    } else {
+        order = (Order) session.getAttribute("tempOrder");
+        if (order == null) {
+            Account account = (Account) session.getAttribute("account");
+            if (account == null) {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User not logged in");
+                return;
+            }
+            // Kiểm tra tableId có tồn tại trong DB không
+            Table table = tableDAO.getTableById(tableId);
+            if (table == null) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid tableId: " + tableId + " does not exist in database");
+                return;
+            }
+            order = new Order();
+            order.setOrderId(orderDAO.generateNextOrderId());
+            order.setUserId(account.getUserId());
+            order.setTableId(tableId);
+            order.setOrderStatus("Pending");
+            order.setOrderType("Dine-in");
+            order.setOrderDate(new Date());
+            order.setTotal(0);
+            order.setOrderDetails(new ArrayList<>());
+            session.setAttribute("tempOrder", order);
+            System.out.println("Created new tempOrder: " + order.getOrderId());
+        }
+    }
+
+    Dish dish = menuDAO.getDishById(dishId);
+    System.out.println("Order: " + (order != null ? order.getOrderId() : "null"));
+    System.out.println("Dish: " + (dish != null ? dish.getDishName() : "null"));
+
+    if (order != null && dish != null) {
+        OrderDetail detail = new OrderDetail();
+        detail.setOrderId(order.getOrderId());
+        detail.setDishId(dishId);
+        detail.setQuantity(quantity);
+        detail.setSubtotal(dish.getDishPrice() * quantity);
+        detail.setDishName(dish.getDishName());
+
+        if (orderId != null && !orderId.trim().isEmpty()) {
+            orderDAO.addOrderDetail(detail);
+            orderDAO.updateOrderTotal(order.getOrderId());
+        } else {
+            order.getOrderDetails().add(detail);
+            order.setTotal(order.getTotal() + detail.getSubtotal());
+            session.setAttribute("tempOrder", order);
+        }
+        response.setContentType("text/plain");
+        response.getWriter().write("Success");
+    } else {
+        String errorMsg = "Invalid order or dish - Order: " + (order != null ? order.getOrderId() : "null") + 
+                        ", Dish: " + (dish != null ? dish.getDishName() : "null");
+        response.sendError(HttpServletResponse.SC_BAD_REQUEST, errorMsg);
+    }
+}
 }
