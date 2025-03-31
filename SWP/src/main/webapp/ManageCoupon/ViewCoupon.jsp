@@ -28,7 +28,7 @@
         <style>
             body {
                 font-family: 'Roboto', sans-serif;
-                background-color: #fcfcf7;
+                background-color: #f8f9fa;
             }
 
             .sidebar {
@@ -162,9 +162,9 @@
             <!-- Sidebar -->
             <div class="sidebar col-md-2 p-3">
                 <h4 class="text-center mb-4">Admin</h4>
-                 <ul class="nav flex-column">
-                   <li class="nav-item"><a href="${pageContext.request.contextPath}/dashboard" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
-                   <li class="nav-item"><a href="${pageContext.request.contextPath}/view-revenue" class="nav-link"><i class="fas fa-chart-line me-2"></i>View Revenue</a></li>
+                <ul class="nav flex-column">
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/dashboard" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/view-revenue" class="nav-link"><i class="fas fa-chart-line me-2"></i>View Revenue</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-list-alt me-2"></i>Menu Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewAccountList" class="nav-link"><i class="fas fa-users me-2"></i>Employee Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewTableList" class="nav-link"><i class="fas fa-building me-2"></i>Table Management</a></li>
@@ -286,20 +286,20 @@
 
                             <div class="mb-3 row"> 
                                 <label for="discountAmount" class="col-sm-4 col-form-label">Discount Amount:</label> <!- Thêm class 'col-sm-4' và 'col-form-label' cho label -->
-                                <div class="col-sm-8"> <!- Bọc input trong một div với class 'col-sm-8' -->
-                                    <input type="number" class="form-control" id="discountAmount" name="discountAmount" required min="1" max="100" step="0.01">
+                                <div class="col-sm-8"> 
+                                    <input type="number" class="form-control" id="discountAmount" name="discountAmount" required min="1" step="0.01">
                                     <small class="text-muted">Enter a non-negative number.</small>
                                 </div>
                             </div>
-                            <div class="mb-3 row"> <!- Thêm class 'row' vào div.mb-3 -->
+                            <div class="mb-3 row"> 
                                 <label for="expirationDate" class="col-sm-4 col-form-label">Expiration Date:</label> <!- Thêm class 'col-sm-4' và 'col-form-label' cho label -->
-                                <div class="col-sm-8"> <!- Bọc input trong một div với class 'col-sm-8' -->
+                                <div class="col-sm-8"> 
                                     <input type="date" class="form-control" id="expirationDate" name="expirationDate" required>
                                 </div>
                             </div>
-                            <div class="mb-3 row"> <!- Thêm class 'row' vào div.mb-3 -->
+                            <div class="mb-3 row"> 
                                 <label for="description" class="col-sm-4 col-form-label">Description:</label> <!- Thêm class 'col-sm-4' và 'col-form-label' cho label -->
-                                <div class="col-sm-8"> <!- Bọc input trong một div với class 'col-sm-8' -->
+                                <div class="col-sm-8"> 
                                     <textarea class="form-control" id="description" name="description" rows="2" required=""></textarea>
                                 </div>
                             </div>
@@ -333,7 +333,7 @@
                             <div class="mb-3 row"> 
                                 <label for="discountAmountUpdate" class="col-sm-4 col-form-label">Discount Amount:</label> 
                                 <div class="col-sm-8">
-                                    <input type="number" class="form-control" id="discountAmountUpdate" name="discountAmount" min="0" max="10000000" required step="0.01">
+                                    <input type="number" class="form-control" id="discountAmountUpdate" name="discountAmount" min="0"  required step="0.01">
                                     <small class="text-muted">Enter a non-negative number.</small>
                                 </div>
                             </div>
@@ -386,17 +386,15 @@
         </div>
 
         <!-- Bootstrap 5.3.0 JS (bao gồm Popper.js) -->
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" 
+        integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
         <script>
             function formatDiscountDisplay(discountAmount) {
                 const discountStr = String(discountAmount); // Chuyển số thành chuỗi
-               
-                    // Định dạng số lớn hơn 999 thành tiền tệ với dấu phẩy và 'đ'
-                    return formatCurrency(discountAmount) + 'đ';
-              
-                
-            }
 
+                // Định dạng số lớn hơn 999 thành tiền tệ với dấu phẩy và 'đ'
+                return formatCurrency(discountAmount) + 'đ';
+            }
             function formatCurrency(number) {
                 return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
             }
@@ -410,39 +408,56 @@
                     $('.error-message').remove();
                     $('.is-invalid').removeClass('is-invalid');
 
-                    var discountAmountInput = $('#discountAmount'); // Lấy đối tượng input discountAmount
+                    var discountAmountInput = $('#discountAmount');
                     var expirationDateInput = $('#expirationDate');
-                    var descriptionInput = $('#description'); // Lấy đối tượng input description
+                    var descriptionInput = $('#description');
 
                     var discountAmount = discountAmountInput.val();
                     var expirationDateValue = expirationDateInput.val();
-                    var description = descriptionInput.val().trim(); // trim() để loại bỏ khoảng trắng đầu cuối
+                    var description = descriptionInput.val().trim();
 
-                    var isValid = true; // Biến cờ để theo dõi trạng thái hợp lệ của form
+                    var isValid = true;
 
                     // **Kiểm tra trường Discount Amount**
                     if (discountAmount === '' || isNaN(discountAmount)) {
                         isValid = false;
                         displayError('discountAmount', 'Please input this field');
                     }
-                    if (parseFloat(discountAmount) <= 0 || discountAmount >= 10000000) {
+                    if (parseFloat(discountAmount) <= 0 || discountAmount >= 1000000) {
                         isValid = false;
-                        displayError('discountAmount', 'Discount Amount must be greater than 0 and lower than 10,000,000');
+                        displayError('discountAmount', 'Discount Amount must be greater than 0 and lower than 1,000,000');
                     }
 
                     // **Kiểm tra trường Expiration Date**
-                    const dateRegex = /^\d{4}-\d{2}-\d{2}$/; // Regex cho yyyy-MM-dd
+                    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
                     if (!expirationDateValue) {
                         isValid = false;
-                        displayError('expirationDate', 'Please input this field.'); // Bắt buộc chọn ngày (required)
+                        displayError('expirationDate', 'Please input this field.');
                     } else if (!dateRegex.test(expirationDateValue)) {
                         isValid = false;
                         displayError('expirationDate', 'Invalid expiration date format.');
                     } else {
-                        const dateObj = new Date(expirationDateValue);
-                        if (isNaN(dateObj.getTime())) { // Kiểm tra ngày tháng có hợp lệ không (ví dụ: 2024-02-30 là không hợp lệ)
+                        const expirationDateObj = new Date(expirationDateValue);
+                        if (isNaN(expirationDateObj.getTime())) {
                             isValid = false;
                             displayError('expirationDate', 'Invalid expiration date.');
+                        } else {
+                            const currentDate = new Date();
+                            currentDate.setHours(0, 0, 0, 0); // Đặt giờ về 0 để so sánh ngày
+
+                            if (expirationDateObj < currentDate) {
+                                isValid = false;
+                                displayError('expirationDate', 'Expiration date cannot be in the past.');
+                            } else {
+                                // **Thêm kiểm tra: Không được dài hơn một năm**
+                                const oneYearFromNow = new Date(currentDate); // Tạo bản sao của currentDate
+                                oneYearFromNow.setFullYear(currentDate.getFullYear() + 1); // Cộng thêm 1 năm
+
+                                if (expirationDateObj > oneYearFromNow) {
+                                    isValid = false;
+                                    displayError('expirationDate', 'Expiration date cannot be more than one year from now.');
+                                }
+                            }
                         }
                     }
 
@@ -458,7 +473,7 @@
                             type: 'POST',
                             data: {
                                 discountAmount: discountAmount,
-                                expirationDate: expirationDateValue, // Sử dụng expirationDateValue vì đã validate định dạng
+                                expirationDate: expirationDateValue,
                                 description: description
                             },
                             success: function () {
@@ -472,7 +487,7 @@
                                     timer: 2000,
                                     showConfirmButton: false
                                 });
-                                $('#addCouponForm')[0].reset(); // Reset form sau khi thành công
+                                $('#addCouponForm')[0].reset();
                             },
                             error: function (xhr, status, error) {
                                 Swal.fire({
@@ -484,7 +499,6 @@
                         });
                     }
                 });
-
                 function displayError(fieldId, errorMessage) {
                     $('#' + fieldId).addClass('is-invalid'); // Thêm class 'is-invalid' để hiển thị lỗi CSS nếu cần
                     $('#' + fieldId).after('<div class="error-message" style="color: red;">' + errorMessage + '</div>'); // Thêm thông báo lỗi
@@ -515,9 +529,9 @@
                     } else if (isNaN(discountAmountUpdate)) {
                         isValid = false;
                         displayError('discountAmountUpdate', 'Discount amount must be a number.');
-                    } else if (parseFloat(discountAmountUpdate) <= 0 || parseFloat(discountAmountUpdate) >= 10000000) {
+                    } else if (parseFloat(discountAmountUpdate) <= 0 || parseFloat(discountAmountUpdate) >= 1000000) {
                         isValid = false;
-                        displayError('discountAmountUpdate', 'Discount amount must be greater than 0 and less than 10,000,000.');
+                        displayError('discountAmountUpdate', 'Discount amount must be greater than 0 and less than 1,000,000.');
                     }
 
                     // **Validate Expiration Date Update field**
@@ -529,10 +543,28 @@
                         isValid = false;
                         displayError('expirationDateUpdate', 'Invalid expiration date format. Please use YYYY-MM-DD format (e.g., 2024-12-31).');
                     } else {
-                        const dateObj = new Date(expirationDateValueUpdate);
-                        if (isNaN(dateObj.getTime())) { // Check if the date is valid (e.g., 2024-02-30 is invalid)
+                        const expirationDateObjUpdate = new Date(expirationDateValueUpdate); // Đổi tên biến để phân biệt
+                        if (isNaN(expirationDateObjUpdate.getTime())) { // Check if the date is valid (e.g., 2024-02-30 is invalid)
                             isValid = false;
                             displayError('expirationDateUpdate', 'Invalid expiration date. Please select a valid date.');
+                        } else {
+                            // **Thêm kiểm tra ngày hết hạn trong quá khứ và không quá một năm**
+                            const currentDate = new Date();
+                            currentDate.setHours(0, 0, 0, 0); // Đặt giờ, phút, giây, mili giây về 0 để so sánh ngày
+
+                            if (expirationDateObjUpdate < currentDate) {
+                                isValid = false;
+                                displayError('expirationDateUpdate', 'Expiration date cannot be in the past.');
+                            } else {
+                                // **Thêm kiểm tra: Không được dài hơn một năm**
+                                const oneYearFromNow = new Date(currentDate); // Tạo bản sao của currentDate
+                                oneYearFromNow.setFullYear(currentDate.getFullYear() + 1); // Cộng thêm 1 năm
+
+                                if (expirationDateObjUpdate > oneYearFromNow) {
+                                    isValid = false;
+                                    displayError('expirationDateUpdate', 'Expiration date cannot be more than one year from now.');
+                                }
+                            }
                         }
                     }
 

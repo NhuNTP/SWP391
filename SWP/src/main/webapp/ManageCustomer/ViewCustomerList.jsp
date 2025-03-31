@@ -11,420 +11,721 @@
 
     Account account = (Account) session.getAttribute("account");
     String UserRole = account.getUserRole();
-
-    String successMessage = (String) session.getAttribute("message");
-    String errorMessage = (String) session.getAttribute("errorMessage");
-
-    if (successMessage != null) {
-        session.removeAttribute("message");
-    }
-    if (errorMessage != null) {
-        session.removeAttribute("errorMessage");
-    }
 %>
 <html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer Management - Admin Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"
-          integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Manage Customer - Admin Dashboard</title>
+        <!-- Bootstrap 5.3.0 CSS -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+        <!-- Font Awesome Icons -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        <!-- jQuery -->
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <!-- SweetAlert2 for enhanced alerts -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #f8f9fa;
-        }
-        .sidebar {
-            background: linear-gradient(to bottom, #2C3E50, #34495E);
-            color: white;
-            height: 100vh;
-        }
-        .sidebar a {
-            color: white;
-            text-decoration: none;
-        }
-        .sidebar a:hover {
-            background-color: #1A252F;
-        }
-        .main-content-area {
-            padding: 20px;
-        }
-        .content-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .content-header h2 {
-            margin-top: 0;
-            font-size: 24px;
-        }
-        .search-bar input {
-            padding: 8px 12px;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            width: 250px;
-        }
-        .table-responsive {
-            overflow-x: auto;
-        }
-        .btn-edit, .btn-delete {
-            padding: 5px 10px;
-            border-radius: 5px;
-            color: white;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .btn-edit {
-            background-color: #007bff;
-        }
-        .btn-edit:hover {
-            background-color: #0056b3;
-        }
-        .btn-delete {
-            background-color: #dc3545;
-            margin-left: 5px;
-        }
-        .btn-delete:hover {
-            background-color: #c82333;
-        }
-        .btn-edit i, .btn-delete i {
-            margin-right: 5px;
-        }
-        .header-buttons .btn-info {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .header-buttons .btn-info:hover {
-            background-color: #0056b3;
-        }
-        .no-data {
-            padding: 20px;
-            text-align: center;
-            color: #777;
-        }
-        .sidebar .nav-link {
-            font-size: 0.9rem;
-        }
-        .sidebar h4 {
-            font-size: 1.5rem;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.4);
-        }
-        .modal-content {
-            background-color: #fefefe;
-            margin: 15% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-        }
-        .notification {
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            color: #155724;
-            background-color: #d4edda;
-            border: 1px solid #c3e6cb;
-            display: none;
-            position: relative;
-        }
-        .notification.error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border-color: #f5c6cb;
-        }
-    </style>
-</head>
-<body>
-<div class="d-flex">
-    <div class="sidebar col-md-2 p-3">
-        <h4 class="text-center mb-4">Admin</h4>
-        <ul class="nav flex-column">
-            <li class="nav-item"><a href="${pageContext.request.contextPath}/dashboard" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
-            <li class="nav-item"><a href="${pageContext.request.contextPath}/view-revenue" class="nav-link"><i class="fas fa-chart-line me-2"></i>View Revenue</a></li>
-            <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-list-alt me-2"></i>Menu Management</a></li>
-            <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewAccountList" class="nav-link"><i class="fas fa-users me-2"></i>Employee Management</a></li>
-            <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewTableList" class="nav-link"><i class="fas fa-building me-2"></i>Table Management</a></li>
-            <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewOrderList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Order Management</a></li>
-            <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCustomerList" class="nav-link"><i class="fas fa-user-friends me-2"></i>Customer Management</a></li>
-            <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCouponController" class="nav-link"><i class="fas fa-tag me-2"></i>Coupon Management</a></li>
-            <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewInventoryController" class="nav-link"><i class="fas fa-boxes me-2"></i>Inventory Management</a></li>
-            <li class="nav-item"><a href="${pageContext.request.contextPath}/view-notifications" class="nav-link"><i class="fas fa-bell me-2"></i>View Notifications</a></li>
-            <% if ("Admin".equals(UserRole) || "Manager".equals(UserRole)) { %>
-            <li class="nav-item"><a href="${pageContext.request.contextPath}/create-notification" class="nav-link"><i class="fas fa-plus me-2"></i>Create Notification</a></li>
-            <% } %>
-            <li class="nav-item"><a href="${pageContext.request.contextPath}/logout" class="nav-link"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
-        </ul>
-    </div>
-
-    <div class="col-md-10 p-4 main-content-area">
-        <% if (successMessage != null) { %>
-        <div id="successNotification" class="notification">
-            <%= successMessage %>
-        </div>
-        <% } %>
-        <% if (errorMessage != null) { %>
-        <div id="errorNotification" class="notification error">
-            <%= errorMessage %>
-        </div>
-        <% } %>
-
-        <section class="main-content">
-            <div class="text-left mb-4">
-                <h4>Customer Management</h4>
+        <style>
+            body {
+                font-family: 'Roboto', sans-serif;
+                background-color: #f8f9fa;
+            }
+            .sidebar {
+                background: linear-gradient(to bottom, #2C3E50, #34495E);
+                color: white;
+                height: 100vh;
+            }
+            .sidebar a {
+                color: white;
+                text-decoration: none;
+            }
+            .sidebar a:hover {
+                background-color: #1A252F;
+            }
+            .main-content-area {
+                padding: 20px;
+            }
+            .content-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+            .content-header h2 {
+                margin-top: 0;
+                font-size: 24px;
+            }
+            .search-bar input {
+                padding: 8px 12px;
+                border: 1px solid #ccc;
+                border-radius: 3px;
+                width: 250px;
+            }
+            .table-responsive {
+                overflow-x: auto;
+            }
+            .btn-edit, .btn-delete {
+                padding: 5px 10px;
+                border-radius: 5px;
+                color: white;
+                text-decoration: none;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .btn-edit {
+                background-color: #007bff;
+            }
+            .btn-edit:hover {
+                background-color: #0056b3;
+            }
+            .btn-delete {
+                background-color: #dc3545;
+                margin-left: 5px;
+            }
+            .btn-delete:hover {
+                background-color: #c82333;
+            }
+            .btn-edit i, .btn-delete i {
+                margin-right: 5px;
+            }
+            .header-buttons .btn-info {
+                background-color: #007bff;
+                color: white;
+                border: none;
+                padding: 8px 15px;
+                border-radius: 5px;
+                cursor: pointer;
+            }
+            .header-buttons .btn-info:hover {
+                background-color: #0056b3;
+            }
+            .no-data {
+                padding: 20px;
+                text-align: center;
+                color: #777;
+            }
+            .sidebar .nav-link {
+                font-size: 0.9rem;
+            }
+            .sidebar h4 {
+                font-size: 1.5rem;
+            }
+            .modal-header{
+                background-color: #f7f7f0
+            }
+            .highlight {
+                background-color: yellow !important; /* Thêm !important */
+            }
+        </style>
+    </head>
+    <body>
+        <div class="d-flex">
+            <div class="sidebar col-md-2 p-3">
+                <h4 class="text-center mb-4">Admin</h4>
+                <ul class="nav flex-column">
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/dashboard" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/view-revenue" class="nav-link"><i class="fas fa-chart-line me-2"></i>View Revenue</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-list-alt me-2"></i>Menu Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewAccountList" class="nav-link"><i class="fas fa-users me-2"></i>Employee Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewTableList" class="nav-link"><i class="fas fa-building me-2"></i>Table Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewOrderList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Order Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCustomerList" class="nav-link"><i class="fas fa-user-friends me-2"></i>Customer Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCouponController" class="nav-link"><i class="fas fa-tag me-2"></i>Coupon Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewInventoryController" class="nav-link"><i class="fas fa-boxes me-2"></i>Inventory Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/view-notifications" class="nav-link"><i class="fas fa-bell me-2"></i>View Notifications</a></li>
+                        <% if ("Admin".equals(UserRole) || "Manager".equals(UserRole)) { %>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/create-notification" class="nav-link"><i class="fas fa-plus me-2"></i>Create Notification</a></li>
+                        <% } %>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/logout" class="nav-link"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                </ul>
             </div>
-            <div class="container-fluid">
-                <main>
-                    <div class="content-header">
-                        <div class="search-bar">
-                            <input type="text" class="form-control" placeholder="Search" id="searchInput" onkeyup="filterTable()">
-                        </div>
-                        <div class="header-buttons">
-                            <button type="button" class="btn btn-info" onclick="openModal('addCustomerModal')">
-                                <i class="fas fa-plus"></i> Add New
-                            </button>
-                        </div>
-                    </div>
 
-                    <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <thead>
-                            <tr>
-                                <th>No.</th>
-                                <th>Customer ID</th>
-                                <th>Customer Name</th>
-                                <th>Customer Phone</th>
-                                <th>Number of Payments</th>
-                                <th>Actions</th>
-                            </tr>
-                            </thead>
-                            <tbody id="customerTableBody">
-                            <%
-                                List<Customer> customerList = (List<Customer>) request.getAttribute("customerList");
-                                if (customerList != null && !customerList.isEmpty()) {
-                                    int displayIndex = 1;
-                                    for (Customer customer : customerList) {
-                            %>
-                            <tr id="customerRow<%=customer.getCustomerId()%>">
-                                <td><%= displayIndex++ %></td>
-                                <td><%= customer.getCustomerId() %></td>
-                                <td><%= customer.getCustomerName() %></td>
-                                <td><%= customer.getCustomerPhone() %></td>
-                                <td><%= customer.getNumberOfPayment() %></td>
-                                <td>
-                                    <button type="button" class="btn btn-edit"
-                                            data-customer-id="<%= customer.getCustomerId() %>"
-                                            data-customer-name="<%= customer.getCustomerName() %>"
-                                            data-customer-phone="<%= customer.getCustomerPhone() %>"
-                                            data-number-of-payment="<%= customer.getNumberOfPayment() %>"
-                                            onclick="openEditModal(this)">
-                                        <i class="fas fa-edit"></i> Update
-                                    </button>
-                                    <button type="button" class="btn btn-delete"
-                                            onclick="confirmDelete('<%= customer.getCustomerId() %>')">
-                                        <i class="fas fa-trash-alt"></i> Delete
-                                    </button>
-                                </td>
-                            </tr>
-                            <%
-                                    }
-                                } else {
-                            %>
-                            <tr>
-                                <td colspan="6">
-                                    <div class="no-data">Customer Not Found.</div>
-                                </td>
-                            </tr>
-                            <%
+            <div class="col-md-10 p-4 main-content-area">
+                <section class="main-content">
+                    <div class="text-left mb-4">
+                        <h4>Customer Management</h4>
+                    </div>
+                    <div class="container-fluid">
+                        <main>
+                            <div class="content-header">
+                                <div class="search-filter">
+                                    <div class="search-bar">
+                                        <input type="text" id="searchInput" placeholder="Search">  <!-- Thêm id="searchInput" -->
+                                    </div>
+                                </div>
+
+                                <div class="header-buttons">
+                                    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#addCustomerModal"> Add New</button>
+                                </div>
+
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>No.</th>
+                                            <th>Customer ID</th>
+                                            <th>Customer Name</th>
+                                            <th>Customer Phone</th>
+                                            <th>Number of Payments</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                        <tr id="noResultsRow" style="display: none;">
+                                            <td colspan="6" style="text-align: center; color: gray">Customer Not Found.</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="customerTableBody">
+                                        <%
+                                            List<Customer> customerList = (List<Customer>) request.getAttribute("customerList");
+                                            if (customerList != null && !customerList.isEmpty()) {
+                                                int displayIndex = 1;
+                                                for (Customer customer : customerList) {
+                                        %>
+                                        <tr id="customerRow<%=customer.getCustomerId()%>">
+                                            <td><%= displayIndex++%></td>
+                                            <td><%= customer.getCustomerId()%></td>
+                                            <td><%= customer.getCustomerName()%></td>
+                                            <td><%= customer.getCustomerPhone()%></td>
+                                            <td><%= customer.getNumberOfPayment()%></td>
+                                            <td>
+                                                <button type="button" class="btn btn-edit btn-update-customer"
+                                                        data-bs-toggle="modal" data-bs-target="#updateCustomerModal"
+                                                        data-customer-id="<%= customer.getCustomerId()%>"
+                                                        data-customer-name="<%= customer.getCustomerName()%>"
+                                                        data-customer-phone="<%= customer.getCustomerPhone()%>"
+                                                        data-number-of-payment="<%= customer.getNumberOfPayment()%>">
+                                                    <i class="fas fa-edit"></i> Update
+                                                </button>
+                                                <button type="button" class="btn btn-delete btn-delete-customer"
+                                                        data-bs-toggle="modal" data-bs-target="#deleteCustomerModal"
+                                                        data-customer-id="<%= customer.getCustomerId()%>">
+                                                    <i class="fas fa-trash-alt"></i> Delete
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <%
+                                            }
+                                        } else {
+                                        %>
+                                        <tr>
+                                            <td colspan="6">
+                                                <div class="no-data">
+                                                    Customer Not Found.
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <%
+                                            }
+                                        %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </main>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Add Customer Modal -->
+        <div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addCustomerModalLabel">Add New Customer</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="addCustomerForm">
+                            <div class="mb-3 row">
+                                <label for="customerName" class="col-sm-4 col-form-label">Customer Name:</label> <!- Thêm class 'col-sm-4' và 'col-form-label' cho label -->
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" id="customerName" name="CustomerName" required>
+
+                                </div>
+                            </div>
+                            <div class="mb-3 row">
+                                <label for="customerPhone" class="col-sm-4 col-form-label">Customer Phone:</label> <!- Thêm class 'col-sm-4' và 'col-form-label' cho label -->
+                                <div class="col-sm-8">
+                                    <input type="number" class="form-control" id="customerPhone" name="CustomerPhone" required>
+                                    <small class="text-muted">Enter customer phone number.</small>
+                                </div>
+                            </div>
+                            <div class="mb-3 row">
+                                <label for="numberOfPayment" class="col-sm-4 col-form-label">Number of Payments:</label> <!- Thêm class 'col-sm-4' và 'col-form-label' cho label -->
+                                <div class="col-sm-8">
+                                    <input type="number" class="form-control" id="numberOfPayment" name="NumberOfPayment" required min="0">
+                                    <small class="text-muted">Enter a non-negative number.</small>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="btnAddCustomer">Add Customer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Update Customer Modal -->
+        <div class="modal fade" id="updateCustomerModal" tabindex="-1" aria-labelledby="updateCustomerModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="updateCustomerModalLabel">Update Customer</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="updateCustomerForm">
+                            <input type="hidden" id="customerIdUpdate" name="customerId">
+                            <div class="mb-3 row">
+                                <label for="customerIdUpdateDisplay" class="col-sm-4 col-form-label">Customer ID(Just View):</label>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" id="customerIdUpdateDisplay" readonly >
+                                    <input type="hidden" id="customerIdUpdate" name="customerId">
+                                </div>
+                            </div>
+                            <div class="mb-3 row">
+                                <label for="customerNameUpdate" class="col-sm-4 col-form-label">Customer Name:</label>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" id="customerNameUpdate" name="CustomerName" required>
+                                    <small class="text-muted">Enter customer name.</small>
+                                </div>
+                            </div>
+                            <div class="mb-3 row">
+                                <label for="customerPhoneUpdate" class="col-sm-4 col-form-label">Customer Phone:</label>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" id="customerPhoneUpdate" name="CustomerPhone" required>
+                                    <small class="text-muted">Enter customer phone number.</small>
+                                </div>
+                            </div>
+                            <div class="mb-3 row">
+                                <label for="numberOfPaymentUpdate" class="col-sm-4 col-form-label">Number of Payments:</label>
+                                <div class="col-sm-8">
+                                    <input type="number" class="form-control" id="numberOfPaymentUpdate" name="NumberOfPayment" required min="0">
+                                    <small class="text-muted">Enter a non-negative integer.</small>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="btnUpdateCustomer">Save change</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Customer Modal -->
+        <div class="modal fade" id="deleteCustomerModal" tabindex="-1" aria-labelledby="deleteCustomerModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteCustomerModalLabel">Confirm Delete</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to DELETE this customer?</p>
+                        <input type="hidden" id="customerIdDelete">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" id="btnDeleteCustomerConfirm">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bootstrap 5.3.0 JS (bao gồm Popper.js) -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+        <script>
+            $(document).ready(function () {
+                bindEventHandlers(); // Gọi bindEventHandlers ngay từ đầu
+                reloadViewCustomer();
+
+                // **Xử lý Thêm Customer**
+                $('#btnAddCustomer').click(function () {
+                    // **Xóa các thông báo lỗi cũ (nếu có)**
+                    $('.error-message').remove();
+                    $('.is-invalid').removeClass('is-invalid');
+
+                    var customerNameInput = $('#customerName');
+                    var customerPhoneInput = $('#customerPhone');
+                    var numberOfPaymentInput = $('#numberOfPayment');
+
+                    var customerName = customerNameInput.val().trim();
+                    var customerPhone = customerPhoneInput.val().trim();
+                    var numberOfPayment = numberOfPaymentInput.val();
+
+                    var isValid = true;
+
+                    // **Kiểm tra trường Customer Name**
+                    if (customerName === '') {
+                        isValid = false;
+                        displayError('customerName', 'Please input this field');
+                    } else if (!/^[a-zA-Z]/.test(customerName)) {
+                        isValid = false;
+                        displayError('customerName', 'Customer name must start with a letter.');
+                    } else if (customerName.length > 50) {
+                        isValid = false;
+                        displayError('customerName', 'Customer name cannot exceed 50 characters.');
+                    }
+
+
+                    // **Kiểm tra trường Customer Phone**
+                    if (customerPhone === '') {
+                        isValid = false;
+                        displayError('customerPhone', 'Please input this field.');
+                    } else if (!customerPhone.startsWith('0')) {
+                        isValid = false;
+                        displayError('customerPhone', 'Phone number must start with \'0\'.');
+                    } else if (!/^\d{10}$/.test(customerPhone)) {
+                        isValid = false;
+                        displayError('customerPhone', 'Phone number must be exactly 10 digits.');
+                    }
+
+                    // **Kiểm tra trường Number of Payments**
+                    if (numberOfPayment === '') {
+                        isValid = false;
+                        displayError('numberOfPayment', 'Please input this field.');
+                    } else if (isNaN(numberOfPayment)) {
+                        isValid = false;
+                        displayError('numberOfPayment', 'Number of Payments must be a number.');
+                    } else if (parseInt(numberOfPayment) <= 0) {
+                        isValid = false;
+                        displayError('numberOfPayment', 'Number of Payments least 1.');
+                    }
+
+                    if (isValid) {
+                        $.ajax({
+                            url: 'AddCustomer', // Your controller URL
+                            type: 'POST',
+                            data: {
+                                CustomerName: customerName,
+                                CustomerPhone: customerPhone,
+                                NumberOfPayment: numberOfPayment
+                            },
+                            success: function (response) { // **Success Callback - Handle actual success**
+                                var addCustomerModal = bootstrap.Modal.getInstance(document.getElementById('addCustomerModal'));
+                                addCustomerModal.hide();
+                                reloadViewCustomer();
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success!',
+                                    text: 'Customer added successfully.',
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
+                                $('#addCustomerForm')[0].reset();
+                            },
+                            error: function (xhr, status, error) { // **Error Callback - Handle all error cases**
+                                if (xhr.status === 400) { // **Check for 400 Bad Request (Duplicate Phone)**
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Sorry!',
+                                        text: 'Phone number already exists. Please use a different phone number.', // Specific error message for duplicate phone
+                                        confirmButtonText: 'OK',
+                                        confirmButtonColor: '#dc3545'
+                                    });
+                                } else { // **Handle other errors (e.g., server errors, database errors)**
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Sorry!',
+                                        text: 'Your transaction has failed. Please go back and try again.', // Generic error message
+                                        confirmButtonText: 'OK',
+                                        confirmButtonColor: '#dc3545'
+                                    });
                                 }
-                            %>
-                            </tbody>
-                        </table>
-                    </div>
-                </main>
-            </div>
-        </section>
-    </div>
-</div>
+                            }
+                        });
+                    }
+                });
+                function displayError(fieldId, errorMessage) {
+                    $('#' + fieldId).addClass('is-invalid'); // Thêm class 'is-invalid' để hiển thị lỗi CSS nếu cần
+                    $('#' + fieldId).after('<div class="error-message" style="color: red;">' + errorMessage + '</div>'); // Thêm thông báo lỗi
+                }
 
-<div id="addCustomerModal" class="modal">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Add New Customer</h5>
-                <button type="button" class="btn-close" onclick="closeModal('addCustomerModal')" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="addCustomerForm" action="${pageContext.request.contextPath}/AddCustomer" method="POST">
-                    <div class="mb-3">
-                        <label for="customerName" class="form-label">Customer Name:</label>
-                        <input type="text" class="form-control" id="customerName" name="CustomerName">
-                        <span id="customerNameError" class="text-danger"></span>
-                    </div>
-                    <div class="mb-3">
-                        <label for="customerPhone" class="form-label">Customer Phone:</label>
-                        <input type="text" class="form-control" id="customerPhone" name="CustomerPhone">
-                        <span id="customerPhoneError" class="text-danger"></span>
-                    </div>
-                    <div class="mb-3">
-                        <label for="numberOfPayment" class="form-label">Number of Payments:</label>
-                        <input type="number" class="form-control" id="numberOfPayment" name="NumberOfPayment">
-                        <span id="numberOfPaymentError" class="text-danger"></span>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" onclick="closeModal('addCustomerModal')">Cancel</button>
-                        <button type="submit" class="btn btn-primary" id="btnAddCustomer">Add Customer</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+                $('#btnUpdateCustomer').click(function (event) {
+                    // **Handle Customer Update**
+                    // **Clear old error messages (if any)**
+                    $('.error-message').remove();
+                    $('.is-invalid').removeClass('is-invalid');
 
-<div id="updateCustomerModal" class="modal">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Update Customer</h5>
-                <button type="button" class="btn-close" onclick="closeModal('updateCustomerModal')" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="updateCustomerForm" action="${pageContext.request.contextPath}/UpdateCustomer" method="POST">
-                    <input type="hidden" id="customerIdUpdate" name="customerId">
-                    <div class="mb-3">
-                        <label for="customerNameUpdate" class="form-label">Customer Name:</label>
-                        <input type="text" class="form-control" id="customerNameUpdate" name="CustomerName">
-                        <span id="customerNameUpdateError" class="text-danger"></span>
-                    </div>
-                    <div class="mb-3">
-                        <label for="customerPhoneUpdate" class="form-label">Customer Phone:</label>
-                        <input type="text" class="form-control" id="customerPhoneUpdate" name="CustomerPhone">
-                        <span id="customerPhoneUpdateError" class="text-danger"></span>
-                    </div>
-                    <div class="mb-3">
-                        <label for="numberOfPaymentUpdate" class="form-label">Number of Payments:</label>
-                        <input type="number" class="form-control" id="numberOfPaymentUpdate" name="NumberOfPayment">
-                        <span id="numberOfPaymentUpdateError" class="text-danger"></span>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" onclick="closeModal('updateCustomerModal')">Cancel</button>
-                        <button type="submit" class="btn btn-primary" id="btnUpdateCustomer">Save changes</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+                    var customerNameInputUpdate = $('#customerNameUpdate');
+                    var customerPhoneInputUpdate = $('#customerPhoneUpdate');
+                    var numberOfPaymentInputUpdate = $('#numberOfPaymentUpdate');
 
-<script>
-    $(document).ready(function () {
-        var successNotification = $("#successNotification");
-        var errorNotification = $("#errorNotification");
+                    var customerNameUpdate = customerNameInputUpdate.val().trim();
+                    var customerPhoneUpdate = customerPhoneInputUpdate.val().trim();
+                    var numberOfPaymentUpdate = numberOfPaymentInputUpdate.val();
 
-        if (successNotification.length) {
-            successNotification.show();
-            setTimeout(function () {
-                successNotification.fadeOut(500);
-            }, 3000);
-        }
+                    var isValid = true; // Flag to track form validity
 
-        if (errorNotification.length) {
-            errorNotification.show();
-            setTimeout(function () {
-                errorNotification.fadeOut(500);
-            }, 3000);
-        }
-    });
+                    // **Validate Customer Name Update field**
+                    if (customerNameUpdate === '') {
+                        isValid = false;
+                        displayError('customerNameUpdate', 'Please input this field.');
+                    } else if (!/^[a-zA-Z]/.test(customerNameUpdate)) {
+                        isValid = false;
+                        displayError('customerNameUpdate', 'Customer name must start with a letter.');
+                    } else if (customerNameUpdate.length > 50) {
+                        isValid = false;
+                        displayError('customerNameUpdate', 'Customer name cannot exceed 50 characters.');
+                    }
 
-    function confirmDelete(customerId) {
-        Swal.fire({
-            title: 'Are you sure?',
-            text: `Do you want to delete customer ID: ${customerId}?`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#dc3545',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Yes, delete it!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = '${pageContext.request.contextPath}/DeleteCustomer?customerId=' + customerId;
-            }
-        });
-    }
+                    // **Validate Customer Phone Update field**
+                    if (customerPhoneUpdate === '') {
+                        isValid = false;
+                        displayError('customerPhoneUpdate', 'Please input this field.');
+                    } else if (!customerPhoneUpdate.startsWith('0')) {
+                        isValid = false;
+                        displayError('customerPhoneUpdate', 'Phone number must start with \'0\'.');
+                    } else if (!/^\d{10}$/.test(customerPhoneUpdate)) {
+                        isValid = false;
+                        displayError('customerPhoneUpdate', 'Phone number must be exactly 10 digits.');
+                    }
 
-    function openModal(modalId) {
-        document.getElementById(modalId).style.display = "block";
-    }
+                    // **Validate Number of Payments Update field**
+                    if (numberOfPaymentUpdate === '') {
+                        isValid = false;
+                        displayError('numberOfPaymentUpdate', 'Please input this field.');
+                    } else if (isNaN(numberOfPaymentUpdate)) {
+                        isValid = false;
+                        displayError('numberOfPaymentUpdate', 'Number of Payments must be a number.');
+                    } else if (parseInt(numberOfPaymentUpdate) < 0) {
+                        isValid = false;
+                        displayError('numberOfPaymentUpdate', 'Number of Payments cannot be negative.');
+                    }
 
-    function closeModal(modalId) {
-        document.getElementById(modalId).style.display = "none";
-        if (modalId === 'addCustomerModal') {
-            $("#customerNameError, #customerPhoneError, #numberOfPaymentError").text("");
-        } else if (modalId === 'updateCustomerModal') {
-            $("#customerNameUpdateError, #customerPhoneUpdateError, #numberOfPaymentUpdateError").text("");
-        }
-    }
+                    if (isValid) { // Prevent form submission if invalid
+                        var customerId = $('#customerIdUpdate').val();
+                        var customerName = $('#customerNameUpdate').val();
+                        var customerPhone = $('#customerPhoneUpdate').val();
+                        var numberOfPayment = $('#numberOfPaymentUpdate').val();
 
-    function openEditModal(button) {
-        document.getElementById("customerIdUpdate").value = button.dataset.customerId;
-        document.getElementById("customerNameUpdate").value = button.dataset.customerName;
-        document.getElementById("customerPhoneUpdate").value = button.dataset.customerPhone;
-        document.getElementById("numberOfPaymentUpdate").value = button.dataset.numberOfPayment;
-        openModal("updateCustomerModal");
-    }
+                        $.ajax({
+                            url: 'UpdateCustomer', // Your controller URL for UpdateCustomer
+                            type: 'POST',
+                            data: {
+                                customerId: customerId,
+                                CustomerName: customerName,
+                                CustomerPhone: customerPhone,
+                                NumberOfPayment: numberOfPayment
+                            },
+                            success: function (response) { // **Success Callback - Handle actual success**
+                                var updateCustomerModal = bootstrap.Modal.getInstance(document.getElementById('updateCustomerModal')); // Correct modal ID
+                                updateCustomerModal.hide();
+                                reloadViewCustomer();
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success!',
+                                    text: 'Customer updated successfully.',
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
+                            },
+                            error: function (xhr, status, error) { // **Error Callback - Handle all error cases**
+                                if (xhr.status === 400) { // **Check for 400 Bad Request (Duplicate Phone)**
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Sorry!',
+                                        text: 'Phone number already exists. Please use a different phone number.', // Specific error message for duplicate phone
+                                        confirmButtonText: 'OK',
+                                        confirmButtonColor: '#dc3545'
+                                    });
+                                } else { // **Handle other errors (e.g., server errors, database errors)**
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Sorry!',
+                                        text: 'Update error. Your transaction has failed. Please go back and try again.', // Generic error message - More informative for update
+                                        confirmButtonText: 'OK',
+                                        confirmButtonColor: '#dc3545'
+                                    });
+                                }
+                            }
+                        });
+                    }
+                });
+                function displayError(fieldId, errorMessage) {
+                    $('#' + fieldId).addClass('is-invalid'); // Add 'is-invalid' class to display CSS error if needed
+                    $('#' + fieldId).after('<div class="error-message" style="color: red;">' + errorMessage + '</div>'); // Add error message
+                }
+                // **Xử lý Xóa Customer**
+                $('#btnDeleteCustomerConfirm').click(function () {
+                    var customerId = $('#customerIdDelete').val();
+                    $.ajax({
+                        url: 'DeleteCustomer', // Thay đổi URL controller cho Customer
+                        type: 'GET',
+                        data: {
+                            customerId: customerId
+                        },
+                        success: function (response) {
+                            var deleteCustomerModal = bootstrap.Modal.getInstance(document.getElementById('deleteCustomerModal'));
+                            deleteCustomerModal.hide();
 
-    function filterTable() {
-        const searchText = document.getElementById('searchInput').value.toLowerCase();
-        const table = document.querySelector('.table-responsive table tbody');
-        const rows = table.querySelectorAll('tr');
-        let hasResults = false;
+                            // Xóa dòng vừa xóa
+                            $('#customerRow' + customerId).remove();
 
-        rows.forEach(row => {
-            const id = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase();
-            const customerName = row.querySelector('td:nth-child(3)')?.textContent.toLowerCase();
-            const customerPhone = row.querySelector('td:nth-child(4)')?.textContent.toLowerCase();
-            const numberOfPayment = row.querySelector('td:nth-child(5)')?.textContent.toLowerCase();
+                            // Kiểm tra xem còn customer nào không sau khi xóa
+                            if ($('#customerTableBody tr').length === 0) {
+                                $('#customerTableBody').html('<tr><td colspan="6"><div class="no-data">No Customer.</div></td></tr>');
+                            }
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: 'Customer deleted successfully.',
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                        },
+                        error: function (xhr, status, error) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: 'Error deleting customer: ' + error
+                            });
+                        }
+                    });
+                });
 
-            if (searchText === "") {
-                row.style.display = '';
-                hasResults = true;
-            } else if (id && customerName && customerPhone && numberOfPayment) {
-                let matchesSearch = id.includes(searchText) || customerName.includes(searchText) ||
-                    customerPhone.includes(searchText) || numberOfPayment.includes(searchText);
-                row.style.display = matchesSearch ? '' : 'none';
-                if (matchesSearch) hasResults = true;
-            }
-        });
 
-        const noDataRow = document.querySelector('.no-data-row');
-        if (noDataRow) noDataRow.remove();
+                function bindEventHandlers() {
+                    $(document).on('click', '.btn-update-customer', function () {
+                        var customerId = $(this).data('customer-id');
+                        var customerName = $(this).data('customer-name');
+                        var customerPhone = $(this).data('customer-phone');
+                        var numberOfPayment = $(this).data('number-of-payment');
 
-        if (!hasResults && searchText !== "") {
-            const newRow = document.createElement('tr');
-            newRow.classList.add('no-data-row');
-            newRow.innerHTML = '<td colspan="6" class="no-data"><i class="fas fa-exclamation-triangle"></i> No matching customers found.</td>';
-            table.appendChild(newRow);
-        }
-    }
-</script>
-</body>
+                        $('#customerIdUpdate').val(customerId);
+                        $('#customerIdUpdateDisplay').val(customerId); // Display Customer ID in update modal
+                        $('#customerNameUpdate').val(customerName);
+                        $('#customerPhoneUpdate').val(customerPhone);
+                        $('#numberOfPaymentUpdate').val(numberOfPayment);
+                    });
+
+                    $(document).on('click', '.btn-delete-customer', function () {
+                        var customerId = $(this).data('customer-id');
+                        $('#customerIdDelete').val(customerId);
+                    });
+                }
+                function reloadViewCustomer() {
+                    $.get('ViewCustomerList', function (data) { // Thay đổi URL controller cho Customer
+                        var newBody = $(data).find('tbody').html();
+                        $('tbody').html(newBody);
+                        bindEventHandlers(); // Re-bind sau khi reload
+                    });
+                }
+
+
+                // ******************* BẮT ĐẦU ĐOẠN CODE THÊM VÀO CHO TÌM KIẾM *******************
+
+                // ******************* KẾT THÚC ĐOẠN CODE THÊM VÀO CHO TÌM KIẾM *******************
+                const searchInput = document.getElementById('searchInput');
+                const table = document.querySelector('.table');
+
+                const noResultsRow = document.getElementById('noResultsRow'); // Lấy hàng "Không tìm thấy kết quả"
+
+                function searchCustomerColumn() {
+                    const searchText = searchInput.value.trim().toLowerCase();
+                    let foundMatch = false;
+                    noResultsRow.style.display = 'none';
+                    const rows = table.querySelectorAll('tbody tr:not(#noResultsRow)');
+
+                    if (searchText.trim() === "") { // Xử lý trường hợp ô tìm kiếm trống
+                        rows.forEach(row => {
+                            row.style.display = ''; // Hiển thị lại tất cả các hàng
+                            // **Thêm đoạn code này để reset highlight khi ô tìm kiếm trống:**
+                            const customerNameColumn = row.querySelector('td:nth-child(3)');
+                            const customerPhoneColumn = row.querySelector('td:nth-child(4)');
+                            const customerIdColumn = row.querySelector('td:nth-child(2)');
+
+                            if (customerNameColumn) {
+                                customerNameColumn.innerHTML = customerNameColumn.textContent; // Reset về text gốc
+                            }
+                            if (customerPhoneColumn) {
+                                customerPhoneColumn.innerHTML = customerPhoneColumn.textContent; // Reset về text gốc
+                            }
+                            if (customerIdColumn) {
+                                customerIdColumn.innerHTML = customerIdColumn.textContent; // Reset về text gốc
+                            }
+                        });
+                        return; // Kết thúc hàm sớm
+                    }
+
+
+                    rows.forEach(row => {
+                        const customerNameColumn = row.querySelector('td:nth-child(3)');
+                        const customerPhoneColumn = row.querySelector('td:nth-child(4)');
+                        const customerIdColumn = row.querySelector('td:nth-child(2)');
+
+                        let rowMatch = false;
+
+                        if (customerNameColumn) {
+                            const originalNameText = customerNameColumn.textContent;
+                            const customerNameText = originalNameText.toLowerCase();
+                            customerNameColumn.innerHTML = originalNameText; // Reset highlight trước khi tìm kiếm lại
+
+                            if (customerNameText.includes(searchText)) {
+                                customerNameColumn.innerHTML = highlightSearchText(originalNameText, searchText);
+                                rowMatch = true;
+                            }
+                        }
+                        if (customerPhoneColumn) {
+                            const originalPhoneText = customerPhoneColumn.textContent;
+                            const customerPhoneText = originalPhoneText.toLowerCase();
+                            customerPhoneColumn.innerHTML = originalPhoneText; // Reset highlight trước khi tìm kiếm lại
+
+                            if (customerPhoneText.includes(searchText)) {
+                                customerPhoneColumn.innerHTML = highlightSearchText(originalPhoneText, searchText);
+                                rowMatch = true;
+                            }
+                        }
+                        if (customerIdColumn) {
+                            const originalIdText = customerIdColumn.textContent;
+                            const customerIdText = originalIdText.toLowerCase();
+                            customerIdColumn.innerHTML = originalIdText; // Reset highlight trước khi tìm kiếm lại
+
+                            if (customerIdText.includes(searchText)) {
+                                customerIdColumn.innerHTML = highlightSearchText(originalIdText, searchText);
+                                rowMatch = true;
+                            }
+                        }
+
+
+                        if (rowMatch) {
+                            row.style.display = '';
+                            foundMatch = true;
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+
+                    if (!foundMatch && searchText.trim() !== "") {
+                        noResultsRow.style.display = '';
+                    }
+                }
+                function highlightSearchText(originalText, searchText) {
+                    let highlightedText = "";
+                    let currentIndex = 0;
+                    let searchIndex = originalText.toLowerCase().indexOf(searchText, currentIndex);
+
+                    while (searchIndex !== -1) {
+                        highlightedText += originalText.slice(currentIndex, searchIndex);
+                        highlightedText += '<span class="highlight">' + originalText.slice(searchIndex, searchIndex + searchText.length) + '</span>';
+                        currentIndex = searchIndex + searchText.length;
+                        searchIndex = originalText.toLowerCase().indexOf(searchText, currentIndex);
+                    }
+                    highlightedText += originalText.slice(currentIndex);
+                    return highlightedText;
+                }
+
+
+                searchInput.addEventListener('keyup', searchCustomerColumn);
+            });
+        </script>
+    </body>
 </html>
