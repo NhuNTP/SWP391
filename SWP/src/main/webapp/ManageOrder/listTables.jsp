@@ -1,5 +1,15 @@
+<%@page import="Model.Account"%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="Model.Table, java.util.List" %>
+<%
+    if (session == null || session.getAttribute("account") == null) {
+        response.sendRedirect(request.getContextPath() + "/LoginPage.jsp");
+        return;
+    }
+
+    Account account = (Account) session.getAttribute("account");
+    String UserRole = account.getUserRole();
+%>
 <html>
 <head>
     <title>Danh sách bàn</title>

@@ -79,107 +79,112 @@ public class OrderDAO {
     }
 
     // Tạo mã OrderDetailId duy nhất
-    public String generateUniqueOrderDetailId() throws SQLException, ClassNotFoundException {
-        try (Connection conn = DBContext.getConnection()) {
-            conn.setAutoCommit(false); // Bắt đầu transaction
-            String nextId;
-            try {
-                // Lấy giá trị lớn nhất của OrderDetailId
-                String sql = "SELECT MAX(OrderDetailId) as MaxId FROM OrderDetail WITH (UPDLOCK, ROWLOCK)";
-                try (PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
-                    if (rs.next() && rs.getString("MaxId") != null) {
-                        String maxId = rs.getString("MaxId");
-                        int numericPart = Integer.parseInt(maxId.substring(2)) + 1;
+   public String generateUniqueOrderDetailId() throws SQLException, ClassNotFoundException {
+    try (Connection conn = DBContext.getConnection()) {
+        conn.setAutoCommit(false); // Bắt đầu transaction
+        String nextId = "OD001";
+        String sql = "SELECT MAX(OrderDetailId) as MaxId FROM OrderDetail WITH (UPDLOCK, ROWLOCK)";
+        try (PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next() && rs.getString("MaxId") != null) {
+                String maxId = rs.getString("MaxId");
+                int numericPart = Integer.parseInt(maxId.substring(2)) + 1;
+                nextId = "OD" + String.format("%03d", numericPart);
+            }
+        }
+
+        // Kiểm tra trùng lặp với giới hạn 100 lần thử
+        String checkSql = "SELECT COUNT(*) FROM OrderDetail WHERE OrderDetailId = ?";
+        try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
+            int maxAttempts = 100; // Giới hạn số lần thử
+            int attempts = 0;
+            boolean isDuplicate;
+            do {
+                checkStmt.setString(1, nextId);
+                try (ResultSet checkRs = checkStmt.executeQuery()) {
+                    checkRs.next();
+                    isDuplicate = checkRs.getInt(1) > 0;
+                    if (isDuplicate) {
+                        attempts++;
+                        if (attempts >= maxAttempts) {
+                            throw new SQLException("Unable to generate unique OrderDetailId after " + maxAttempts + " attempts.");
+                        }
+                        int numericPart = Integer.parseInt(nextId.substring(2)) + 1;
                         nextId = "OD" + String.format("%03d", numericPart);
-                    } else {
-                        nextId = "OD001"; // Giá trị khởi đầu nếu bảng rỗng
                     }
                 }
-
-                // Kiểm tra xem nextId có trùng không và sinh mã mới nếu cần
-                String checkSql = "SELECT COUNT(*) FROM OrderDetail WHERE OrderDetailId = ?";
-                try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
-                    boolean isDuplicate;
-                    do {
-                        checkStmt.setString(1, nextId);
-                        try (ResultSet checkRs = checkStmt.executeQuery()) {
-                            checkRs.next();
-                            isDuplicate = checkRs.getInt(1) > 0;
-                            if (isDuplicate) {
-                                int numericPart = Integer.parseInt(nextId.substring(2)) + 1;
-                                nextId = "OD" + String.format("%03d", numericPart);
-                                logger.warning("OrderDetailId " + nextId + " already exists. Generating a new one."); // Log thông tin trùng lặp
-                            }
-                        } catch (SQLException e) {
-                            logger.log(Level.SEVERE, "Error checking for duplicate OrderDetailId: " + e.getMessage(), e);
-                            conn.rollback();
-                            throw e; // Re-throw exception
-                        }
-                    } while (isDuplicate);
-                }
-
-                conn.commit(); // Hoàn tất transaction
-                logger.info("Generated unique OrderDetailId: " + nextId); // Log ID được tạo
-                return nextId;
-            } catch (SQLException e) {
-                conn.rollback(); // Rollback nếu có lỗi
-                logger.log(Level.SEVERE, "Error generating OrderDetailId: " + e.getMessage(), e);
-                throw e;
-            }
-        } catch (SQLException | ClassNotFoundException e) {
-            logger.log(Level.SEVERE, "Error connecting to database: " + e.getMessage(), e);
-            throw e;
+            } while (isDuplicate);
         }
-    }
 
+        conn.commit(); // Commit transaction
+        logger.info("Generated unique OrderDetailId: " + nextId);
+        return nextId;
+    } catch (SQLException e) {
+        logger.log(Level.SEVERE, "Error generating OrderDetailId: " + e.getMessage(), e);
+        throw e;
+    }
+}
     // Tạo đơn hàng mới
-    public void CreateOrder(Order order) throws SQLException, ClassNotFoundException {
-        try (Connection conn = DBContext.getConnection()) {
-            conn.setAutoCommit(false);
+  public void CreateOrder(Order order) throws SQLException, ClassNotFoundException {
+    Connection conn = null;
+    try {
+        conn = DBContext.getConnection();
+        conn.setAutoCommit(false);
 
-            String sqlOrder = "INSERT INTO [Order] (OrderId, UserId, CustomerId, OrderDate, OrderStatus, OrderType, TableId, Total, CustomerPhone) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            try (PreparedStatement pstmtOrder = conn.prepareStatement(sqlOrder)) {
-                pstmtOrder.setString(1, order.getOrderId());
-                pstmtOrder.setString(2, order.getUserId());
-                pstmtOrder.setString(3, order.getCustomerId());
-                pstmtOrder.setTimestamp(4, new Timestamp(order.getOrderDate().getTime()));
-                pstmtOrder.setString(5, order.getOrderStatus());
-                pstmtOrder.setString(6, order.getOrderType());
-                pstmtOrder.setString(7, order.getTableId());
-                pstmtOrder.setDouble(8, order.getTotal());
-                pstmtOrder.setString(9, order.getCustomerPhone());
-                pstmtOrder.executeUpdate();
-            }
+        String sqlOrder = "INSERT INTO [Order] (OrderId, UserId, CustomerId, OrderDate, OrderStatus, OrderType, TableId, Total, CustomerPhone) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement pstmtOrder = conn.prepareStatement(sqlOrder)) {
+            pstmtOrder.setString(1, order.getOrderId());
+            pstmtOrder.setString(2, order.getUserId());
+            pstmtOrder.setString(3, order.getCustomerId());
+            pstmtOrder.setTimestamp(4, new Timestamp(order.getOrderDate().getTime()));
+            pstmtOrder.setString(5, order.getOrderStatus());
+            pstmtOrder.setString(6, order.getOrderType());
+            pstmtOrder.setString(7, order.getTableId());
+            pstmtOrder.setDouble(8, order.getTotal());
+            pstmtOrder.setString(9, order.getCustomerPhone());
+            pstmtOrder.executeUpdate();
+        }
 
-            if (order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) {
-                String sqlOrderDetail = "INSERT INTO OrderDetail (OrderDetailId, OrderId, DishId, Quantity, Subtotal, DishName) "
-                        + "VALUES (?, ?, ?, ?, ?, ?)";
-                try (PreparedStatement pstmtOrderDetail = conn.prepareStatement(sqlOrderDetail)) {
-                    for (OrderDetail detail : order.getOrderDetails()) {
-                        if (detail.getOrderDetailId() == null || detail.getOrderDetailId().isEmpty()) {
-                            String orderDetailId = generateUniqueOrderDetailId(); // Sinh mã mới
-                            detail.setOrderDetailId(orderDetailId);
-                        }
-                        pstmtOrderDetail.setString(1, detail.getOrderDetailId());
-                        pstmtOrderDetail.setString(2, order.getOrderId());
-                        pstmtOrderDetail.setString(3, detail.getDishId());
-                        pstmtOrderDetail.setInt(4, detail.getQuantity());
-                        pstmtOrderDetail.setDouble(5, detail.getSubtotal());
-                        pstmtOrderDetail.setString(6, detail.getDishName());
-                        pstmtOrderDetail.addBatch();
-                    }
-                    pstmtOrderDetail.executeBatch();
+        if (order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) {
+            String sqlOrderDetail = "INSERT INTO OrderDetail (OrderDetailId, OrderId, DishId, Quantity, Subtotal, DishName) "
+                    + "VALUES (?, ?, ?, ?, ?, ?)";
+            try (PreparedStatement pstmtOrderDetail = conn.prepareStatement(sqlOrderDetail)) {
+                for (OrderDetail detail : order.getOrderDetails()) {
+                    String orderDetailId = generateUniqueOrderDetailId();
+                    detail.setOrderDetailId(orderDetailId);
+                    pstmtOrderDetail.setString(1, detail.getOrderDetailId());
+                    pstmtOrderDetail.setString(2, order.getOrderId());
+                    pstmtOrderDetail.setString(3, detail.getDishId());
+                    pstmtOrderDetail.setInt(4, detail.getQuantity());
+                    pstmtOrderDetail.setDouble(5, detail.getSubtotal());
+                    pstmtOrderDetail.setString(6, detail.getDishName());
+                    logger.info("Adding OrderDetail: " + orderDetailId + " for Order: " + order.getOrderId());
+                    pstmtOrderDetail.addBatch();
                 }
+                pstmtOrderDetail.executeBatch();
             }
+        }
 
-            conn.commit();
-            logger.log(Level.INFO, "Successfully created Order: {0}", order.getOrderId());
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Error creating Order: {0}", e.getMessage());
-            throw e;
+        conn.commit();
+        logger.log(Level.INFO, "Successfully created Order: {0}", order.getOrderId());
+    } catch (SQLException e) {
+        if (conn != null) {
+            try {
+                conn.rollback();
+                logger.log(Level.SEVERE, "Rolled back transaction for Order: " + order.getOrderId());
+            } catch (SQLException rollbackEx) {
+                logger.log(Level.SEVERE, "Rollback failed: " + rollbackEx.getMessage(), rollbackEx);
+            }
+        }
+        logger.log(Level.SEVERE, "Error creating Order: " + e.getMessage(), e);
+        throw e;
+    } finally {
+        if (conn != null) {
+            conn.close();
         }
     }
+}
 
     // Thêm OrderDetail
     public void addOrderDetail(OrderDetail detail) throws SQLException, ClassNotFoundException {
