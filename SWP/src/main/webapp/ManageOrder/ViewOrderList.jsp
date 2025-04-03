@@ -157,9 +157,6 @@
                             <div class="search-bar">
                                 <input type="text" class="form-control" placeholder="Search" id="searchInput">
                             </div>
-                            <div class="header-buttons">
-                                <a href="${pageContext.request.contextPath}/order?action=listTables" class="btn btn-info"><i class="fas fa-plus"></i> Add New</a>
-                            </div>
                         </div>
 
                         <div class="table-responsive">

@@ -66,45 +66,45 @@
 
         <!-- Danh sách món ăn -->
         <div class="dish-list">
-            <h3>Danh sách món ăn</h3>
-            <table class="table-list">
+    <h3>Danh sách món ăn</h3>
+    <table class="table-list">
+        <tr>
+            <th>Tên món</th>
+            <th>Số lượng</th>
+            <th>Đơn giá</th>
+            <th>Tổng phụ</th>
+            <th>Hành động</th>
+        </tr>
+        <% if (order != null && order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) { %>
+            <% for (OrderDetail detail : order.getOrderDetails()) { %>
                 <tr>
-                    <th>Tên món</th>
-                    <th>Số lượng</th>
-                    <th>Đơn giá</th>
-                    <th>Tổng phụ</th>
-                    <th>Hành động</th>
+                    <td><%= detail.getDishName() %></td>
+                    <td><%= detail.getQuantity() %></td>
+                    <td><%= detail.getSubtotal() / detail.getQuantity() %></td>
+                    <td><%= detail.getSubtotal() %></td>
+                    <td>
+                        <a href="${pageContext.request.contextPath}/order?action=editDishQuantity&orderDetailId=<%= detail.getOrderDetailId() %>&dishId=<%= detail.getDishId() %>&newQuantity=<%= detail.getQuantity() + 1 %>&tableId=<%= request.getAttribute("tableId") %>">
+                            <button class="button btn-success">+</button>
+                        </a>
+                        <% if (detail.getQuantity() > 1) { %>
+                            <a href="${pageContext.request.contextPath}/order?action=editDishQuantity&orderDetailId=<%= detail.getOrderDetailId() %>&dishId=<%= detail.getDishId() %>&newQuantity=<%= detail.getQuantity() - 1 %>&tableId=<%= request.getAttribute("tableId") %>">
+                                <button class="button btn-primary">-</button>
+                            </a>
+                        <% } %>
+                        <a href="${pageContext.request.contextPath}/order?action=deleteDish&orderDetailId=<%= detail.getOrderDetailId() %>&dishId=<%= detail.getDishId() %>&tableId=<%= request.getAttribute("tableId") %>">
+                            <button class="button btn-danger">Xóa</button>
+                        </a>
+                    </td>
                 </tr>
-                <% if (order != null && order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) { %>
-                    <% for (OrderDetail detail : order.getOrderDetails()) { %>
-                        <tr>
-                            <td><%= detail.getDishName() %></td>
-                            <td><%= detail.getQuantity() %></td>
-                            <td><%= detail.getSubtotal() / detail.getQuantity() %></td>
-                            <td><%= detail.getSubtotal() %></td>
-                            <td>
-                                <a href="${pageContext.request.contextPath}/order?action=editDishQuantity&orderDetailId=<%= detail.getOrderDetailId() %>&newQuantity=<%= detail.getQuantity() + 1 %>&tableId=<%= request.getAttribute("tableId") %>">
-                                    <button class="button btn-success">+</button>
-                                </a>
-                                <% if (detail.getQuantity() > 1) { %>
-                                    <a href="${pageContext.request.contextPath}/order?action=editDishQuantity&orderDetailId=<%= detail.getOrderDetailId() %>&newQuantity=<%= detail.getQuantity() - 1 %>&tableId=<%= request.getAttribute("tableId") %>">
-                                        <button class="button btn-primary">-</button>
-                                    </a>
-                                <% } %>
-                                <a href="${pageContext.request.contextPath}/order?action=deleteDish&orderDetailId=<%= detail.getOrderDetailId() %>&tableId=<%= request.getAttribute("tableId") %>">
-                                    <button class="button btn-danger">Xóa</button>
-                                </a>
-                            </td>
-                        </tr>
-                    <% } %>
-                <% } else { %>
-                    <tr>
-                        <td colspan="5" style="text-align: center;">Chưa có món ăn nào trong đơn hàng.</td>
-                    </tr>
-                <% } %>
-            </table>
-            <a href="${pageContext.request.contextPath}/order?action=selectDish&tableId=<%= request.getAttribute("tableId") %>" class="button btn-primary" style="margin-top: 10px;">Thêm món ăn</a>
-        </div>
+            <% } %>
+        <% } else { %>
+            <tr>
+                <td colspan="5" style="text-align: center;">Chưa có món ăn nào trong đơn hàng.</td>
+            </tr>
+        <% } %>
+    </table>
+    <a href="${pageContext.request.contextPath}/order?action=selectDish&tableId=<%= request.getAttribute("tableId") %>" class="button btn-primary" style="margin-top: 10px;">Thêm món ăn</a>
+</div>
 
         <!-- Chọn khách hàng -->
         <div class="customer-section">
