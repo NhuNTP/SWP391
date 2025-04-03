@@ -45,49 +45,88 @@
             .sidebar h4 {
                 font-size: 1.5rem;
             }
-            .dish-list {
-                list-style: none;
-                padding: 0;
-            }
-            .dish-list li {
-                border: 1px solid #ddd;
-                border-radius: 5px;
-                margin-bottom: 10px;
-                padding: 10px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-            .dish-info {
-                flex-grow: 1;
-            }
-            .dish-actions {
-                flex-shrink: 0;
-            }
-            .tab-content {
+            .content-area {
                 padding: 20px;
-            }
-            label {
-                display: inline-block;
-                width: 150px;
-                font-weight: bold;
-            }
-            input[type="text"], input[type="number"], select, textarea {
-                width: 70%;
-                padding: 8px;
-                margin-bottom: 15px;
-                border: 1px solid #ccc;
-                border-radius: 4px;
-            }
-            input[type="number"] {
-                width: 30%;
-                margin-left: 10px;
             }
             .error {
                 color: red;
             }
             .success {
                 color: green;
+            }
+            .table {
+                width: 100%;
+                margin-bottom: 1rem;
+                background-color: #fff;
+            }
+            .table th,
+            .table td {
+                padding: 12px;
+                vertical-align: middle;
+                text-align: left;
+            }
+            .table thead th {
+                background-color: #343a40;
+                color: white;
+                border-color: #454d55;
+            }
+            .table-hover tbody tr:hover {
+                background-color: #f1f1f1;
+            }
+            .table-bordered {
+                border: 1px solid #dee2e6;
+            }
+            .table-bordered th,
+            .table-bordered td {
+                border: 1px solid #dee2e6;
+            }
+            .text-left.mb-4 {
+
+                overflow: hidden; /* Đảm bảo background và border-radius hoạt động đúng với nội dung bên trong */
+                /* Các tùy chỉnh tùy chọn để làm đẹp thêm (có thể bỏ nếu không cần) */
+                background: linear-gradient(to right, #2C3E50, #42A5F5);
+                padding: 1rem; /* Thêm padding bên trong để tạo khoảng cách, tùy chọn */
+                color:white;
+                margin-left : -24px !important;
+                margin-top: -25px !important;
+                margin-right: -25px !important;
+            }
+            .btn-warning {
+                background-color: #ffca28; /* Chọn màu vàng ấm áp: #ffca28 (hoặc #ffb300, #ffc107, tùy bạn thích) */
+                border-color: #ffca28;    /* Viền cùng màu nền */
+                color: white;         /* Chữ tối màu */
+                transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; /* Transition mượt mà */
+            }
+
+            .btn-warning:hover {
+                background-color: #ffda6a; /* Vàng sáng hơn một chút khi hover: #ffda6a (hoặc #ffe082, tùy màu nền) */
+                border-color: #ffda6a;    /* Viền cùng màu nền hover */
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Bóng đổ nhẹ */
+            }
+
+            .btn-danger {
+                background-color: #f44336; /* Màu đỏ "đỏ hơn", ví dụ: #f44336 (hoặc #e53935, #d32f2f, tùy chọn) */
+                border-color: #f44336;    /* Viền cùng màu nền */
+                color: white;             /* Chữ trắng */
+                transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; /* Transition mượt mà */
+            }
+
+            .btn-danger:hover {
+                background-color: #e53935; /* Đỏ đậm hơn một chút khi hover, ví dụ: #e53935 (hoặc #d32f2f, tùy màu nền) */
+                border-color: #e53935;    /* Viền cùng màu nền hover */
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Bóng đổ nhẹ */
+                color: black;
+            }
+            .text-left.mb-4 {
+
+                overflow: hidden; /* Đảm bảo background và border-radius hoạt động đúng với nội dung bên trong */
+                /* Các tùy chỉnh tùy chọn để làm đẹp thêm (có thể bỏ nếu không cần) */
+                background: linear-gradient(to right, #2C3E50, #42A5F5);
+                padding: 1rem; /* Thêm padding bên trong để tạo khoảng cách, tùy chọn */
+                color:white;
+                margin-left : -24px !important;
+                margin-top: -25px !important;
+                margin-right: -25px !important;
             }
         </style>
     </head>
@@ -96,9 +135,10 @@
             <div class="sidebar col-md-2 p-3">
                 <h4 class="text-center mb-4">Admin</h4>
                 <ul class="nav flex-column">
-                     <li class="nav-item"><a href="${pageContext.request.contextPath}/dashboard" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/dashboard" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/view-revenue" class="nav-link"><i class="fas fa-chart-line me-2"></i>View Revenue</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-list-alt me-2"></i>Menu Management</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/addnewdish" class="nav-link"><i class="fas fa-plus me-2"></i>Add New Dish</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewAccountList" class="nav-link"><i class="fas fa-users me-2"></i>Employee Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewTableList" class="nav-link"><i class="fas fa-building me-2"></i>Table Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewOrderList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Order Management</a></li>
@@ -112,296 +152,180 @@
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/logout" class="nav-link"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                 </ul>
             </div>
-            <div class="col-md-10 p-4">
-                <h3>Menu Management</h3>
+            <div class="col-md-10 p-4 content-area">
+                <div class="text-left mb-4">
+                    <h4>Menu Management</h4>
+                </div>
+
                 <% if (request.getSession().getAttribute("message") != null) {%>
-                <div class="alert alert-success">
+                <div class="alert alert-success" id="successMessage">
                     <%= request.getSession().getAttribute("message")%>
                 </div>
                 <% request.getSession().removeAttribute("message"); %>
                 <% } %>
                 <% if (request.getSession().getAttribute("errorMessage") != null) {%>
-                <div class="alert alert-danger">
+                <div class="alert alert-danger" id="errorMessage">
                     <%= request.getSession().getAttribute("errorMessage")%>
                 </div>
                 <% request.getSession().removeAttribute("errorMessage"); %>
                 <% } %>
-                <ul class="nav nav-tabs" id="menuTabs" role="tablist">
-                    <li class="nav-item">
-                        <a class="nav-link active" id="list-tab" data-bs-toggle="tab" href="#list" role="tab">Dish List</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" id="add-tab" data-bs-toggle="tab" href="#add" role="tab">Add New Dish</a>
-                    </li>
-                </ul>
-                <div class="tab-content" id="menuTabContent">
-                    <div class="tab-pane fade show active" id="list" role="tabpanel">
-                        <div class="mb-3 mt-3">
-                            <form id="searchForm" class="row g-3">
-                                <div class="col-auto">
-                                    <input type="text" class="form-control" id="searchKeyword" name="searchKeyword" placeholder="Enter dish name">
-                                </div>
-                                <div class="col-auto">
-                                    <select class="form-select" id="filterStatus" name="filterStatus">
-                                        <option value="">All Status</option>
-                                        <option value="Available">Available</option>
-                                        <option value="Unavailable">Unavailable</option>
-                                    </select>
-                                </div>
-                                <div class="col-auto">
-                                    <select class="form-select" id="filterIngredientStatus" name="filterIngredientStatus">
-                                        <option value="">All Ingredients</option>
-                                        <option value="Sufficient">Sufficient</option>
-                                        <option value="Insufficient">Insufficient</option>
-                                    </select>
-                                </div>
-                            </form>
+
+                <!-- Add New Dish Button -->
+                <div class="mb-3">
+                    <a href="${pageContext.request.contextPath}/addnewdish" class="btn btn-primary ">
+                        <i class="fas fa-plus me-2"></i>Add New Dish
+                    </a>
+                </div>
+
+                <!-- Filter and Sort Form -->
+                <div class="mb-3">
+                    <form id="searchForm" class="row g-3">
+                        <div class="col-auto">
+                            <input type="text" class="form-control" id="searchKeyword" name="searchKeyword" placeholder="Enter dish name">
                         </div>
-                        <div id="dishListContainer">
-                            <%
-                                List<Dish> dishList = (List<Dish>) request.getAttribute("dishList");
-                                if (dishList != null && !dishList.isEmpty()) {
-                            %>
-                            <ul class="dish-list">
-                                <% for (Dish dish : dishList) {%>
-                                <li>
-                                    <div class="dish-info">
-                                        <h5><%= dish.getDishName()%></h5>
-                                        <p class="price"><%= dish.getDishPrice()%> VNĐ</p>
-                                        <p>Status: <%= dish.getDishStatus()%></p>
-                                        <p>Ingredients: <%= dish.getIngredientStatus()%></p>
-                                    </div>
-                                    <div class="dish-actions">
-                                        <a href="#" class="btn btn-warning btn-sm edit-dish-btn" data-bs-toggle="modal" data-bs-target="#editDishModal" data-dish-id="<%= dish.getDishId()%>">Modify</a>
-                                        <form action="deletedish" method="post" style="display:inline;">
-                                            <input type="hidden" name="dishId" value="<%= dish.getDishId()%>">
-                                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                                        </form>
-                                        <a href="#" class="btn btn-info btn-sm view-dish-btn" data-bs-toggle="modal" data-bs-target="#dishDetailModal" data-dish-id="<%= dish.getDishId()%>">Detail</a>
-                                    </div>
-                                </li>
-                                <% } %>
-                            </ul>
-                            <% } else { %>
-                            <p class="text-muted">No food available.</p>
-                            <% }%>
+                        <div class="col-auto">
+                            <select class="form-select" id="filterStatus" name="filterStatus">
+                                <option value="">All Status</option>
+                                <option value="Available">Available</option>
+                                <option value="Unavailable">Unavailable</option>
+                            </select>
                         </div>
-                    </div>
-                    <div class="tab-pane fade" id="add" role="tabpanel">
-                        <h2>Add New Dish</h2>
-                        <form action="${pageContext.request.contextPath}/addnewdish" method="post" enctype="multipart/form-data" onsubmit="return validateAddForm()">
-                            <label for="addDishName">Dish Name:</label>
-                            <input type="text" id="addDishName" name="dishName" required><br><br>
-                            <label for="addDishType">Dish Type:</label>
-                            <select id="addDishType" name="dishType">
+                        <div class="col-auto">
+                            <select class="form-select" id="filterIngredientStatus" name="filterIngredientStatus">
+                                <option value="">All Ingredients</option>
+                                <option value="Sufficient">Sufficient</option>
+                                <option value="Insufficient">Insufficient</option>
+                            </select>
+                        </div>
+                        <div class="col-auto">
+                            <select class="form-select" id="filterDishType" name="filterDishType">
+                                <option value="">All Types</option>
                                 <option value="Food">Food</option>
                                 <option value="Drink">Drink</option>
-                            </select><br><br>
-                            <label for="addDishPrice">Price:</label>
-                            <input type="number" id="addDishPrice" name="dishPrice" step="0.01" required><br><br>
-                            <label for="addDishDescription">Description:</label>
-                            <textarea id="addDishDescription" name="dishDescription"></textarea><br><br>
-                            <label for="addDishImage">Image:</label>
-                            <input type="file" id="addDishImage" name="dishImage"><br><br>
-                            <h3>Ingredients</h3>
-                            <%
-                                List<InventoryItem> inventoryList = (List<InventoryItem>) request.getAttribute("inventoryList");
-                                if (inventoryList != null && !inventoryList.isEmpty()) {
-                                    for (InventoryItem inventory : inventoryList) {
-                                        String itemId = inventory.getItemId();
-                            %>
-                            <div>
-                                <label for="addItemId<%= itemId%>"><%= inventory.getItemName()%> (<%= inventory.getItemUnit()%>) - Quantity: <%= inventory.getItemQuantity()%></label>
-                                <input type="checkbox" id="addItemId<%= itemId%>" name="itemId" value="<%= itemId%>" onclick="showAddQuantityInput('<%= itemId%>')">
-                                <input type="number" id="addQuantityUsed<%= itemId%>" name="quantityUsed<%= itemId%>" placeholder="Quantity Used" step="0.01" style="display:none;">
-                            </div>
-                            <%      }
-                            } else {
-                            %>
-                            <p class="error">No ingredients available. Please add some ingredients in Inventory Management.</p>
-                            <% }%>
-                            <br>
-                            <input type="submit" class="btn btn-primary" value="Add Dish">
-                        </form>
-                    </div>
-                </div>
-                <div class="modal fade" id="editDishModal" tabindex="-1" aria-labelledby="editDishModalLabel" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="editDishModalLabel">Modify Dish</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <!-- Content will be loaded here via AJAX -->
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                <button type="button" class="btn btn-primary" id="saveChangesBtn">Save Change</button>
-                            </div>
+                            </select>
                         </div>
-                    </div>
-                </div>
-                <div class="modal fade" id="dishDetailModal" tabindex="-1" aria-labelledby="dishDetailModalLabel" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="dishDetailModalLabel">Dish Detail</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <!-- Content will be loaded here via AJAX -->
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            </div>
+                        <div class="col-auto">
+                            <select class="form-select" id="sortOption" name="sortOption">
+                                <option value="">Sort</option>
+                                <option value="price-asc">Price: Low to High</option>
+                                <option value="price-desc">Price: High to Low</option>
+                                <option value="name-asc">Name: A-Z</option>
+                                <option value="name-desc">Name: Z-A</option>
+                            </select>
                         </div>
-                    </div>
+                    </form>
+                </div>
+
+                <div id="dishListContainer">
+                    <%
+                        List<Dish> dishList = (List<Dish>) request.getAttribute("dishList");
+                        if (dishList != null && !dishList.isEmpty()) {
+                    %>
+                    <table class="table table-bordered table-hover">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Dish Name</th>
+                                <th>Price</th>
+                                <th>Status</th>
+                                <th>Ingredients</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dishTableBody">
+                            <% for (Dish dish : dishList) {%>
+                            <tr data-dish-type="<%= dish.getDishType()%>">
+                                <td><%= dish.getDishName()%></td>
+                                <td><%= dish.getDishPrice()%> VNĐ</td>
+                                <td><%= dish.getDishStatus()%></td>
+                                <td><%= dish.getIngredientStatus()%></td>
+                                <td>
+                                    <a href="${pageContext.request.contextPath}/updatedish?dishId=<%= dish.getDishId()%>" class="btn btn-warning btn-sm">Edit</a>
+                                    <form action="deletedish" method="post" style="display:inline;" onsubmit="return confirmDelete();">
+                                        <input type="hidden" name="dishId" value="<%= dish.getDishId()%>">
+                                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                    </form>
+                                    <a href="${pageContext.request.contextPath}/dishdetail?dishId=<%= dish.getDishId()%>" class="btn btn-info btn-sm">Detail</a>
+                                </td>
+                            </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                    <% } else { %>
+                    <p class="text-muted">No dishes available.</p>
+                    <% }%>
                 </div>
             </div>
         </div>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
         <script>
-                                    function showAddQuantityInput(itemId) {
-                                        var quantityInput = document.getElementById("addQuantityUsed" + itemId);
-                                        var checkbox = document.getElementById("addItemId" + itemId);
-                                        console.log("Add Item ID:", itemId);
-                                        console.log("Checkbox found:", checkbox);
-                                        console.log("Quantity Input found:", quantityInput);
-                                        if (checkbox && quantityInput) {
-                                            if (checkbox.checked) {
-                                                quantityInput.style.display = "inline-block";
-                                            } else {
-                                                quantityInput.style.display = "none";
-                                                quantityInput.value = "";
-                                            }
-                                        } else {
-                                            console.error("Element not found for itemId:", itemId);
-                                        }
-                                    }
+                             $(document).ready(function () {
+                                 const searchKeyword = document.getElementById('searchKeyword');
+                                 const filterStatus = document.getElementById('filterStatus');
+                                 const filterIngredientStatus = document.getElementById('filterIngredientStatus');
+                                 const filterDishType = document.getElementById('filterDishType');
+                                 const sortOption = document.getElementById('sortOption');
+                                 const dishTableBody = document.getElementById('dishTableBody');
+                                 const rows = Array.from(dishTableBody.querySelectorAll('tr'));
 
-                                    function validateAddForm() {
-                                        var checkboxes = document.getElementsByName("itemId");
-                                        var isChecked = false;
-                                        var errorMessage = "";
+                                 function filterAndSortTable() {
+                                     const searchText = searchKeyword.value.toLowerCase();
+                                     const selectedStatus = filterStatus.value;
+                                     const selectedIngredientStatus = filterIngredientStatus.value;
+                                     const selectedDishType = filterDishType.value;
+                                     const sortValue = sortOption.value;
 
-                                        for (var i = 0; i < checkboxes.length; i++) {
-                                            var checkbox = checkboxes[i];
-                                            if (checkbox.checked) {
-                                                isChecked = true;
-                                                var itemId = checkbox.value;
-                                                var quantityInput = document.getElementById("addQuantityUsed" + itemId);
-                                                var quantityValue = quantityInput.value.trim();
+                                     let filteredRows = rows.filter(row => {
+                                         const dishName = row.cells[0].textContent.toLowerCase();
+                                         const status = row.cells[2].textContent;
+                                         const ingredientStatus = row.cells[3].textContent;
+                                         const dishType = row.getAttribute('data-dish-type');
 
-                                                console.log("Validating itemId:", itemId, "Quantity:", quantityValue);
+                                         const matchesSearch = dishName.includes(searchText);
+                                         const matchesStatus = selectedStatus === '' || status.includes(selectedStatus);
+                                         const matchesIngredientStatus = selectedIngredientStatus === '' || ingredientStatus.includes(selectedIngredientStatus);
+                                         const matchesDishType = selectedDishType === '' || dishType === selectedDishType;
 
-                                                if (!quantityValue) {
-                                                    errorMessage = "Please enter a quantity for " + document.querySelector('label[for="addItemId' + itemId + '"]').textContent;
-                                                    quantityInput.focus();
-                                                    break;
-                                                } else if (isNaN(quantityValue) || Number(quantityValue) <= 0) {
-                                                    errorMessage = "Quantity for " + document.querySelector('label[for="addItemId' + itemId + '"]').textContent + " must be greater than 0.";
-                                                    quantityInput.focus();
-                                                    break;
-                                                }
-                                            }
-                                        }
+                                         return matchesSearch && matchesStatus && matchesIngredientStatus && matchesDishType;
+                                     });
 
-                                        if (!isChecked) {
-                                            errorMessage = "Please select at least one ingredient.";
-                                        }
+                                     if (sortValue) {
+                                         const [sortField, sortDirection] = sortValue.split('-');
+                                         if (sortField === 'price') {
+                                             filteredRows.sort((a, b) => {
+                                                 const priceA = parseFloat(a.cells[1].textContent);
+                                                 const priceB = parseFloat(b.cells[1].textContent);
+                                                 return sortDirection === 'asc' ? priceA - priceB : priceB - priceA;
+                                             });
+                                         } else if (sortField === 'name') {
+                                             filteredRows.sort((a, b) => {
+                                                 const nameA = a.cells[0].textContent.toLowerCase();
+                                                 const nameB = b.cells[0].textContent.toLowerCase();
+                                                 return sortDirection === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+                                             });
+                                         }
+                                     }
 
-                                        if (errorMessage) {
-                                            alert(errorMessage);
-                                            return false;
-                                        }
+                                     dishTableBody.innerHTML = '';
+                                     filteredRows.forEach(row => dishTableBody.appendChild(row));
+                                 }
 
-                                        return true;
-                                    }
+                                 searchKeyword.addEventListener('keyup', filterAndSortTable);
+                                 filterStatus.addEventListener('change', filterAndSortTable);
+                                 filterIngredientStatus.addEventListener('change', filterAndSortTable);
+                                 filterDishType.addEventListener('change', filterAndSortTable);
+                                 sortOption.addEventListener('change', filterAndSortTable);
 
-                                    $(document).ready(function () {
-                                        $('.edit-dish-btn').click(function () {
-                                            var dishId = $(this).data('dish-id');
-                                            var modalBody = $('#editDishModal .modal-body');
-                                            $.ajax({
-                                                url: 'updatedish',
-                                                type: 'GET',
-                                                data: {dishId: dishId},
-                                                success: function (data) {
-                                                    modalBody.html(data);
-                                                },
-                                                error: function (xhr, status, error) {
-                                                    modalBody.html('<p class="text-danger">Error loading content.</p>');
-                                                    console.error(error);
-                                                }
-                                            });
-                                        });
-                                        $('#editDishModal').on('click', '#saveChangesBtn', function (event) {
-                                            event.preventDefault();
-                                            var form = $('#editDishModal form');
-                                            $.ajax({
-                                                url: form.attr('action'),
-                                                type: 'POST',
-                                                data: new FormData(form[0]),
-                                                processData: false,
-                                                contentType: false,
-                                                success: function (response) {
-                                                    $('#editDishModal .modal-body').html(response);
-                                                    setTimeout(function () {
-                                                        $('#editDishModal').modal('hide');
-                                                        window.location.reload();
-                                                    }, 1000);
-                                                },
-                                                error: function (xhr, status, error) {
-                                                    console.error(error);
-                                                    alert('Error updating dish.');
-                                                }
-                                            });
-                                        });
-                                        $('.view-dish-btn').click(function () {
-                                            var dishId = $(this).data('dish-id');
-                                            var modalBody = $('#dishDetailModal .modal-body');
-                                            $.ajax({
-                                                url: 'dishdetail',
-                                                type: 'GET',
-                                                data: {dishId: dishId},
-                                                success: function (data) {
-                                                    modalBody.html(data);
-                                                },
-                                                error: function (xhr, status, error) {
-                                                    modalBody.html('<p class="text-danger">Error loading content.</p>');
-                                                    console.error(error);
-                                                }
-                                            });
-                                        });
-                                        const searchKeyword = document.getElementById('searchKeyword');
-                                        const filterStatus = document.getElementById('filterStatus');
-                                        const filterIngredientStatus = document.getElementById('filterIngredientStatus');
-                                        const dishListContainer = document.getElementById('dishListContainer');
-                                        const rows = dishListContainer.querySelectorAll('.dish-list li');
-                                        function filterTable() {
-                                            const searchText = searchKeyword.value.toLowerCase();
-                                            const selectedStatus = filterStatus.value;
-                                            const selectedIngredientStatus = filterIngredientStatus.value;
-                                            rows.forEach(row => {
-                                                const dishName = row.querySelector('.dish-info h5').textContent.toLowerCase();
-                                                const status = row.querySelector('.dish-info p:nth-child(3)').textContent;
-                                                const ingredientStatus = row.querySelector('.dish-info p:nth-child(4)').textContent;
-                                                let matchesSearch = dishName.includes(searchText);
-                                                let matchesStatus = selectedStatus === '' || status.includes(selectedStatus);
-                                                let matchesIngredientStatus = selectedIngredientStatus === '' || ingredientStatus.includes(selectedIngredientStatus);
-                                                if (matchesSearch && matchesStatus && matchesIngredientStatus) {
-                                                    row.style.display = '';
-                                                } else {
-                                                    row.style.display = 'none';
-                                                }
-                                            });
-                                        }
-                                        searchKeyword.addEventListener('keyup', filterTable);
-                                        filterStatus.addEventListener('change', filterTable);
-                                        filterIngredientStatus.addEventListener('change', filterTable);
-                                    });
+                                 setTimeout(function () {
+                                     $('#successMessage').fadeOut('slow');
+                                     $('#errorMessage').fadeOut('slow');
+                                 }, 10000);
+                             });
+
+                             // Hàm xác nhận xóa
+                             function confirmDelete() {
+                                 return confirm("Are you sure you want to delete this dish?");
+                             }
         </script>
     </body>
 </html>

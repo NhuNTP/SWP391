@@ -23,12 +23,16 @@ public class Order {
     private String couponId;  // Changed to String to match NVARCHAR(50) in DB, nullable
     private String tableId;   // Changed to String to match NVARCHAR(50) in DB, nullable
     private List<OrderDetail> orderDetails; // Keep this
+    private String customerPhone;
+    private double total;
+    
 
     // Constructors (Optional, but good practice)
+
     public Order() {
     }
 
-    public Order(String orderId, String userId, String customerId, Date orderDate, String orderStatus, String orderType, String orderDescription, String couponId, String tableId, List<OrderDetail> orderDetails) {
+    public Order(String orderId, String userId, String customerId, Date orderDate, String orderStatus, String orderType, String orderDescription, String couponId, String tableId, List<OrderDetail> orderDetails, String customerPhone, double total) {
         this.orderId = orderId;
         this.userId = userId;
         this.customerId = customerId;
@@ -39,8 +43,9 @@ public class Order {
         this.couponId = couponId;
         this.tableId = tableId;
         this.orderDetails = orderDetails;
+        this.customerPhone = customerPhone;
+        this.total = total;
     }
-    // Getters and setters
 
     public String getOrderId() {
         return orderId;
@@ -121,4 +126,21 @@ public class Order {
     public void setOrderDetails(List<OrderDetail> orderDetails) {
         this.orderDetails = orderDetails;
     }
+
+    public String getCustomerPhone() {
+        return customerPhone;
+    }
+
+    public void setCustomerPhone(String customerPhone) {
+        this.customerPhone = customerPhone;
+    }
+
+    public double getTotal() {
+        return total;
+    }
+
+    public void setTotal(double total) {
+        this.total = total;
+    }
+    
 }

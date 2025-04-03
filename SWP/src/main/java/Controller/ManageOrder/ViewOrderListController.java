@@ -21,7 +21,7 @@ public class ViewOrderListController extends HttpServlet {
         try {
             orderList = orderDAO.getAllOrders();
             if (orderList == null) {
-                orderList = new ArrayList<>(); // Tránh null
+                orderList = new ArrayList<>();
             }
             for (Order order : orderList) {
                 List<OrderDetail> orderDetails = orderDAO.getOrderDetails(order.getOrderId());

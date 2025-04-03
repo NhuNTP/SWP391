@@ -12,13 +12,9 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author HuynhPhuBinh
- */
 @WebServlet("/UpdateCustomer")
 public class UpdateCustomerProfileController extends HttpServlet {
-    private static final long serialVersionUID = 1L;
+
     private CustomerDAO customerDAO;
 
     @Override
@@ -32,9 +28,7 @@ public class UpdateCustomerProfileController extends HttpServlet {
         Customer customer = null;
         try {
             customer = customerDAO.getCustomerById(customerId);
-        } catch (SQLException ex) {
-            Logger.getLogger(UpdateCustomerProfileController.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ClassNotFoundException ex) {
+        } catch (SQLException | ClassNotFoundException ex) {
             Logger.getLogger(UpdateCustomerProfileController.class.getName()).log(Level.SEVERE, null, ex);
         }
         request.setAttribute("customer", customer);
@@ -44,39 +38,34 @@ public class UpdateCustomerProfileController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String customerId = request.getParameter("customerId");
-        String customerName = request.getParameter("CustomerName"); // Corrected parameter name
-        String customerPhone = request.getParameter("CustomerPhone"); // Corrected parameter name
-        String numberOfPaymentStr = request.getParameter("NumberOfPayment"); // Corrected parameter name
+        String customerName = request.getParameter("CustomerName");
+        String customerPhone = request.getParameter("CustomerPhone");
+        String numberOfPaymentStr = request.getParameter("NumberOfPayment");
 
-        int numberOfPayment;
-
-        if (numberOfPaymentStr == null || numberOfPaymentStr.isEmpty()) {
-            numberOfPayment = 0; // Default value
-        } else {
-            try {
-                numberOfPayment = Integer.parseInt(numberOfPaymentStr);
-            } catch (NumberFormatException e) {
-                request.setAttribute("errorMessage", "Invalid Number of Payments.");
-                request.getRequestDispatcher("ViewCustomerList").forward(request, response);
-                return;
-            }
-        }
+        int numberOfPayment= Integer.parseInt(numberOfPaymentStr);;
+//        try {
+//            numberOfPayment = Integer.parseInt(numberOfPaymentStr);
+//        } catch (NumberFormatException e) {
+//            request.getSession().setAttribute("errorMessage", "Invalid Number of Payments.");
+//            response.sendRedirect(request.getContextPath() + "/ViewCustomerList");
+//            return;
+//        }
 
         Customer customer = new Customer(customerId, customerName, customerPhone, numberOfPayment);
         try {
-            customerDAO.updateCustomer(customer);
-        } catch (SQLException ex) {
-            Logger.getLogger(UpdateCustomerProfileController.class.getName()).log(Level.SEVERE, null, ex);
-             request.setAttribute("errorMessage", "Database error during update: " + ex.getMessage());
-            request.getRequestDispatcher("ViewCustomerList").forward(request, response);
-            return;
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(UpdateCustomerProfileController.class.getName()).log(Level.SEVERE, null, ex);
-            request.setAttribute("errorMessage", "Class not found error: " + ex.getMessage());
-            request.getRequestDispatcher("ViewCustomerList").forward(request, response);
-            return;
-        }
+            if (customerDAO.isPhoneExists(customerPhone, null)) {
+                System.out.println(customerDAO.isPhoneExists(customerPhone, null));
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                response.getWriter().write("Customer phone already exists. Please check agains.");
 
-        response.sendRedirect("ViewCustomerList");
+                return;
+            }
+            customerDAO.updateCustomer(customer);
+            request.getSession().setAttribute("message", "Customer updated successfully!");
+        } catch (SQLException | ClassNotFoundException ex) {
+            Logger.getLogger(UpdateCustomerProfileController.class.getName()).log(Level.SEVERE, null, ex);
+            request.getSession().setAttribute("errorMessage", "Database error during update: " + ex.getMessage());
+        }
+        response.sendRedirect(request.getContextPath() + "/ViewCustomerList");
     }
 }

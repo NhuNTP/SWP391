@@ -180,7 +180,7 @@ public class MenuDAO {
                 deleteDishInventoryStmt.executeUpdate();
 
                 // 3. Xóa Dish
-                String deleteDishSql = "DELETE FROM Dish WHERE DishId = ?";
+                    String deleteDishSql = "DELETE FROM Dish WHERE DishId = ?";
                 deleteDishStmt = connection.prepareStatement(deleteDishSql);
                 deleteDishStmt.setString(1, dishId);
                 int affectedRows = deleteDishStmt.executeUpdate();
@@ -449,4 +449,28 @@ public class MenuDAO {
             return false;
         }
     }
+    public List<Dish> getAvailableDishes() {
+    List<Dish> dishList = new ArrayList<>();
+    String sql = "SELECT DishId, DishName, DishType, DishPrice, DishDescription, DishImage, DishStatus, IngredientStatus " +
+                 "FROM Dish WHERE DishStatus = 'Available' AND IngredientStatus = 'Sufficient'";
+    try (Connection connection = DBContext.getConnection();
+         PreparedStatement preparedStatement = connection.prepareStatement(sql);
+         ResultSet resultSet = preparedStatement.executeQuery()) {
+        while (resultSet.next()) {
+            Dish dish = new Dish();
+            dish.setDishId(resultSet.getString("DishId"));
+            dish.setDishName(resultSet.getString("DishName"));
+            dish.setDishType(resultSet.getString("DishType"));
+            dish.setDishPrice(resultSet.getDouble("DishPrice"));
+            dish.setDishDescription(resultSet.getString("DishDescription"));
+            dish.setDishImage(resultSet.getString("DishImage"));
+            dish.setDishStatus(resultSet.getString("DishStatus"));
+            dish.setIngredientStatus(resultSet.getString("IngredientStatus"));
+            dishList.add(dish);
+        }
+    } catch (SQLException | ClassNotFoundException e) {
+        LOGGER.log(Level.SEVERE, "Error getting available dishes", e);
+    }
+    return dishList;
+}
 }

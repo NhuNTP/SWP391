@@ -163,7 +163,7 @@ public class RevenueDAO {
     public List<Revenue> getYearlyRevenue() {
         List<Revenue> revenueList = new ArrayList<>();
         String sql = "SELECT 'R' + CAST(MONTH(OrderDate) AS NVARCHAR) as RevenueId, " +
-                     "NULL as OrderId, " + // Không cần OrderId cụ thể khi tổng hợp
+                     "NULL as OrderId, " + 
                      "SUM(TotalRevenue) as TotalRevenue, " +
                      "CAST(GETDATE() AS DATE) as OrderDate " + // Dùng ngày hiện tại làm đại diện
                      "FROM Revenue " +
