@@ -15,6 +15,7 @@ import jakarta.servlet.http.Part;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -46,10 +47,9 @@ protected void doGet(HttpServletRequest request, HttpServletResponse response)
     dispatcher.forward(request, response);
 }
 
-    @Override
+   @Override
 protected void doPost(HttpServletRequest request, HttpServletResponse response)
         throws ServletException, IOException {
-
     response.setContentType("text/html;charset=UTF-8");
 
     String dishName = request.getParameter("dishName");
@@ -57,27 +57,31 @@ protected void doPost(HttpServletRequest request, HttpServletResponse response)
     String dishPriceStr = request.getParameter("dishPrice");
     String dishDescription = request.getParameter("dishDescription");
 
-    double dishPrice;
+    // Validation variables
+    List<String> errors = new ArrayList<>();
+    double dishPrice = 0;
+
+    // Validate dishName
+    if (dishName == null || dishName.trim().isEmpty()) {
+        errors.add("Dish name is required.");
+    } else if (menuDAO.dishNameExists(dishName)) {
+        errors.add("Dish name already exists.");
+    }
+
+    // Validate dishPrice
     try {
         dishPrice = Double.parseDouble(dishPriceStr);
+        if (dishPrice <= 0) {
+            errors.add("Price must be greater than 0.");
+        }
     } catch (NumberFormatException e) {
-        request.getSession().setAttribute("errorMessage", "Invalid dish price format.");
-        response.sendRedirect(request.getContextPath() + "/viewalldish");
-        return;
+        errors.add("Invalid dish price format.");
     }
 
-    boolean dishNameExists = menuDAO.dishNameExists(dishName);
-    if (dishNameExists) {
-        request.getSession().setAttribute("errorMessage", "Dish name already exists.");
-        response.sendRedirect(request.getContextPath() + "/viewalldish");
-        return;
-    }
-
+    // Handle image upload
     String uploadPath = getServletContext().getRealPath("") + File.separator + UPLOAD_DIRECTORY;
     File uploadDir = new File(uploadPath);
-    if (!uploadDir.exists()) {
-        uploadDir.mkdir();
-    }
+    if (!uploadDir.exists()) uploadDir.mkdir();
 
     String dishImage = null;
     try {
@@ -88,18 +92,25 @@ protected void doPost(HttpServletRequest request, HttpServletResponse response)
             filePart.write(uploadPath + File.separator + fileName);
         }
     } catch (Exception e) {
-        request.getSession().setAttribute("errorMessage", "Error uploading image: " + e.getMessage());
-        response.sendRedirect(request.getContextPath() + "/viewalldish");
+        errors.add("Error uploading image: " + e.getMessage());
+    }
+
+    // Nếu có lỗi, trả lại trang với thông báo lỗi
+    if (!errors.isEmpty()) {
+        request.setAttribute("errors", errors);
+        request.setAttribute("inventoryList", menuDAO.getAllInventory());
+        request.getRequestDispatcher("ManageMenu/AddNewDish.jsp").forward(request, response);
         return;
     }
 
+    // Nếu không có lỗi, tiếp tục xử lý
     Dish dish = new Dish();
     dish.setDishName(dishName);
     dish.setDishType(dishType);
     dish.setDishPrice(dishPrice);
     dish.setDishDescription(dishDescription);
     dish.setDishImage(dishImage);
-    dish.setDishStatus("Available"); // Mặc định từ DB
+    dish.setDishStatus("Available");
 
     String newDishId = menuDAO.addDish(dish);
     if (newDishId != null) {
@@ -125,18 +136,19 @@ protected void doPost(HttpServletRequest request, HttpServletResponse response)
             }
         }
 
-        // Tự động cập nhật IngredientStatus
         menuDAO.updateIngredientStatus(newDishId);
 
         if (!hasError) {
-            request.getSession().setAttribute("message", "Dish added successfully!");
+            request.setAttribute("message", "Dish added successfully!"); // Thông báo thành công
         } else {
-            request.getSession().setAttribute("errorMessage", "Dish added but some ingredients failed.");
+            request.setAttribute("errorMessage", "Dish added but some ingredients failed.");
         }
     } else {
-        request.getSession().setAttribute("errorMessage", "Failed to add dish.");
+        request.setAttribute("errorMessage", "Failed to add dish.");
     }
-    response.sendRedirect(request.getContextPath() + "/viewalldish");
+
+    request.setAttribute("inventoryList", menuDAO.getAllInventory());
+    request.getRequestDispatcher("ManageMenu/AddNewDish.jsp").forward(request, response);
 }
 }
 //ok
