@@ -9,6 +9,10 @@
 
     Account account = (Account) session.getAttribute("account");
     String UserRole = account.getUserRole();
+    if (!"Waiter".equals(UserRole)) {
+        response.sendRedirect(request.getContextPath() + "/dashboard");
+        return;
+    }
 %>
 <html>
 <head>
@@ -24,6 +28,7 @@
         .button:hover { opacity: 0.9; }
         .error { color: red; text-align: center; margin-bottom: 10px; }
     </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
     <div class="nav-item"><a href="${pageContext.request.contextPath}/logout" class="nav-link">Logout</a></div>
@@ -56,11 +61,13 @@
                 <td><%= table.isHasOrder() ? "Có (Pending)" : "Không" %></td>
                 <td>
                     <% if ("Available".equals(table.getTableStatus())) { %>
-                        <a href="${pageContext.request.contextPath}/order?action=tableOverview&tableId=<%= table.getTableId() %>">
+                        <a href="#" onclick="handleTableClick('<%= table.getTableId() %>'); return false;">
                             <button class="button">Chọn bàn</button>
                         </a>
                     <% } else { %>
-                        <span style="color: gray;">Đã sử dụng</span>
+                        <a href="#" onclick="handleTableClick('<%= table.getTableId() %>'); return false;">
+                            <button class="button">Xem/Thêm món</button>
+                        </a>
                     <% } %>
                 </td>
             </tr>
@@ -70,5 +77,27 @@
             <p>Không có bàn nào khả dụng.</p>
         <% } %>
     </div>
+
+    <script>
+        function handleTableClick(tableId) {
+            $.ajax({
+                url: '${pageContext.request.contextPath}/order',
+                type: 'GET',
+                data: { action: 'checkOrderByTable', tableId: tableId },
+                success: function(response) {
+                    if (response.orderId) {
+                        // Bàn đã có đơn hàng -> vào tableOverview để thêm món
+                        window.location.href = '${pageContext.request.contextPath}/order?action=tableOverview&tableId=' + tableId;
+                    } else {
+                        // Bàn trống -> vào selectDish để tạo đơn mới
+                        window.location.href = '${pageContext.request.contextPath}/order?action=selectDish&tableId=' + tableId;
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('Error checking table: ' + error);
+                }
+            });
+        }
+    </script>
 </body>
 </html>
