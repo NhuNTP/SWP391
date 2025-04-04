@@ -86,12 +86,12 @@
 
         <form action="${pageContext.request.contextPath}/login" method="post">
             <div class="mb-3">
-                <label for="username" class="form-label fw-bold text-dark">Username</label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="fas fa-user"></i></span>
-                    <input type="text" class="form-control" id="username" name="username" placeholder="Enter username" required>
-                </div>
-            </div>
+    <label for="email" class="form-label fw-bold text-dark">Email</label>
+    <div class="input-group">
+        <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+        <input type="email" class="form-control" id="email" name="email" placeholder="Enter email" required>
+    </div>
+</div>
             <div class="mb-4">
                 <label for="password" class="form-label fw-bold text-dark">Password</label>
                 <div class="input-group">

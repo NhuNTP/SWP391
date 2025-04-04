@@ -26,56 +26,55 @@ public class LoginController extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            String username = request.getParameter("username");
-            String password = request.getParameter("password");
+protected void doPost(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException {
+    try {
+        String email = request.getParameter("email");  // Thay username thành email
+        String password = request.getParameter("password");
 
-            AccountDAO accountDAO = new AccountDAO();
-            Account account = accountDAO.login(username, password);
+        AccountDAO accountDAO = new AccountDAO();
+        Account account = accountDAO.login(email, password);  // Truyền email thay vì username
 
-            if (account != null) {
-                HttpSession session = request.getSession();
-                session.setAttribute("account", account);
+        if (account != null) {
+            HttpSession session = request.getSession();
+            session.setAttribute("account", account);
 
-                // Chuyển hướng theo vai trò
-                switch (account.getUserRole()) {
-                    case "Admin":
-                        response.sendRedirect(request.getContextPath() + "/dashboard");
-                        break;
-                    case "Manager":
-                        response.sendRedirect(request.getContextPath() + "/Dashboard/ManagerDashboard.jsp");
-                        break;
-                    case "Cashier":
-                        response.sendRedirect(request.getContextPath() + "/Dashboard/CashierDashboard.jsp");
-                        break;
-                    case "Waiter":
-                        response.sendRedirect(request.getContextPath() + "/order");
-                        break;
-                    case "kitchen staff":
-                        response.sendRedirect(request.getContextPath() + "/Dashboard/KitchenstaffDashboard.jsp");
-                        break;
-                    default:
-                        LOGGER.warning("Unknown role for user: " + username);
-                        response.sendRedirect(request.getContextPath() + "/LoginPage.jsp");
-                        break;
-                }
-            } else {
-                request.setAttribute("error", "Incorrect username, password or account has been deleted!");
-                request.getRequestDispatcher("LoginPage.jsp").forward(request, response);
+            // Chuyển hướng theo vai trò - giữ nguyên phần này
+            switch (account.getUserRole()) {
+                case "Admin":
+                    response.sendRedirect(request.getContextPath() + "/dashboard");
+                    break;
+                case "Manager":
+                    response.sendRedirect(request.getContextPath() + "/Dashboard/ManagerDashboard.jsp");
+                    break;
+                case "Cashier":
+                    response.sendRedirect(request.getContextPath() + "/Dashboard/CashierDashboard.jsp");
+                    break;
+                case "Waiter":
+                    response.sendRedirect(request.getContextPath() + "/order");
+                    break;
+                case "kitchen staff":
+                    response.sendRedirect(request.getContextPath() + "/Dashboard/KitchenstaffDashboard.jsp");
+                    break;
+                default:
+                    LOGGER.warning("Unknown role for user: " + email);  // Thay username thành email trong log
+                    response.sendRedirect(request.getContextPath() + "/LoginPage.jsp");
+                    break;
             }
-        } catch (ClassNotFoundException ex) {
-            LOGGER.log(Level.SEVERE, "Database driver not found", ex);
-            request.setAttribute("error", "System error, please try again later!");
-            request.getRequestDispatcher("LoginPage.jsp").forward(request, response);
-        } catch (SQLException ex) {
-            LOGGER.log(Level.SEVERE, "SQL error during login", ex);
-            request.setAttribute("error", "System error, please try again later!");
+        } else {
+            request.setAttribute("error", "Incorrect email, password or account has been deleted!");  // Thay username thành email trong thông báo lỗi
             request.getRequestDispatcher("LoginPage.jsp").forward(request, response);
         }
+    } catch (ClassNotFoundException ex) {
+        LOGGER.log(Level.SEVERE, "Database driver not found", ex);
+        request.setAttribute("error", "System error, please try again later!");
+        request.getRequestDispatcher("LoginPage.jsp").forward(request, response);
+    } catch (SQLException ex) {
+        LOGGER.log(Level.SEVERE, "SQL error during login", ex);
+        request.setAttribute("error", "System error, please try again later!");
+        request.getRequestDispatcher("LoginPage.jsp").forward(request, response);
     }
-
+}
     @Override
     public String getServletInfo() {
         return "Login Controller for user authentication";
