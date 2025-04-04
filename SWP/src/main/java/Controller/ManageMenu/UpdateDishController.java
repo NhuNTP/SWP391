@@ -14,15 +14,24 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @WebServlet("/updatedish")
-@MultipartConfig(fileSizeThreshold = 1024 * 1024, maxFileSize = 1024 * 1024 * 10, maxRequestSize = 1024 * 1024 * 100)
+@MultipartConfig(
+    fileSizeThreshold = 1024 * 1024, 
+    maxFileSize = 1024 * 1024 * 10, 
+    maxRequestSize = 1024 * 1024 * 100
+)
 public class UpdateDishController extends HttpServlet {
     private final MenuDAO menuDAO = new MenuDAO();
-    private static final String UPLOAD_DIRECTORY = "images";
+    private static final String UPLOAD_DIRECTORY = "dish_img"; // Thư mục con trong ManageMenu
     private static final Logger LOGGER = Logger.getLogger(UpdateDishController.class.getName());
 
     @Override
@@ -102,16 +111,31 @@ public class UpdateDishController extends HttpServlet {
             }
 
             // Xử lý upload ảnh
-            String uploadPath = getServletContext().getRealPath("") + File.separator + UPLOAD_DIRECTORY;
+            String webAppRoot = getServletContext().getRealPath("/");
+            File webAppRootDir = new File(webAppRoot);
+            File targetDir = webAppRootDir.getParentFile();
+            File projectRootDir = targetDir.getParentFile();
+            String srcWebAppPath = new File(projectRootDir, "src/main/webapp/ManageMenu").getAbsolutePath();
+            String uploadPath = srcWebAppPath + File.separator + UPLOAD_DIRECTORY;
+
             File uploadDir = new File(uploadPath);
-            if (!uploadDir.exists()) uploadDir.mkdir();
+            if (!uploadDir.exists()) uploadDir.mkdirs();
 
             String dishImage = request.getParameter("oldDishImage");
             Part filePart = request.getPart("dishImage");
-            String fileName = filePart.getSubmittedFileName();
-            if (fileName != null && !fileName.isEmpty()) {
-                dishImage = UPLOAD_DIRECTORY + "/" + fileName;
-                filePart.write(uploadPath + File.separator + fileName);
+            if (filePart != null && filePart.getSize() > 0 && filePart.getSubmittedFileName() != null && !filePart.getSubmittedFileName().isEmpty()) {
+                String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+                String uniqueFileName = UUID.randomUUID().toString() + "_" + fileName;
+                String filePath = uploadPath + File.separator + uniqueFileName;
+                dishImage = "/ManageMenu/" + UPLOAD_DIRECTORY + "/" + uniqueFileName; // Đường dẫn tương đối để hiển thị
+
+                try (InputStream fileContent = filePart.getInputStream()) {
+                    Files.copy(fileContent, Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
+                    LOGGER.info("File saved successfully to: " + filePath);
+                } catch (IOException e) {
+                    request.setAttribute("dishImageError", "Error uploading image: " + e.getMessage());
+                    hasError = true;
+                }
             }
 
             // Tạo đối tượng Dish
@@ -183,7 +207,7 @@ public class UpdateDishController extends HttpServlet {
                 if (ingredientsError.length() > 0) {
                     request.setAttribute("ingredientsError", ingredientsError.toString());
                 }
-                if (!isUpdated && !hasError) { // Nếu lỗi không phải từ validate mà từ update
+                if (!isUpdated && !hasError) {
                     request.setAttribute("generalError", "Failed to update dish due to a server error.");
                 }
             } else {
