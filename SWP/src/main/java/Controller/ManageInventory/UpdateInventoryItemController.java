@@ -1,5 +1,6 @@
 package Controller.ManageInventory;
 
+import Controller.ManageCustomer.UpdateCustomerProfileController;
 import DAO.InventoryDAO;
 import Model.InventoryItem;
 import jakarta.servlet.ServletException;
@@ -8,6 +9,9 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @WebServlet(name = "UpdateInventoryItemController", urlPatterns = {"/UpdateInventoryItemController"})
 public class UpdateInventoryItemController extends HttpServlet {
@@ -39,11 +43,8 @@ public class UpdateInventoryItemController extends HttpServlet {
         System.out.println("itemPrice: " + itemPrice);
         System.out.println("itemQuantity: " + itemQuantity);
         System.out.println("------------------------------------");
-        
-        
-        
-        // 2. Tạo đối tượng InventoryItem để cập nhật
-        InventoryItem updatedItem = new InventoryItem();
+         InventoryDAO inventoryDAO = new InventoryDAO();
+  InventoryItem updatedItem = new InventoryItem();
         updatedItem.setItemId(itemId);
         updatedItem.setItemName(itemName);
         updatedItem.setItemType(itemType);
@@ -51,13 +52,32 @@ public class UpdateInventoryItemController extends HttpServlet {
         updatedItem.setItemQuantity(itemQuantity);
         updatedItem.setItemUnit(itemUnit);
         updatedItem.setItemDescription(itemDescription);
-
-        // 3. Cập nhật sản phẩm trong kho hàng trong database
-        InventoryDAO updateDao = new InventoryDAO();
-        updateDao.updateInventoryItem(updatedItem);
-
-        // 4. Chuyển hướng đến trang danh sách sản phẩm
-        response.sendRedirect("ViewInventoryController");
+        if (inventoryDAO.isInventoryItemExist(itemName)) {
+            System.out.println(inventoryDAO.isInventoryItemExist(itemName));
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write("Inventory item already exists. Please check agains.");
+            return;
+        }
+        inventoryDAO.updateInventoryItem(updatedItem);
+        request.getSession().setAttribute("message", "Customer updated successfully!");
+        response.sendRedirect(request.getContextPath() + "/ViewInventoryController");
+        
+//        // 2. Tạo đối tượng InventoryItem để cập nhật
+//        InventoryItem updatedItem = new InventoryItem();
+//        updatedItem.setItemId(itemId);
+//        updatedItem.setItemName(itemName);
+//        updatedItem.setItemType(itemType);
+//        updatedItem.setItemPrice(itemPrice);
+//        updatedItem.setItemQuantity(itemQuantity);
+//        updatedItem.setItemUnit(itemUnit);
+//        updatedItem.setItemDescription(itemDescription);
+//
+//        // 3. Cập nhật sản phẩm trong kho hàng trong database
+//        InventoryDAO updateDao = new InventoryDAO();
+//        updateDao.updateInventoryItem(updatedItem);
+//
+//        // 4. Chuyển hướng đến trang danh sách sản phẩm
+//        response.sendRedirect("ViewInventoryController");
     }
 
     /**

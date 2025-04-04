@@ -12,6 +12,8 @@ import java.util.logging.Logger;
 
 public class InventoryDAO extends DB.DBContext {
 
+    private static final Logger LOGGER = Logger.getLogger(CouponDAO.class.getName());
+
     public List<InventoryItem> getAllInventoryItem() {
         String sql = "SELECT * FROM Inventory WHERE isDeleted = 0";
         List<InventoryItem> inventoryItemList = new ArrayList<>();
@@ -219,28 +221,76 @@ public class InventoryDAO extends DB.DBContext {
             Logger.getLogger(CouponDAO.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
-    public String isInventoryItemExist(String itemName) {
-        String sql = "SELECT ItemID FROM Inventory WHERE LOWER(ItemName) = LOWER(?) AND isDeleted=0";
+//
+//    public String isInventoryItemExist(String itemName) {
+//        String sql = "SELECT ItemID FROM Inventory WHERE LOWER(ItemName) = LOWER(?) AND isDeleted=0";
+//        try (PreparedStatement st = getConnection().prepareStatement(sql)) {
+//            st.setString(1, itemName);
+//            try (ResultSet rs = st.executeQuery()) {
+//                if (rs.next()) {
+//                    // Nếu tìm thấy item, trả về ItemID
+//                    System.out.println("NGUYEN THANH PHAT");
+//                    return rs.getString("ItemID");
+//
+//                } else {
+//
+//                    return "None";
+//                }
+//            }
+//        } catch (SQLException e) {
+//            System.err.println("Lỗi kiểm tra Inventory Item theo tên: " + e.getMessage());
+//            e.printStackTrace();
+//        } catch (ClassNotFoundException ex) {
+//            Logger.getLogger(InventoryDAO.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+//        return "None";
+//    }
+    
+    
+    public boolean isInventoryItemExist(String itemName) {
+        String sql = "SELECT 1 FROM Inventory WHERE LOWER(ItemName) = LOWER(?) AND isDeleted=0"; // Chỉ cần SELECT 1 để kiểm tra sự tồn tại
         try (PreparedStatement st = getConnection().prepareStatement(sql)) {
             st.setString(1, itemName);
             try (ResultSet rs = st.executeQuery()) {
                 if (rs.next()) {
-                    // Nếu tìm thấy item, trả về ItemID
-                     System.out.println("NGUYEN THANH PHAT");
-                    return rs.getString("ItemID");
-                   
+                    // Nếu tìm thấy item, trả về true
+                    // System.out.println("NGUYEN THANH PHAT"); // Có thể bỏ dòng này vì không cần thiết cho logic true/false
+                    return true;
                 } else {
-
-                    return "None";
+                    return false;
                 }
             }
         } catch (SQLException e) {
             System.err.println("Lỗi kiểm tra Inventory Item theo tên: " + e.getMessage());
             e.printStackTrace();
+            return false; // Trả về false khi có lỗi SQL
         } catch (ClassNotFoundException ex) {
             Logger.getLogger(InventoryDAO.class.getName()).log(Level.SEVERE, null, ex);
+            return false; // Trả về false khi có lỗi ClassNotFoundException
         }
-        return "None";
     }
+
+  
+    public boolean isInventoryItemExists(String itemId, String excludeItemId) throws SQLException, ClassNotFoundException {
+        String sql = excludeItemId == null || excludeItemId.isEmpty()
+                ? "SELECT COUNT(*) FROM Inventory WHERE ItemId = ? AND isDeleted = 0"
+                : "SELECT COUNT(*) FROM Inventory WHERE ItemId = ? AND ItemId != ? AND isDeleted = 0";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, itemId);
+            if (excludeItemId != null && !excludeItemId.isEmpty()) {
+                stmt.setString(2, excludeItemId);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error checking InventoryItem existence: {0}", e.getMessage());
+            throw e;
+        }
+        return false;
+    }
+
 }
