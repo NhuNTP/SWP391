@@ -215,21 +215,21 @@
                 color: black;
             }
 
-/*            .btn-add-new {  Đặt một lớp CSS riêng để dễ tùy chỉnh, ví dụ: .btn-add-new 
-                background-color: #64b5f6;  Xanh dương nhạt: #64b5f6 (hoặc chọn màu khác từ gợi ý) 
-                border: none;              Loại bỏ viền mặc định 
-                color: white;              Chữ trắng 
-                padding: 8px 15px;         Điều chỉnh padding nếu cần 
-                border-radius: 0.5rem;     Góc bo tròn 
-                cursor: pointer;          Con trỏ tay khi hover 
-                transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;  Transition mượt mà 
-            }
-
-            .btn-add-new:hover {
-                background-color: #42a5f5;  Xanh dương đậm hơn một chút khi hover 
-                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);  Bóng đổ nhẹ 
-                transform: scale(1.02);    Phóng to nhẹ khi hover 
-            }*/
+            /*            .btn-add-new {  Đặt một lớp CSS riêng để dễ tùy chỉnh, ví dụ: .btn-add-new 
+                            background-color: #64b5f6;  Xanh dương nhạt: #64b5f6 (hoặc chọn màu khác từ gợi ý) 
+                            border: none;              Loại bỏ viền mặc định 
+                            color: white;              Chữ trắng 
+                            padding: 8px 15px;         Điều chỉnh padding nếu cần 
+                            border-radius: 0.5rem;     Góc bo tròn 
+                            cursor: pointer;          Con trỏ tay khi hover 
+                            transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;  Transition mượt mà 
+                        }
+            
+                        .btn-add-new:hover {
+                            background-color: #42a5f5;  Xanh dương đậm hơn một chút khi hover 
+                            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);  Bóng đổ nhẹ 
+                            transform: scale(1.02);    Phóng to nhẹ khi hover 
+                        }*/
 
         </style>
     </head>
@@ -604,36 +604,57 @@
 
                     if (isValid) {
                         // Nếu tất cả các trường hợp lệ, gửi AJAX request
-                        $.ajax({
-                            url: 'AddInventoryItemController',
+        $.ajax({
+                            url: 'UpdateInventoryItemController', // URL controller của bạn
                             type: 'POST',
                             data: {
-                                itemName: itemName,
-                                itemType: itemType,
-                                itemPrice: itemPrice,
-                                itemQuantity: itemQuantity,
-                                itemUnit: itemUnit,
-                                itemDescription: itemDescription
+                                itemId: itemId,
+                                itemName: itemNameUpdate,
+                                itemType: itemTypeUpdate,
+                                itemPrice: itemPriceUpdate,
+                                itemQuantity: itemQuantityUpdate,
+                                itemUnit: itemUnitUpdate,
+                                itemDescription: itemDescriptionUpdate
                             },
-                            success: function () {
-                                var addInventoryModal = bootstrap.Modal.getInstance(document.getElementById('addInventoryModal'));
-                                addInventoryModal.hide();
-                                reloadViewInventory(); // Giả sử hàm này reload lại bảng dữ liệu
+                            success: function (response) { // Callback khi thành công - Xử lý thành công thực tế
+                                var updateInventoryModal = bootstrap.Modal.getInstance(document.getElementById('updateInventoryModal'));
+                                updateInventoryModal.hide();
+                                reloadViewInventory();
                                 Swal.fire({
                                     icon: 'success',
                                     title: 'Success!',
-                                    text: 'Inventory item added successfully.',
+                                    text: 'Inventory item updated successfully.',
                                     timer: 2000,
                                     showConfirmButton: false
                                 });
-                                $('#addInventoryForm')[0].reset();
                             },
-                            error: function (xhr, status, error) {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error!',
-                                    text: 'Error adding inventory item: ' + error
-                                });
+                            error: function (xhr, status, error) { // Callback khi lỗi - Xử lý tất cả các trường hợp lỗi
+                                if (xhr.status === 400) { // Kiểm tra lỗi 400 Bad Request (Ví dụ: Tên item bị trùng)
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Sorry!',
+                                        text: 'Item name already exists or invalid input. Please check your information.', // Thông báo lỗi cụ thể hơn
+                                        confirmButtonText: 'OK',
+                                        confirmButtonColor: '#dc3545'
+                                    });
+                                } else if (xhr.status === 500) { // Kiểm tra lỗi 500 Internal Server Error (Lỗi server, database)
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Sorry!',
+                                        text: 'Server error.  Update failed. Please try again later.', // Thông báo lỗi server
+                                        confirmButtonText: 'OK',
+                                        confirmButtonColor: '#dc3545'
+                                    });
+                                }
+                                else { // Xử lý các lỗi khác (lỗi mạng, lỗi không xác định...)
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Sorry!',
+                                        text: 'Update error. Your transaction has failed. Please go back and try again.', // Thông báo lỗi chung
+                                        confirmButtonText: 'OK',
+                                        confirmButtonColor: '#dc3545'
+                                    });
+                                }
                             }
                         });
                     }
