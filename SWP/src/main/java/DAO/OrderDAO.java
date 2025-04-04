@@ -34,30 +34,31 @@ public class OrderDAO {
     }
 
     // Lấy chi tiết đơn hàng theo OrderId
-   public List<OrderDetail> getOrderDetailsByOrderId(String orderId) throws SQLException, ClassNotFoundException {
-    List<OrderDetail> details = new ArrayList<>();
-    String sql = "SELECT OrderDetailId, DishList FROM OrderDetail WHERE OrderId = ?";
-    try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-        stmt.setString(1, orderId);
-        try (ResultSet rs = stmt.executeQuery()) {
-            if (rs.next()) {
-                String orderDetailId = rs.getString("OrderDetailId");
-                String dishListJson = rs.getString("DishList");
-                ObjectMapper mapper = new ObjectMapper();
-                List<OrderDetail> dishList = mapper.readValue(dishListJson, new TypeReference<List<OrderDetail>>() {});
-                for (OrderDetail detail : dishList) {
-                    detail.setOrderDetailId(orderDetailId); // Gán lại OrderDetailId chung
-                    detail.setOrderId(orderId);
-                    details.add(detail);
+    public List<OrderDetail> getOrderDetailsByOrderId(String orderId) throws SQLException, ClassNotFoundException {
+        List<OrderDetail> details = new ArrayList<>();
+        String sql = "SELECT OrderDetailId, DishList FROM OrderDetail WHERE OrderId = ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, orderId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    String orderDetailId = rs.getString("OrderDetailId");
+                    String dishListJson = rs.getString("DishList");
+                    ObjectMapper mapper = new ObjectMapper();
+                    List<OrderDetail> dishList = mapper.readValue(dishListJson, new TypeReference<List<OrderDetail>>() {
+                    });
+                    for (OrderDetail detail : dishList) {
+                        detail.setOrderDetailId(orderDetailId); // Gán lại OrderDetailId chung
+                        detail.setOrderId(orderId);
+                        details.add(detail);
+                    }
                 }
             }
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error parsing DishList: " + e.getMessage(), e);
+            throw new SQLException("Error parsing DishList", e);
         }
-    } catch (Exception e) {
-        logger.log(Level.SEVERE, "Error parsing DishList: " + e.getMessage(), e);
-        throw new SQLException("Error parsing DishList", e);
+        return details;
     }
-    return details;
-}
 
     // Lấy đơn hàng theo OrderId
     public Order getOrderById(String orderId) throws SQLException, ClassNotFoundException {
@@ -85,107 +86,107 @@ public class OrderDAO {
     }
 
     // Tạo mã OrderDetailId duy nhất
-  public String generateUniqueOrderDetailId(Connection conn) throws SQLException {
-    String nextId = "OD001";
-    String sql = "SELECT MAX(OrderDetailId) as MaxId FROM OrderDetail WITH (UPDLOCK, ROWLOCK)";
-    try (PreparedStatement stmt = conn.prepareStatement(sql);
-         ResultSet rs = stmt.executeQuery()) {
-        if (rs.next() && rs.getString("MaxId") != null) {
-            String maxId = rs.getString("MaxId");
-            int numericPart = Integer.parseInt(maxId.substring(2)) + 1;
-            nextId = "OD" + String.format("%03d", numericPart);
+    public String generateUniqueOrderDetailId(Connection conn) throws SQLException {
+        String nextId = "OD001";
+        String sql = "SELECT MAX(OrderDetailId) as MaxId FROM OrderDetail WITH (UPDLOCK, ROWLOCK)";
+        try (PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
+            if (rs.next() && rs.getString("MaxId") != null) {
+                String maxId = rs.getString("MaxId");
+                int numericPart = Integer.parseInt(maxId.substring(2)) + 1;
+                nextId = "OD" + String.format("%03d", numericPart);
+            }
         }
+
+        // Kiểm tra trùng lặp với giới hạn 100 lần thử
+        String checkSql = "SELECT COUNT(*) FROM OrderDetail WHERE OrderDetailId = ?";
+        try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
+            int maxAttempts = 100;
+            int attempts = 0;
+            boolean isDuplicate;
+            do {
+                checkStmt.setString(1, nextId);
+                try (ResultSet checkRs = checkStmt.executeQuery()) {
+                    checkRs.next();
+                    isDuplicate = checkRs.getInt(1) > 0;
+                    if (isDuplicate) {
+                        attempts++;
+                        if (attempts >= maxAttempts) {
+                            throw new SQLException("Unable to generate unique OrderDetailId after " + maxAttempts + " attempts.");
+                        }
+                        int numericPart = Integer.parseInt(nextId.substring(2)) + 1;
+                        nextId = "OD" + String.format("%03d", numericPart);
+                    }
+                }
+            } while (isDuplicate);
+        }
+
+        logger.log(Level.INFO, "Generated unique OrderDetailId: {0}", nextId);
+        return nextId;
     }
 
-    // Kiểm tra trùng lặp với giới hạn 100 lần thử
-    String checkSql = "SELECT COUNT(*) FROM OrderDetail WHERE OrderDetailId = ?";
-    try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
-        int maxAttempts = 100;
-        int attempts = 0;
-        boolean isDuplicate;
-        do {
-            checkStmt.setString(1, nextId);
-            try (ResultSet checkRs = checkStmt.executeQuery()) {
-                checkRs.next();
-                isDuplicate = checkRs.getInt(1) > 0;
-                if (isDuplicate) {
-                    attempts++;
-                    if (attempts >= maxAttempts) {
-                        throw new SQLException("Unable to generate unique OrderDetailId after " + maxAttempts + " attempts.");
-                    }
-                    int numericPart = Integer.parseInt(nextId.substring(2)) + 1;
-                    nextId = "OD" + String.format("%03d", numericPart);
+    // Tạo đơn hàng mới
+    public void CreateOrder(Order order) throws SQLException, ClassNotFoundException {
+        Connection conn = null;
+        try {
+            conn = DBContext.getConnection();
+            conn.setAutoCommit(false);
+
+            // Chèn vào bảng Order
+            String sqlOrder = "INSERT INTO [Order] (OrderId, UserId, CustomerId, OrderDate, OrderStatus, OrderType, TableId, Total, CustomerPhone) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            try (PreparedStatement pstmtOrder = conn.prepareStatement(sqlOrder)) {
+                pstmtOrder.setString(1, order.getOrderId());
+                pstmtOrder.setString(2, order.getUserId());
+                pstmtOrder.setString(3, order.getCustomerId());
+                pstmtOrder.setTimestamp(4, new Timestamp(order.getOrderDate().getTime()));
+                pstmtOrder.setString(5, order.getOrderStatus());
+                pstmtOrder.setString(6, order.getOrderType());
+                pstmtOrder.setString(7, order.getTableId());
+                pstmtOrder.setDouble(8, order.getTotal());
+                pstmtOrder.setString(9, order.getCustomerPhone());
+                pstmtOrder.executeUpdate();
+            }
+
+            if (order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) {
+                // Tạo OrderDetailId
+                String orderDetailId = "OD" + order.getOrderId().substring(2); // Ví dụ: OR001 -> OD001
+
+                // Chuyển danh sách OrderDetail thành JSON
+                ObjectMapper mapper = new ObjectMapper();
+                String dishListJson = mapper.writeValueAsString(order.getOrderDetails());
+                double total = order.getOrderDetails().stream().mapToDouble(OrderDetail::getSubtotal).sum();
+
+                // Chèn vào OrderDetail
+                String sqlOrderDetail = "INSERT INTO OrderDetail (OrderDetailId, OrderId, DishList, Total) "
+                        + "VALUES (?, ?, ?, ?)";
+                try (PreparedStatement pstmtOrderDetail = conn.prepareStatement(sqlOrderDetail)) {
+                    pstmtOrderDetail.setString(1, orderDetailId);
+                    pstmtOrderDetail.setString(2, order.getOrderId());
+                    pstmtOrderDetail.setString(3, dishListJson);
+                    pstmtOrderDetail.setDouble(4, total);
+                    pstmtOrderDetail.executeUpdate();
+                }
+                logger.info("Added OrderDetail: " + orderDetailId + " with DishList: " + dishListJson);
+            }
+
+            conn.commit();
+            logger.log(Level.INFO, "Successfully created Order: {0}", order.getOrderId());
+        } catch (Exception e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException rollbackEx) {
+                    logger.log(Level.SEVERE, "Rollback failed: " + rollbackEx.getMessage(), rollbackEx);
                 }
             }
-        } while (isDuplicate);
-    }
-
-    logger.log(Level.INFO, "Generated unique OrderDetailId: {0}", nextId);
-    return nextId;
-}
-    // Tạo đơn hàng mới
-  public void CreateOrder(Order order) throws SQLException, ClassNotFoundException {
-    Connection conn = null;
-    try {
-        conn = DBContext.getConnection();
-        conn.setAutoCommit(false);
-
-        // Chèn vào bảng Order
-        String sqlOrder = "INSERT INTO [Order] (OrderId, UserId, CustomerId, OrderDate, OrderStatus, OrderType, TableId, Total, CustomerPhone) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement pstmtOrder = conn.prepareStatement(sqlOrder)) {
-            pstmtOrder.setString(1, order.getOrderId());
-            pstmtOrder.setString(2, order.getUserId());
-            pstmtOrder.setString(3, order.getCustomerId());
-            pstmtOrder.setTimestamp(4, new Timestamp(order.getOrderDate().getTime()));
-            pstmtOrder.setString(5, order.getOrderStatus());
-            pstmtOrder.setString(6, order.getOrderType());
-            pstmtOrder.setString(7, order.getTableId());
-            pstmtOrder.setDouble(8, order.getTotal());
-            pstmtOrder.setString(9, order.getCustomerPhone());
-            pstmtOrder.executeUpdate();
-        }
-
-        if (order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) {
-            // Tạo OrderDetailId
-            String orderDetailId = "OD" + order.getOrderId().substring(2); // Ví dụ: OR001 -> OD001
-
-            // Chuyển danh sách OrderDetail thành JSON
-            ObjectMapper mapper = new ObjectMapper();
-            String dishListJson = mapper.writeValueAsString(order.getOrderDetails());
-            double total = order.getOrderDetails().stream().mapToDouble(OrderDetail::getSubtotal).sum();
-
-            // Chèn vào OrderDetail
-            String sqlOrderDetail = "INSERT INTO OrderDetail (OrderDetailId, OrderId, DishList, Total) "
-                    + "VALUES (?, ?, ?, ?)";
-            try (PreparedStatement pstmtOrderDetail = conn.prepareStatement(sqlOrderDetail)) {
-                pstmtOrderDetail.setString(1, orderDetailId);
-                pstmtOrderDetail.setString(2, order.getOrderId());
-                pstmtOrderDetail.setString(3, dishListJson);
-                pstmtOrderDetail.setDouble(4, total);
-                pstmtOrderDetail.executeUpdate();
-            }
-            logger.info("Added OrderDetail: " + orderDetailId + " with DishList: " + dishListJson);
-        }
-
-        conn.commit();
-        logger.log(Level.INFO, "Successfully created Order: {0}", order.getOrderId());
-    } catch (Exception e) {
-        if (conn != null) {
-            try {
-                conn.rollback();
-            } catch (SQLException rollbackEx) {
-                logger.log(Level.SEVERE, "Rollback failed: " + rollbackEx.getMessage(), rollbackEx);
+            logger.log(Level.SEVERE, "Error creating Order: " + e.getMessage(), e);
+            throw new SQLException("Error creating Order: " + e.getMessage(), e);
+        } finally {
+            if (conn != null) {
+                conn.close();
             }
         }
-        logger.log(Level.SEVERE, "Error creating Order: " + e.getMessage(), e);
-        throw new SQLException("Error creating Order: " + e.getMessage(), e);
-    } finally {
-        if (conn != null) {
-            conn.close();
-        }
     }
-}
 
     // Thêm OrderDetail
     public void addOrderDetail(OrderDetail detail) throws SQLException, ClassNotFoundException {
