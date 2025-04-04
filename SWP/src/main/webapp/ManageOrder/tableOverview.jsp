@@ -32,7 +32,71 @@
         .btn-secondary { background-color: #757575; }
         .error { color: red; text-align: center; margin-bottom: 10px; }
         select, input[type="text"], input[type="number"] { padding: 5px; width: 100%; max-width: 300px; }
+        #addCustomerForm { display: none; }
+        .quantity-input { width: 60px; text-align: center; }
+        .quantity-btn { padding: 5px 10px; font-size: 14px; }
     </style>
+    <script>
+        function toggleAddCustomerForm() {
+            var checkbox = document.getElementById("addCustomerCheckbox");
+            var form = document.getElementById("addCustomerForm");
+            var selectForm = document.getElementById("selectCustomerForm");
+            if (checkbox.checked) {
+                form.style.display = "block";
+                selectForm.style.display = "none";
+            } else {
+                form.style.display = "none";
+                selectForm.style.display = "block";
+            }
+        }
+
+        function updateQuantity(orderDetailId, dishId, tableId, delta) {
+            var input = document.getElementById("quantity_" + dishId);
+            var newQuantity = parseInt(input.value) + delta;
+            if (newQuantity < 0) {
+                alert("Số lượng không thể nhỏ hơn 0!");
+                return;
+            }
+            input.value = newQuantity;
+
+            var form = document.createElement("form");
+            form.method = "POST";
+            form.action = "${pageContext.request.contextPath}/order";
+
+            var actionInput = document.createElement("input");
+            actionInput.type = "hidden";
+            actionInput.name = "action";
+            actionInput.value = "editDishQuantity";
+            form.appendChild(actionInput);
+
+            var orderDetailInput = document.createElement("input");
+            orderDetailInput.type = "hidden";
+            orderDetailInput.name = "orderDetailId";
+            orderDetailInput.value = orderDetailId || "";
+            form.appendChild(orderDetailInput);
+
+            var dishInput = document.createElement("input");
+            dishInput.type = "hidden";
+            dishInput.name = "dishId";
+            dishInput.value = dishId;
+            form.appendChild(dishInput);
+
+            var quantityInput = document.createElement("input");
+            quantityInput.type = "hidden";
+            quantityInput.name = "newQuantity";
+            quantityInput.value = newQuantity;
+            form.appendChild(quantityInput);
+
+            var tableInput = document.createElement("input");
+            tableInput.type = "hidden";
+            tableInput.name = "tableId";
+            tableInput.value = tableId;
+            form.appendChild(tableInput);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
 </head>
 <body>
     <div class="container">
@@ -66,77 +130,85 @@
 
         <!-- Danh sách món ăn -->
         <div class="dish-list">
-    <h3>Danh sách món ăn</h3>
-    <table class="table-list">
-        <tr>
-            <th>Tên món</th>
-            <th>Số lượng</th>
-            <th>Đơn giá</th>
-            <th>Tổng phụ</th>
-            <th>Hành động</th>
-        </tr>
-        <% if (order != null && order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) { %>
-            <% for (OrderDetail detail : order.getOrderDetails()) { %>
+            <h3>Danh sách món ăn</h3>
+            <table class="table-list">
                 <tr>
-                    <td><%= detail.getDishName() %></td>
-                    <td><%= detail.getQuantity() %></td>
-                    <td><%= detail.getSubtotal() / detail.getQuantity() %></td>
-                    <td><%= detail.getSubtotal() %></td>
-                    <td>
-                        <a href="${pageContext.request.contextPath}/order?action=editDishQuantity&orderDetailId=<%= detail.getOrderDetailId() %>&dishId=<%= detail.getDishId() %>&newQuantity=<%= detail.getQuantity() + 1 %>&tableId=<%= request.getAttribute("tableId") %>">
-                            <button class="button btn-success">+</button>
-                        </a>
-                        <% if (detail.getQuantity() > 1) { %>
-                            <a href="${pageContext.request.contextPath}/order?action=editDishQuantity&orderDetailId=<%= detail.getOrderDetailId() %>&dishId=<%= detail.getDishId() %>&newQuantity=<%= detail.getQuantity() - 1 %>&tableId=<%= request.getAttribute("tableId") %>">
-                                <button class="button btn-primary">-</button>
-                            </a>
-                        <% } %>
-                        <a href="${pageContext.request.contextPath}/order?action=deleteDish&orderDetailId=<%= detail.getOrderDetailId() %>&dishId=<%= detail.getDishId() %>&tableId=<%= request.getAttribute("tableId") %>">
-                            <button class="button btn-danger">Xóa</button>
-                        </a>
-                    </td>
+                    <th>Tên món</th>
+                    <th>Số lượng</th>
+                    <th>Đơn giá</th>
+                    <th>Tổng phụ</th>
+                    <th>Hành động</th>
                 </tr>
-            <% } %>
-        <% } else { %>
-            <tr>
-                <td colspan="5" style="text-align: center;">Chưa có món ăn nào trong đơn hàng.</td>
-            </tr>
-        <% } %>
-    </table>
-    <a href="${pageContext.request.contextPath}/order?action=selectDish&tableId=<%= request.getAttribute("tableId") %>" class="button btn-primary" style="margin-top: 10px;">Thêm món ăn</a>
-</div>
-
-        <!-- Chọn khách hàng -->
-        <div class="customer-section">
-            <h3>Chọn khách hàng</h3>
-            <form action="${pageContext.request.contextPath}/order" method="post">
-                <input type="hidden" name="action" value="selectCustomer">
-                <input type="hidden" name="tableId" value="<%= request.getAttribute("tableId") %>">
-                <input type="hidden" name="orderId" value="<%= order != null ? order.getOrderId() : "" %>">
-                <select name="customerId" onchange="this.form.submit()">
-                    <option value="">-- Chọn khách hàng --</option>
-                    <% for (Customer customer : customers) { %>
-                        <option value="<%= customer.getCustomerId() %>" <%= order != null && customer.getCustomerId().equals(order.getCustomerId()) ? "selected" : "" %>>
-                            <%= customer.getCustomerName() %> (<%= customer.getCustomerPhone() %>)
-                        </option>
+                <% if (order != null && order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) { %>
+                    <% for (OrderDetail detail : order.getOrderDetails()) { %>
+                        <tr>
+                            <td><%= detail.getDishName() %></td>
+                            <td>
+                                <button class="quantity-btn btn-secondary" onclick="updateQuantity('<%= detail.getOrderDetailId() %>', '<%= detail.getDishId() %>', '<%= request.getAttribute("tableId") %>', -1)">-</button>
+                                <input type="number" class="quantity-input" id="quantity_<%= detail.getDishId() %>" 
+                                       value="<%= detail.getQuantity() %>" min="0" readonly>
+                                <button class="quantity-btn btn-secondary" onclick="updateQuantity('<%= detail.getOrderDetailId() %>', '<%= detail.getDishId() %>', '<%= request.getAttribute("tableId") %>', 1)">+</button>
+                            </td>
+                            <td><%= detail.getSubtotal() / detail.getQuantity() %></td>
+                            <td><%= detail.getSubtotal() %></td>
+                            <td>
+                                <form action="${pageContext.request.contextPath}/order" method="post" style="display: inline;">
+                                    <input type="hidden" name="action" value="deleteDish">
+                                    <input type="hidden" name="orderDetailId" value="<%= detail.getOrderDetailId() %>">
+                                    <input type="hidden" name="dishId" value="<%= detail.getDishId() %>">
+                                    <input type="hidden" name="tableId" value="<%= request.getAttribute("tableId") %>">
+                                    <button type="submit" class="button btn-danger">Xóa</button>
+                                </form>
+                            </td>
+                        </tr>
                     <% } %>
-                </select>
-            </form>
+                <% } else { %>
+                    <tr>
+                        <td colspan="5" style="text-align: center;">Chưa có món ăn nào trong đơn hàng.</td>
+                    </tr>
+                <% } %>
+            </table>
+            <a href="${pageContext.request.contextPath}/order?action=selectDish&tableId=<%= request.getAttribute("tableId") %>&returnTo=tableOverview" class="button btn-primary" style="margin-top: 10px;">Thêm món ăn</a>
         </div>
 
-        <!-- Thêm khách hàng mới -->
+        <!-- Quản lý khách hàng -->
         <div class="customer-section">
-            <h3>Thêm khách hàng mới</h3>
-            <form action="${pageContext.request.contextPath}/order" method="post">
-                <input type="hidden" name="action" value="addCustomer">
-                <input type="hidden" name="tableId" value="<%= request.getAttribute("tableId") %>">
-                <input type="hidden" name="orderId" value="<%= order != null ? order.getOrderId() : "" %>">
-                <label>Tên khách hàng:</label><br>
-                <input type="text" name="customerName" required><br><br>
-                <label>Số điện thoại:</label><br>
-                <input type="text" name="customerPhone" required><br><br>
-                <button type="submit" class="button btn-success">Thêm</button>
-            </form>
+            <h3>Quản lý khách hàng</h3>
+            <div>
+                <input type="checkbox" id="addCustomerCheckbox" onclick="toggleAddCustomerForm()">
+                <label for="addCustomerCheckbox">Thêm khách hàng mới</label>
+            </div>
+
+            <!-- Chọn khách hàng (default) -->
+            <div id="selectCustomerForm">
+                <form action="${pageContext.request.contextPath}/order" method="post">
+                    <input type="hidden" name="action" value="selectCustomer">
+                    <input type="hidden" name="tableId" value="<%= request.getAttribute("tableId") %>">
+                    <input type="hidden" name="orderId" value="<%= order != null ? order.getOrderId() : "" %>">
+                    <select name="customerId" onchange="this.form.submit()">
+                        <option value="">-- Chọn khách hàng --</option>
+                        <% for (Customer customer : customers) { %>
+                            <option value="<%= customer.getCustomerId() %>" <%= order != null && customer.getCustomerId().equals(order.getCustomerId()) ? "selected" : "" %>>
+                                <%= customer.getCustomerName() %> (<%= customer.getCustomerPhone() %>)
+                            </option>
+                        <% } %>
+                    </select>
+                </form>
+            </div>
+
+            <!-- Thêm khách hàng mới -->
+            <div id="addCustomerForm">
+                <form action="${pageContext.request.contextPath}/order" method="post">
+                    <input type="hidden" name="action" value="addCustomer">
+                    <input type="hidden" name="tableId" value="<%= request.getAttribute("tableId") %>">
+                    <input type="hidden" name="orderId" value="<%= order != null ? order.getOrderId() : "" %>">
+                    <label>Tên khách hàng:</label><br>
+                    <input type="text" name="customerName" required><br><br>
+                    <label>Số điện thoại:</label><br>
+                    <input type="text" name="customerPhone" required><br><br>
+                    <button type="submit" class="button btn-success">Thêm</button>
+                </form>
+            </div>
         </div>
 
         <!-- Nút hành động -->
@@ -147,7 +219,6 @@
                 <button type="submit" class="button btn-success">Hoàn tất đơn hàng</button>
             </form>
             <a href="${pageContext.request.contextPath}/order?action=cancelOrder" class="button btn-danger" style="margin-left: 10px;">Hủy đơn hàng</a>
-            <a href="${pageContext.request.contextPath}/order?action=listTables" class="button btn-secondary" style="margin-left: 10px;">Quay lại</a>
         </div>
     </div>
 </body>
