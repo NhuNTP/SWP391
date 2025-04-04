@@ -30,40 +30,40 @@ public class AccountDAO {
         conn = DBContext.getConnection();
     }
 
-    public Account login(String username, String password) throws ClassNotFoundException, SQLException {
-        String sql = "SELECT UserId, UserEmail, UserPassword, UserName, UserRole, IdentityCard, UserAddress, UserImage, IsDeleted " +
-                     "FROM Account WHERE UserName = ? AND UserPassword = ? AND IsDeleted = 0";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, username);
-            pstmt.setString(2, password);
-            ResultSet rs = pstmt.executeQuery();
+    public Account login(String email, String password) throws ClassNotFoundException, SQLException {  // Thay tham số username thành email
+    String sql = "SELECT UserId, UserEmail, UserPassword, UserName, UserRole, IdentityCard, UserAddress, UserImage, IsDeleted " +
+                 "FROM Account WHERE UserEmail = ? AND UserPassword = ? AND IsDeleted = 0";  // Thay UserName thành UserEmail trong truy vấn
+    try (Connection conn = DBContext.getConnection();
+         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        pstmt.setString(1, email);  // Thay username thành email
+        pstmt.setString(2, password);
+        ResultSet rs = pstmt.executeQuery();
 
-            if (rs.next()) {
-                Account account = new Account();
-                account.setUserId(rs.getString("UserId"));
-                account.setUserEmail(rs.getString("UserEmail"));
-                account.setUserPassword(rs.getString("UserPassword"));
-                account.setUserName(rs.getString("UserName"));
-                account.setUserRole(rs.getString("UserRole"));
-                account.setIdentityCard(rs.getString("IdentityCard"));
-                account.setUserAddress(rs.getString("UserAddress"));
-                account.setUserImage(rs.getString("UserImage"));
-                account.setIsDeleted(rs.getBoolean("IsDeleted"));
-                LOGGER.info("Login successful for user: " + username);
-                return account;
-            } else {
-                LOGGER.info("Login failed for user: " + username + " - Account not found or deleted.");
-                return null;
-            }
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error during login for user: " + username, e);
-            throw e;
-        } catch (ClassNotFoundException e) {
-            LOGGER.log(Level.SEVERE, "Database driver not found", e);
-            throw e;
+        if (rs.next()) {
+            Account account = new Account();
+            account.setUserId(rs.getString("UserId"));
+            account.setUserEmail(rs.getString("UserEmail"));
+            account.setUserPassword(rs.getString("UserPassword"));
+            account.setUserName(rs.getString("UserName"));
+            account.setUserRole(rs.getString("UserRole"));
+            account.setIdentityCard(rs.getString("IdentityCard"));
+            account.setUserAddress(rs.getString("UserAddress"));
+            account.setUserImage(rs.getString("UserImage"));
+            account.setIsDeleted(rs.getBoolean("IsDeleted"));
+            LOGGER.info("Login successful for user: " + email);  // Thay username thành email trong log
+            return account;
+        } else {
+            LOGGER.info("Login failed for user: " + email + " - Account not found or deleted.");  // Thay username thành email trong log
+            return null;
         }
+    } catch (SQLException e) {
+        LOGGER.log(Level.SEVERE, "Error during login for user: " + email, e);  // Thay username thành email trong log
+        throw e;
+    } catch (ClassNotFoundException e) {
+        LOGGER.log(Level.SEVERE, "Database driver not found", e);
+        throw e;
     }
+}
 
     public ResultSet getAllAccount() {
         ResultSet rs = null;
