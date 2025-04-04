@@ -1,120 +1,78 @@
-<%@page import="java.util.ArrayList"%>
-<%@page import="Model.Dish"%>
-<%@page import="DAO.MenuDAO"%>
-<%@page import="java.util.List"%>
 <%@page import="Model.Account"%>
-<%@ page contentType="text/html" pageEncoding="UTF-8"%>
+<%@page import="Model.Account"%>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="Model.Dish, java.util.List" %>
 <%
     if (session == null || session.getAttribute("account") == null) {
         response.sendRedirect(request.getContextPath() + "/LoginPage.jsp");
         return;
     }
+
     Account account = (Account) session.getAttribute("account");
     String UserRole = account.getUserRole();
-
-    List<Dish> dishList = (List<Dish>) request.getAttribute("dishes");
-    String tableId = (String) request.getAttribute("tableId");
+    List<Dish> dishes = (List<Dish>) request.getAttribute("dishes");
 %>
-<!DOCTYPE html>
-<html lang="vi">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chọn món cho bàn <%= tableId %></title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>Chọn món ăn</title>
     <style>
-        body { background-color: #f8f9fa; font-family: 'Roboto', sans-serif; }
-        .dish-table { width: 80%; margin: 20px auto; border-collapse: collapse; }
-        .dish-table th, .dish-table td { border: 1px solid #ddd; padding: 10px; text-align: center; }
-        .dish-table th { background-color: #f2f2f2; }
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }
+        h1 { color: #333; text-align: center; }
+        .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .dish-list { width: 100%; border-collapse: collapse; }
+        .dish-list th, .dish-list td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        .dish-list th { background-color: #4CAF50; color: white; }
+        .button { padding: 8px 15px; border: none; border-radius: 5px; color: white; cursor: pointer; }
+        .button:hover { opacity: 0.9; }
+        .btn-primary { background-color: #2196F3; }
+        .btn-success { background-color: #4CAF50; }
+        .error { color: red; text-align: center; margin-bottom: 10px; }
+        input[type="number"] { width: 60px; padding: 5px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1 class="text-center my-4">Chọn món cho bàn <%= tableId %></h1>
-        <form id="createOrderForm" action="order" method="post">
-            <input type="hidden" name="action" value="createOrder">
-            <input type="hidden" name="tableId" value="<%= tableId %>">
-            <table class="dish-table">
-                <thead>
+        <h1>Chọn món ăn cho bàn <%= request.getAttribute("tableId") %></h1>
+
+        <!-- Thông báo lỗi -->
+        <% if (request.getAttribute("error") != null) { %>
+            <p class="error"><%= request.getAttribute("error") %></p>
+        <% } %>
+
+        <form action="${pageContext.request.contextPath}/order" method="post">
+            <input type="hidden" name="action" value="submitOrder">
+            <input type="hidden" name="tableId" value="<%= request.getAttribute("tableId") %>">
+            <table class="dish-list">
+                <tr>
+                    <th>Tên món</th>
+                    <th>Loại</th>
+                    <th>Giá</th>
+                    <th>Mô tả</th>
+                    <th>Số lượng</th>
+                </tr>
+                <% if (dishes != null && !dishes.isEmpty()) { %>
+                    <% for (Dish dish : dishes) { %>
+                        <tr>
+                            <td><%= dish.getDishName() %></td>
+                            <td><%= dish.getDishType() %></td>
+                            <td><%= dish.getDishPrice() %> VNĐ</td>
+                            <td><%= dish.getDishDescription() %></td>
+                            <td>
+                                <input type="number" name="quantity_<%= dish.getDishId() %>" min="0" value="0">
+                            </td>
+                        </tr>
+                    <% } %>
+                <% } else { %>
                     <tr>
-                        <th>Tên món</th>
-                        <th>Giá</th>
-                        <th>Số lượng</th>
-                        <th>Tổng phụ</th>
+                        <td colspan="5" style="text-align: center;">Không có món ăn nào khả dụng.</td>
                     </tr>
-                </thead>
-                <tbody>
-                    <%
-                        if (dishList != null && !dishList.isEmpty()) {
-                            boolean hasAvailableDishes = false;
-                            for (Dish dish : dishList) {
-                                if ("Available".equals(dish.getDishStatus()) && "Sufficient".equals(dish.getIngredientStatus())) {
-                                    hasAvailableDishes = true;
-                    %>
-                    <tr>
-                        <td><%= dish.getDishName() %></td>
-                        <td>
-                            <input type="hidden" id="price_<%= dish.getDishId() %>" value="<%= dish.getDishPrice() %>">
-                            <%= dish.getDishPrice() %>
-                        </td>
-                        <td>
-                            <button type="button" onclick="decreaseQuantity('<%= dish.getDishId() %>')">-</button>
-                            <input type="number" id="quantity_<%= dish.getDishId() %>" name="quantity_<%= dish.getDishId() %>" value="0" min="0" onchange="updateSubtotal('<%= dish.getDishId() %>')">
-                            <input type="hidden" name="dishId" value="<%= dish.getDishId() %>">
-                            <button type="button" onclick="increaseQuantity('<%= dish.getDishId() %>')">+</button>
-                        </td>
-                        <td><span id="subtotal_<%= dish.getDishId() %>">0.00</span></td>
-                    </tr>
-                    <%
-                                }
-                            }
-                            if (!hasAvailableDishes) {
-                    %>
-                    <tr><td colspan="4">Không có món nào khả dụng.</td></tr>
-                    <%
-                            }
-                        } else {
-                    %>
-                    <tr><td colspan="4">Không có món nào khả dụng.</td></tr>
-                    <%
-                        }
-                    %>
-                </tbody>
+                <% } %>
             </table>
-            <div class="text-center my-3">
-                <button type="button" class="btn btn-primary" onclick="submitOrder()">Xác nhận</button>
-                <a href="order?action=selectTable" class="btn btn-secondary">Quay lại</a>
+            <div style="text-align: center; margin-top: 20px;">
+                <button type="submit" class="button btn-success">Thêm vào đơn hàng</button>
+                <a href="${pageContext.request.contextPath}/order?action=tableOverview&tableId=<%= request.getAttribute("tableId") %>" class="button btn-primary" style="margin-left: 10px;">Quay lại</a>
             </div>
         </form>
     </div>
-
-    <script>
-        function increaseQuantity(dishId) {
-            var input = document.getElementById("quantity_" + dishId);
-            input.value = parseInt(input.value) + 1;
-            updateSubtotal(dishId);
-        }
-
-        function decreaseQuantity(dishId) {
-            var input = document.getElementById("quantity_" + dishId);
-            if (parseInt(input.value) > 0) {
-                input.value = parseInt(input.value) - 1;
-                updateSubtotal(dishId);
-            }
-        }
-
-        function updateSubtotal(dishId) {
-            var quantity = parseInt(document.getElementById("quantity_" + dishId).value);
-            var price = parseFloat(document.getElementById("price_" + dishId).value);
-            var subtotal = quantity * price;
-            document.getElementById("subtotal_" + dishId).innerText = isNaN(subtotal) ? "0.00" : subtotal.toFixed(2);
-        }
-
-        function submitOrder() {
-            $('#createOrderForm').submit();
-        }
-    </script>
 </body>
 </html>

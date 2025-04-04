@@ -639,18 +639,42 @@
             </div>
         </div>
 
+        <!-- Modal Confirm Code -->
+        <div class="modal fade" id="confirmCodeModal" tabindex="-1" aria-labelledby="confirmCodeModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="confirmCodeModalLabel">Enter Confirmation Code</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="confirmCodeForm">
+                            <div class="mb-3">
+                                <label for="confirmationCode" class="form-label">Confirmation Code</label>
+                                <input type="text" class="form-control" id="confirmationCode" name="confirmationCode" placeholder="Enter 6-digit code" maxlength="6" required>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <input type="submit" class="btn btn-primary" value="Confirm">
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
         <!-- Bootstrap 5.3.0 JS -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
 
         <script>
-                                            // Display error message
+// Display error message
                                             function displayError(fieldId, errorMessage) {
                                                 const $field = $('#' + fieldId);
                                                 $field.addClass('is-invalid');
                                                 $field.siblings('.invalid-feedback').text(errorMessage);
                                             }
 
-                                            // Validate create form
+// Validate create form
                                             function validateCreateForm() {
                                                 $('.invalid-feedback').text('');
                                                 $('.is-invalid').removeClass('is-invalid');
@@ -727,11 +751,103 @@
                                                 return isValid;
                                             }
 
-                                            // Validate update form
+// Submit create form
+                                            function submitCreateForm(event) {
+                                                event.preventDefault();
+                                                if (!validateCreateForm())
+                                                    return;
+
+                                                var formData = new FormData($("#createAccountForm")[0]);
+                                                formData.append("action", "submitForm");
+
+                                                $.ajax({
+                                                    url: "CreateAccount",
+                                                    type: "POST",
+                                                    data: formData,
+                                                    contentType: false,
+                                                    processData: false,
+                                                    dataType: "json",
+                                                    success: function (response) {
+                                                        if (response.success) {
+                                                            var createModal = bootstrap.Modal.getInstance(document.getElementById('createEmployeeModal'));
+                                                            createModal.hide();
+                                                            Swal.fire({
+                                                                icon: 'info',
+                                                                title: 'Check Your Email',
+                                                                text: response.message,
+                                                                timer: 3000,
+                                                                showConfirmButton: true
+                                                            }).then(() => {
+                                                                var confirmModal = new bootstrap.Modal(document.getElementById('confirmCodeModal'));
+                                                                confirmModal.show();
+                                                            });
+                                                        } else {
+                                                            if (response.message === "Email not found.") {
+                                                                displayError('UserEmail', 'Email not found.');
+                                                            } else {
+                                                                displayError('UserEmail', response.message || 'Failed to process request.');
+                                                            }
+                                                        }
+                                                    },
+                                                    error: function (xhr, status, error) {
+                                                        try {
+                                                            var errorResponse = JSON.parse(xhr.responseText);
+                                                            displayError('UserEmail', errorResponse.message || 'Error processing request: ' + error);
+                                                        } catch (e) {
+                                                            displayError('UserEmail', 'Error processing request: ' + error);
+                                                        }
+                                                    }
+                                                });
+                                            }
+
+// Submit confirmation code
+                                            function submitConfirmCodeForm(event) {
+                                                event.preventDefault();
+                                                var confirmationCode = $("#confirmationCode").val().trim();
+
+                                                if (!/^\d{6}$/.test(confirmationCode)) {
+                                                    displayError('confirmationCode', 'Please enter a valid 6-digit code.');
+                                                    return;
+                                                }
+
+                                                var formData = new FormData();
+                                                formData.append("action", "confirmCode");
+                                                formData.append("confirmationCode", confirmationCode);
+
+                                                $.ajax({
+                                                    url: "CreateAccount",
+                                                    type: "POST",
+                                                    data: formData,
+                                                    contentType: false,
+                                                    processData: false,
+                                                    dataType: "json",
+                                                    success: function (response) {
+                                                        if (response.success) {
+                                                            var confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmCodeModal'));
+                                                            confirmModal.hide();
+                                                            Swal.fire({
+                                                                icon: 'success',
+                                                                title: 'Success!',
+                                                                text: response.message,
+                                                                timer: 2000,
+                                                                showConfirmButton: false
+                                                            }).then(() => {
+                                                                location.reload();
+                                                            });
+                                                        } else {
+                                                            displayError('confirmationCode', response.message || 'Invalid confirmation code.');
+                                                        }
+                                                    },
+                                                    error: function (xhr, status, error) {
+                                                        displayError('confirmationCode', 'Error confirming code: ' + error);
+                                                    }
+                                                });
+                                            }
+
+// Validate update form
                                             function validateUpdateDetailForm() {
                                                 $('.invalid-feedback').text('');
                                                 $('.is-invalid').removeClass('is-invalid');
-
                                                 let email = $("#DetailUserEmail").val().trim();
                                                 let password = $("#DetailUserPassword").val().trim();
                                                 let name = $("#DetailUserName").val().trim();
@@ -739,7 +855,6 @@
                                                 let idCard = $("#DetailIdentityCard").val().trim();
                                                 let address = $("#DetailUserAddress").val().trim();
                                                 let phone = $("#DetailUserPhone").val().trim();
-
                                                 let isValid = true;
 
                                                 if (!email) {
@@ -798,61 +913,7 @@
                                                 return isValid;
                                             }
 
-                                            // Submit create form
-                                            function submitCreateForm(event) {
-                                                event.preventDefault();
-                                                if (!validateCreateForm())
-                                                    return;
-
-                                                var formData = new FormData($("#createAccountForm")[0]);
-                                                $.ajax({
-                                                    url: "CreateAccount",
-                                                    type: "POST",
-                                                    data: formData,
-                                                    contentType: false,
-                                                    processData: false,
-                                                    dataType: "json",
-                                                    success: function (response) {
-                                                        if (response.success) {
-                                                            var createModal = bootstrap.Modal.getInstance(document.getElementById('createEmployeeModal'));
-                                                            createModal.hide();
-                                                            Swal.fire({
-                                                                icon: 'success',
-                                                                title: 'Success!',
-                                                                text: 'Account created successfully.',
-                                                                timer: 2000,
-                                                                showConfirmButton: false
-                                                            }).then(() => {
-                                                                location.reload();
-                                                            });
-                                                        } else {
-                                                            if (response.errors) {
-                                                                for (let field in response.errors) {
-                                                                    displayError('User' + field.charAt(0).toUpperCase() + field.slice(1), response.errors[field]);
-                                                                }
-                                                            } else {
-                                                                displayError('UserEmail', response.message || 'Failed to create account.');
-                                                            }
-                                                        }
-                                                    },
-                                                    error: function (xhr, status, error) {
-                                                        try {
-                                                            var errorResponse = JSON.parse(xhr.responseText);
-                                                            if (errorResponse.errors) {
-                                                                for (let field in errorResponse.errors) {
-                                                                    displayError('User' + field.charAt(0).toUpperCase() + field.slice(1), errorResponse.errors[field]);
-                                                                }
-                                                            } else {
-                                                                displayError('UserEmail', errorResponse.message || 'Error creating account: ' + error);
-                                                            }
-                                                        } catch (e) {
-                                                            displayError('UserEmail', 'Error creating account: ' + error);
-                                                        }
-                                                    }
-                                                });
-                                            }
-
-                                            // Submit update form
+// Submit update form
                                             function submitUpdateDetailForm(event) {
                                                 event.preventDefault();
                                                 if (!validateUpdateDetailForm())
@@ -906,14 +967,13 @@
                                                 });
                                             }
 
-                                            // Check selected image
+// Check selected image
                                             function checkImageSelected(mode) {
                                                 if (mode === 'create') {
                                                     var imageInput = $("#UserImage")[0];
                                                     var noImageMessage = $("#createNoImageMessage");
                                                     var currentImage = $("#createCurrentImage");
                                                     var fileNameDisplay = $("#createFileNameDisplay");
-
                                                     if (imageInput.files.length === 0) {
                                                         fileNameDisplay.text("No file chosen");
                                                         noImageMessage.show();
@@ -933,10 +993,8 @@
                                                     var noImageMessage = $("#noImageMessage");
                                                     var currentImage = $("#DetailCurrentImage");
                                                     var fileNameDisplay = $("#updateFileNameDisplay");
-
                                                     if (imageInput.files.length === 0) {
                                                         fileNameDisplay.text("No file chosen");
-                                                        // Check if there is an existing image in the currentImage src
                                                         if (!currentImage.attr('src') || currentImage.attr('src') === '') {
                                                             noImageMessage.show();
                                                             currentImage.hide();
@@ -957,27 +1015,31 @@
                                                 }
                                             }
 
-                                            // Enable edit mode
+// Enable edit mode
                                             function enableEditMode() {
                                                 $("#detailModalHeading").text("Update Profile");
                                                 $("#DetailUserEmail, #DetailUserPassword, #DetailUserName, #DetailUserAddress, #DetailUserPhone, #DetailIdentityCard")
                                                         .prop("readonly", false);
                                                 $("#DetailUserRole").prop("disabled", false);
                                                 $("#imageUpdateSection").show();
-
                                                 var modalActions = $("#modalActions");
                                                 modalActions.empty();
                                                 modalActions.append('<input type="submit" class="btn btn-primary" value="Save">');
                                                 modalActions.append('<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>');
-
-                                                $("#updateCustomFileButton").off("click").on("click", function () {
-                                                    $("#DetailUserImage").click();
-                                                });
                                             }
 
                                             $(document).ready(function () {
                                                 var createBtn = $(".add-employee-btn");
                                                 var detailButtons = $(".view-detail-btn");
+
+                                                // Gán sự kiện cho nút "Choose File" bằng event delegation
+                                                $(document).on("click", "#createCustomFileButton", function () {
+                                                    $("#UserImage").click();
+                                                });
+
+                                                $(document).on("click", "#updateCustomFileButton", function () {
+                                                    $("#DetailUserImage").click();
+                                                });
 
                                                 createBtn.on("click", function () {
                                                     $("#createAccountForm")[0].reset();
@@ -985,13 +1047,8 @@
                                                     $("#createCurrentImage").hide().attr('src', '');
                                                     $("#createFileNameDisplay").text("No file chosen");
                                                     checkImageSelected('create');
-                                                    $("#createCustomFileButton").off("click").on("click", function () {
-                                                        $("#UserImage").click();
-                                                    });
-
                                                     $('.invalid-feedback').text('');
                                                     $('.is-invalid').removeClass('is-invalid');
-
                                                     var createModal = new bootstrap.Modal(document.getElementById('createEmployeeModal'));
                                                     createModal.show();
                                                 });
@@ -1006,12 +1063,12 @@
                                                 });
 
                                                 $("#createAccountForm").submit(submitCreateForm);
+                                                $("#confirmCodeForm").submit(submitConfirmCodeForm);
 
                                                 detailButtons.on("click", function (e) {
                                                     e.preventDefault();
                                                     var btn = $(this);
                                                     var isAdmin = btn.data("userrole").toLowerCase() === "admin";
-
                                                     $("#detailModalHeading").text("Account Detail");
                                                     $("#DetailUserIdHidden").val(btn.data("userid"));
                                                     $("#DetailUserRoleHidden").val(btn.data("userrole"));
@@ -1023,8 +1080,6 @@
                                                     $("#DetailIdentityCard").val(btn.data("identitycard")).prop("readonly", true);
                                                     $("#DetailUserAddress").val(btn.data("useraddress")).prop("readonly", true);
                                                     $("#DetailUserPhone").val(btn.data("userphone") || '').prop("readonly", true);
-
-                                                    // Set the image source and handle visibility
                                                     var userImage = btn.data("userimage") || '';
                                                     $("#DetailCurrentImage").attr("src", userImage);
                                                     $("#DetailOldImagePath").val(userImage);
@@ -1037,23 +1092,18 @@
                                                     }
 
                                                     $("#imageUpdateSection").hide();
-
                                                     $('.invalid-feedback').text('');
                                                     $('.is-invalid').removeClass('is-invalid');
-
                                                     var modalActions = $("#modalActions");
                                                     modalActions.empty();
-
                                                     if (!isAdmin) {
                                                         modalActions.append('<button type="button" class="btn btn-warning" id="editButton"><i class="fas fa-edit"></i> Update</button>');
                                                         modalActions.append('<button type="button" class="btn btn-danger btn-delete-account" data-bs-toggle="modal" data-bs-target="#deleteAccountModal" data-account-id="' + btn.data("userid") + '" data-account-name="' + btn.data("username") + '"><i class="fas fa-trash-alt"></i> Delete</button>');
                                                     }
                                                     modalActions.append('<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>');
-
                                                     $("#editButton").off("click").on("click", function () {
                                                         enableEditMode();
                                                     });
-
                                                     var detailModal = new bootstrap.Modal(document.getElementById('viewAccountDetailModal'));
                                                     detailModal.show();
                                                     checkImageSelected('update');
@@ -1070,6 +1120,7 @@
 
                                                 $("#updateAccountDetailForm").submit(submitUpdateDetailForm);
 
+                                                // Xử lý input real-time
                                                 $("#UserEmail").on("input", function () {
                                                     $(this).removeClass('is-invalid');
                                                     $(this).siblings('.invalid-feedback').text('');
@@ -1144,6 +1195,12 @@
                                                     }
                                                 });
 
+                                                $("#confirmationCode").on("input", function () {
+                                                    $(this).removeClass('is-invalid');
+                                                    $(this).siblings('.invalid-feedback').text('');
+                                                });
+
+                                                // Các input real-time cho update form
                                                 $("#DetailUserEmail").on("input", function () {
                                                     $(this).removeClass('is-invalid');
                                                     $(this).siblings('.invalid-feedback').text('');
@@ -1229,10 +1286,8 @@
                                                         const name = $(this).find("td:nth-child(3)").text().toLowerCase();
                                                         const email = $(this).find("td:nth-child(4)").text().toLowerCase();
                                                         const role = $(this).find("td:nth-child(5)").text();
-
                                                         let matchesSearch = id.includes(searchText) || name.includes(searchText) || email.includes(searchText);
                                                         let matchesRole = selectedRole === '' || role === selectedRole;
-
                                                         $(this).css("display", (matchesSearch && matchesRole) ? '' : 'none');
                                                     });
                                                 }

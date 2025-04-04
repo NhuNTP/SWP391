@@ -12,6 +12,12 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Message;
+import jakarta.mail.Session;
+import jakarta.mail.Transport;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
 
 @WebServlet("/ViewAccountList")
 public class ViewAccountController extends HttpServlet {
@@ -19,8 +25,17 @@ public class ViewAccountController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
+            // Debug classloader
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            try {
+                Class<?> messagingExceptionClass = classLoader.loadClass("jakarta.mail.MessagingException");
+                System.out.println("jakarta.mail.MessagingException loaded successfully: " + messagingExceptionClass);
+            } catch (ClassNotFoundException e) {
+                System.out.println("Failed to load jakarta.mail.MessagingException: " + e.getMessage());
+            }
+
             AccountDAO dao = new AccountDAO();
-            List<Account> accountList = dao.getAllAccount(); // Lấy toàn bộ thông tin
+            List<Account> accountList = dao.getAllAccount();
             request.setAttribute("accountList", accountList);
             request.getRequestDispatcher("/ManageAccount/ViewAccountList.jsp").forward(request, response);
         } catch (ClassNotFoundException | SQLException ex) {

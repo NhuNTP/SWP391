@@ -327,7 +327,7 @@
 
             .pagination {
                 display: flex;
-                justify-content: center; /* Căn giữa các nút pagination */
+                justify-content: center;
                 list-style: none;
                 padding: 0;
                 margin-top: 30px;
@@ -419,10 +419,10 @@
                     <div class="content-header">
                         <div class="search-filter">
                             <div class="search-bar">
-                                <input type="text" id="searchInput" placeholder="Search by ID or Seats" onkeyup="filterTables()">
+                                <input type="text" id="searchInput" placeholder="Search by ID or Seats">
                             </div>
                             <div class="filter-bar">
-                                <select id="statusFilter" onchange="filterTables()">
+                                <select id="statusFilter">
                                     <option value="">All Status</option>
                                     <option value="Available">Available</option>
                                     <option value="Occupied">Occupied</option>
@@ -430,7 +430,7 @@
                                 </select>
                             </div>
                             <div class="filter-bar">
-                                <select id="floorFilter" onchange="filterTables()">
+                                <select id="floorFilter">
                                     <option value="all">All Floors</option>
                                     <% if (floorNumbers != null && !floorNumbers.isEmpty()) {
                                             for (Integer floor : floorNumbers) {%>
@@ -488,46 +488,10 @@
                         <% } %>
                     </div>
 
-                    <% if (totalPages > 1) {%>
+                    <!-- Container cho phân trang động -->
                     <nav aria-label="Table navigation">
-                        <ul class="pagination justify-content-center"> <!-- Thêm class justify-content-center -->
-                            <li class="page-item <%= (currentPage <= 1) ? "disabled" : ""%>">
-                                <a class="page-link" href="?page=<%= currentPage - 1%><%= getFilterParams()%>" aria-label="Previous">
-                                    <span aria-hidden="true">«</span>
-                                </a>
-                            </li>
-                            <% int startPage = Math.max(1, currentPage - 2);
-                                int endPage = Math.min(totalPages, currentPage + 2);
-                                if (startPage > 1) {
-                                    out.println("<li class='page-item'><a class='page-link' href='?page=1" + getFilterParams() + "'>1</a></li>");
-                                    if (startPage > 2) {
-                                        out.println("<li class='page-item disabled'><span class='page-link'>...</span></li>");
-                                    }
-                                }
-                                for (int i = startPage; i <= endPage; i++) {%>
-                            <li class="page-item <%= (currentPage == i) ? "active" : ""%>">
-                                <a class="page-link" href="?page=<%= i%><%= getFilterParams()%>"><%= i%></a>
-                            </li>
-                            <% }
-                                if (endPage < totalPages) {
-                                    if (endPage < totalPages - 1) {
-                                        out.println("<li class='page-item disabled'><span class='page-link'>...</span></li>");
-                                    }
-                                    out.println("<li class='page-item'><a class='page-link' href='?page=" + totalPages + getFilterParams() + "'>" + totalPages + "</a></li>");
-                                }%>
-                            <li class="page-item <%= (currentPage >= totalPages) ? "disabled" : ""%>">
-                                <a class="page-link" href="?page=<%= currentPage + 1%><%= getFilterParams()%>" aria-label="Next">
-                                    <span aria-hidden="true">»</span>
-                                </a>
-                            </li>
-                        </ul>
+                        <ul class="pagination justify-content-center"></ul>
                     </nav>
-                    <% }%>
-                    <%!
-                        private String getFilterParams() {
-                            return "";
-                        }
-                    %>
                 </div>
             </div>
         </div>
@@ -624,279 +588,375 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
 
         <script>
-                                     function filterTables() {
-                                         console.log("filterTables được gọi");
-                                         const searchText = $('#searchInput').val().toLowerCase();
-                                         const selectedStatus = $('#statusFilter').val().toLowerCase();
-                                         const selectedFloor = $('#floorFilter').val();
-                                         console.log("Search:", searchText, "Status:", selectedStatus, "Floor:", selectedFloor);
+                                    const allTables = [
+            <%
+            List<Table> allTablesForJs = (List<Table>) request.getAttribute("tableList");
+            if (allTablesForJs != null) {
+                for (int i = 0; i < allTablesForJs.size(); i++) {
+                    Table table = allTablesForJs.get(i);
+                    out.print("{");
+                    out.print("\"tableId\": \"" + table.getTableId() + "\",");
+                    out.print("\"floorNumber\": \"" + table.getFloorNumber() + "\",");
+                    out.print("\"numberOfSeats\": \"" + table.getNumberOfSeats() + "\",");
+                    out.print("\"tableStatus\": \"" + table.getTableStatus() + "\"");
+                    out.print("}");
+                    if (i < allTablesForJs.size() - 1) {
+                        out.print(",");
+                    }
+                }
+            }
+            %>
+                                    ];
 
-                                         $.ajax({
-                                             url: '${pageContext.request.contextPath}/ViewTableList',
-                                             type: 'GET',
-                                             data: {
-                                                 search: searchText,
-                                                 status: selectedStatus,
-                                                 floor: selectedFloor
-                                             },
-                                             dataType: 'json',
-                                             success: function (response) {
-                                                 console.log("Response từ server:", response);
-                                                 const tables = response.tables;
-                                                 const tableGrid = $('#tableGrid');
-                                                 tableGrid.empty();
+                                    $(document).ready(function () {
+                                        // Gắn sự kiện cho search và filter
+                                        $('#searchInput').on('keyup', filterTables);
+                                        $('#statusFilter').on('change', filterTables);
+                                        $('#floorFilter').on('change', filterTables);
 
-                                                 if (tables && tables.length > 0) {
-                                                     tables.forEach(table => {
-                                                         let tableClass = "table-item";
-                                                         let statusText = table.tableStatus;
-                                                         if ("available" === statusText.toLowerCase()) {
-                                                             tableClass += " available";
-                                                         } else if ("occupied" === statusText.toLowerCase()) {
-                                                             tableClass += " occupied";
-                                                         } else if ("reserved" === statusText.toLowerCase()) {
-                                                             tableClass += " reserved";
-                                                         }
+                                        // Xử lý form tạo bàn mới
+                                        $('#createTableForm').submit(function (event) {
+                                            event.preventDefault();
+                                            if (!validateCreateTableForm())
+                                                return;
+                                            var formData = $(this).serialize();
+                                            $.ajax({
+                                                url: 'CreateTable',
+                                                type: 'POST',
+                                                data: formData,
+                                                dataType: 'json',
+                                                success: function (response) {
+                                                    if (response.success) {
+                                                        $('#createTableModal').modal('hide');
+                                                        Swal.fire({
+                                                            icon: 'success',
+                                                            title: 'Success!',
+                                                            text: 'Table created successfully.',
+                                                            timer: 2000,
+                                                            showConfirmButton: false
+                                                        }).then(() => {
+                                                            location.reload();
+                                                        });
+                                                    } else {
+                                                        if (response.errors) {
+                                                            for (let field in response.errors) {
+                                                                displayError('Create' + field.charAt(0).toUpperCase() + field.slice(1), response.errors[field]);
+                                                            }
+                                                        } else {
+                                                            Swal.fire('Error!', response.message || 'Failed to create table.', 'error');
+                                                        }
+                                                    }
+                                                },
+                                                error: function (xhr, status, error) {
+                                                    Swal.fire('Error!', 'An error occurred while creating the table.', 'error');
+                                                }
+                                            });
+                                        });
 
-                                                         const tableHtml = `
-                             <div class="${tableClass}" id="tableItem-${table.tableId}">
-                                 <div class="table-info">
-                                     <div class="table-id">ID: ${table.tableId}</div>
-                                     <div class="table-floor">Floor: ${table.floorNumber}</div>
-                                     <div class="table-seats">Seats: ${table.numberOfSeats}</div>
-                                     <div class="table-status">Status: <span>${statusText}</span></div>
-                                 </div>
-                                 <div class="table-buttons">
-                                     <a href="#" class="btn-edit-table edit-table-btn" data-bs-toggle="modal" data-bs-target="#editTableModal"
-                                        data-tableid="${table.tableId}" data-floornumber="${table.floorNumber}"
-                                        data-numberofseats="${table.numberOfSeats}" data-tablestatus="${table.tableStatus}">
-                                         <i class="fas fa-edit"></i>
-                                     </a>
-                                     <a href="#" class="btn-delete-table" onclick="confirmDelete('${table.tableId}', '${table.tableStatus}')">
-                                         <i class="fas fa-trash-alt"></i>
-                                     </a>
-                                 </div>
-                             </div>
-                         `;
-                                                         tableGrid.append(tableHtml);
-                                                     });
-                                                 } else {
-                                                     tableGrid.append(`
-                         <div class="no-data">
-                             <i class="fas fa-chair"></i>
-                             <span>NO TABLES MATCH CURRENT FILTERS.</span>
-                         </div>
-                     `);
-                                                 }
+                                        // Xử lý form chỉnh sửa bàn
+                                        $('#editTableForm').submit(function (event) {
+                                            event.preventDefault();
+                                            if (!validateEditTableForm())
+                                                return;
+                                            var formData = $(this).serialize();
+                                            $.ajax({
+                                                url: 'UpdateTable',
+                                                type: 'POST',
+                                                data: formData,
+                                                dataType: 'json',
+                                                success: function (response) {
+                                                    if (response.success) {
+                                                        $('#editTableModal').modal('hide');
+                                                        Swal.fire({
+                                                            icon: 'success',
+                                                            title: 'Success!',
+                                                            text: 'Table updated successfully.',
+                                                            timer: 2000,
+                                                            showConfirmButton: false
+                                                        }).then(() => {
+                                                            location.reload();
+                                                        });
+                                                    } else {
+                                                        if (response.errors) {
+                                                            for (let field in response.errors) {
+                                                                displayError('Edit' + field.charAt(0).toUpperCase() + field.slice(1), response.errors[field]);
+                                                            }
+                                                        } else {
+                                                            Swal.fire('Error!', response.message || 'Failed to update table.', 'error');
+                                                        }
+                                                    }
+                                                },
+                                                error: function (xhr, status, error) {
+                                                    Swal.fire('Error!', 'An error occurred while updating the table.', 'error');
+                                                }
+                                            });
+                                        });
 
-                                                 $('nav[aria-label="Table navigation"]').hide();
-                                             },
-                                             error: function (xhr, status, error) {
-                                                 console.log("Lỗi AJAX:", status, error);
-                                                 Swal.fire('Error!', 'Đã xảy ra lỗi khi lọc table: ' + error, 'error');
-                                             }
-                                         });
-                                     }
+                                        // Xử lý nút chỉnh sửa bàn
+                                        $(document).on('click', '.edit-table-btn', function () {
+                                            var tableId = $(this).data('tableid');
+                                            var floorNumber = $(this).data('floornumber');
+                                            var numberOfSeats = $(this).data('numberofseats');
+                                            var tableStatus = $(this).data('tablestatus');
+                                            $('#EditTableIdHidden').val(tableId);
+                                            $('#EditTableId').val(tableId);
+                                            $('#EditFloorNumber').val(floorNumber);
+                                            $('#EditNumberOfSeats').val(numberOfSeats);
+                                            $('#EditTableStatus').val(tableStatus);
+                                            clearErrors('editTableForm');
+                                        });
 
-                                     $(document).ready(function () {
-                                         // Giữ nguyên các hàm khác
-                                         $('#createTableForm').submit(function (event) {
-                                             event.preventDefault();
-                                             if (!validateCreateTableForm())
-                                                 return;
-                                             var formData = $(this).serialize();
-                                             $.ajax({
-                                                 url: 'CreateTable',
-                                                 type: 'POST',
-                                                 data: formData,
-                                                 dataType: 'json',
-                                                 success: function (response) {
-                                                     if (response.success) {
-                                                         $('#createTableModal').modal('hide');
-                                                         Swal.fire({
-                                                             icon: 'success',
-                                                             title: 'Success!',
-                                                             text: 'Table created successfully.',
-                                                             timer: 2000,
-                                                             showConfirmButton: false
-                                                         }).then(() => {
-                                                             location.reload();
-                                                         });
-                                                     } else {
-                                                         if (response.errors) {
-                                                             for (let field in response.errors) {
-                                                                 displayError('Create' + field.charAt(0).toUpperCase() + field.slice(1), response.errors[field]);
-                                                             }
-                                                         } else {
-                                                             Swal.fire('Error!', response.message || 'Failed to create table.', 'error');
-                                                         }
-                                                     }
-                                                 },
-                                                 error: function (xhr, status, error) {
-                                                     Swal.fire('Error!', 'An error occurred while creating the table.', 'error');
-                                                 }
-                                             });
-                                         });
+                                        // Xóa lỗi khi người dùng nhập dữ liệu
+                                        $('#createTableForm input, #createTableForm select').on('input change', function () {
+                                            clearErrors('createTableForm');
+                                        });
 
-                                         $('#editTableForm').submit(function (event) {
-                                             event.preventDefault();
-                                             if (!validateEditTableForm())
-                                                 return;
-                                             var formData = $(this).serialize();
-                                             $.ajax({
-                                                 url: 'UpdateTable',
-                                                 type: 'POST',
-                                                 data: formData,
-                                                 dataType: 'json',
-                                                 success: function (response) {
-                                                     if (response.success) {
-                                                         $('#editTableModal').modal('hide');
-                                                         Swal.fire({
-                                                             icon: 'success',
-                                                             title: 'Success!',
-                                                             text: 'Table updated successfully.',
-                                                             timer: 2000,
-                                                             showConfirmButton: false
-                                                         }).then(() => {
-                                                             location.reload();
-                                                         });
-                                                     } else {
-                                                         if (response.errors) {
-                                                             for (let field in response.errors) {
-                                                                 displayError('Edit' + field.charAt(0).toUpperCase() + field.slice(1), response.errors[field]);
-                                                             }
-                                                         } else {
-                                                             Swal.fire('Error!', response.message || 'Failed to update table.', 'error');
-                                                         }
-                                                     }
-                                                 },
-                                                 error: function (xhr, status, error) {
-                                                     Swal.fire('Error!', 'An error occurred while updating the table.', 'error');
-                                                 }
-                                             });
-                                         });
+                                        $('#editTableForm input, #editTableForm select').on('input change', function () {
+                                            clearErrors('editTableForm');
+                                        });
 
-                                         $('.edit-table-btn').click(function () {
-                                             var tableId = $(this).data('tableid');
-                                             var floorNumber = $(this).data('floornumber');
-                                             var numberOfSeats = $(this).data('numberofseats');
-                                             var tableStatus = $(this).data('tablestatus');
-                                             $('#EditTableIdHidden').val(tableId);
-                                             $('#EditTableId').val(tableId);
-                                             $('#EditFloorNumber').val(floorNumber);
-                                             $('#EditNumberOfSeats').val(numberOfSeats);
-                                             $('#EditTableStatus').val(tableStatus);
-                                             clearErrors('editTableForm');
-                                         });
+                                        // Gọi filterTables ngay khi trang được tải để áp dụng bộ lọc từ URL (nếu có)
+                                        filterTables();
+                                    });
 
-                                         $('#createTableForm input, #createTableForm select').on('input change', function () {
-                                             clearErrors('createTableForm');
-                                         });
+                                    function filterTables() {
+                                        console.log("filterTables được gọi");
+                                        const searchText = $('#searchInput').val().toLowerCase();
+                                        const selectedStatus = $('#statusFilter').val();
+                                        const selectedFloor = $('#floorFilter').val();
+                                        console.log("Search:", searchText, "Status:", selectedStatus, "Floor:", selectedFloor);
 
-                                         $('#editTableForm input, #editTableForm select').on('input change', function () {
-                                             clearErrors('editTableForm');
-                                         });
-                                     });
+                                        // Lọc danh sách bàn
+                                        const filteredTables = allTables.filter(table => {
+                                            const matchesSearch = String(table.tableId).toLowerCase().includes(searchText) ||
+                                                    String(table.numberOfSeats).toLowerCase().includes(searchText);
+                                            const matchesStatus = selectedStatus === '' || table.tableStatus === selectedStatus;
+                                            const matchesFloor = selectedFloor === 'all' || String(table.floorNumber) === selectedFloor;
+                                            return matchesSearch && matchesStatus && matchesFloor;
+                                        });
 
-                                     function displayError(fieldId, errorMessage) {
-                                         const $field = $('#' + fieldId);
-                                         $field.addClass('is-invalid');
-                                         $field.siblings('.invalid-feedback').text(errorMessage);
-                                     }
+                                        // Cập nhật giao diện với danh sách đã lọc
+                                        const pageSize = 20;
+                                        const totalTables = filteredTables.length;
+                                        const totalPages = Math.ceil(totalTables / pageSize);
+                                        let currentPage = 1;
 
-                                     function clearErrors(formId) {
-                                         $('#' + formId + ' .is-invalid').removeClass('is-invalid');
-                                         $('#' + formId + ' .invalid-feedback').text('');
-                                     }
+                                        const pageParam = new URLSearchParams(window.location.search).get("page");
+                                        if (pageParam) {
+                                            currentPage = parseInt(pageParam) || 1;
+                                            if (currentPage < 1)
+                                                currentPage = 1;
+                                            if (currentPage > totalPages)
+                                                currentPage = totalPages;
+                                        }
 
-                                     function validateCreateTableForm() {
-                                         clearErrors('createTableForm');
-                                         let isValid = true;
-                                         const floorNumber = $('#CreateFloorNumber').val().trim();
-                                         const numberOfSeats = $('#CreateNumberOfSeats').val().trim();
-                                         const tableStatus = $('#CreateTableStatus').val();
-                                         if (!floorNumber || isNaN(floorNumber) || parseInt(floorNumber) <= 0) {
-                                             displayError('CreateFloorNumber', 'Please enter a valid positive floor number.');
-                                             isValid = false;
-                                         }
-                                         if (!numberOfSeats || isNaN(numberOfSeats) || parseInt(numberOfSeats) <= 0) {
-                                             displayError('CreateNumberOfSeats', 'Please enter a valid positive number of seats.');
-                                             isValid = false;
-                                         }
-                                         if (!tableStatus) {
-                                             displayError('CreateTableStatus', 'Please select a table status.');
-                                             isValid = false;
-                                         }
-                                         return isValid;
-                                     }
+                                        const startIndex = (currentPage - 1) * pageSize;
+                                        const endIndex = Math.min(startIndex + pageSize, totalTables);
+                                        const paginatedTables = filteredTables.slice(startIndex, endIndex);
 
-                                     function validateEditTableForm() {
-                                         clearErrors('editTableForm');
-                                         let isValid = true;
-                                         const floorNumber = $('#EditFloorNumber').val().trim();
-                                         const numberOfSeats = $('#EditNumberOfSeats').val().trim();
-                                         const tableStatus = $('#EditTableStatus').val();
-                                         if (!floorNumber || isNaN(floorNumber) || parseInt(floorNumber) <= 0) {
-                                             displayError('EditFloorNumber', 'Please enter a valid positive floor number.');
-                                             isValid = false;
-                                         }
-                                         if (!numberOfSeats || isNaN(numberOfSeats) || parseInt(numberOfSeats) <= 0) {
-                                             displayError('EditNumberOfSeats', 'Please enter a valid positive number of seats.');
-                                             isValid = false;
-                                         }
-                                         if (!tableStatus) {
-                                             displayError('EditTableStatus', 'Please select a table status.');
-                                             isValid = false;
-                                         }
-                                         return isValid;
-                                     }
+                                        const tableGrid = $('#tableGrid');
+                                        tableGrid.empty();
 
-                                     function confirmDelete(tableId, tableStatus) {
-                                         Swal.fire({
-                                             title: 'Are you sure?',
-                                             text: `You are about to delete Table ID: ${tableId}. This action cannot be undone!`,
-                                             icon: 'warning',
-                                             showCancelButton: true,
-                                             confirmButtonColor: '#dc3545',
-                                             cancelButtonColor: '#6c757d',
-                                             confirmButtonText: 'Yes, delete it!'
-                                         }).then((result) => {
-                                             if (result.isConfirmed) {
-                                                 if (tableStatus.toLowerCase() === 'reserved') {
-                                                     Swal.fire('Error!', 'The table is reserved and cannot be deleted.', 'error');
-                                                     return;
-                                                 } else if (tableStatus.toLowerCase() === 'occupied') {
-                                                     Swal.fire('Error!', 'The table is occupied and cannot be deleted.', 'error');
-                                                     return;
-                                                 }
+                                        if (paginatedTables.length > 0) {
+                                            paginatedTables.forEach(table => {
+                                                let tableClass = "table-item";
+                                                let statusText = table.tableStatus;
+                                                if ("Available" === statusText) {
+                                                    tableClass += " available";
+                                                } else if ("Occupied" === statusText) {
+                                                    tableClass += " occupied";
+                                                } else if ("Reserved" === statusText) {
+                                                    tableClass += " reserved";
+                                                }
 
-                                                 $.ajax({
-                                                     url: 'DeleteTable',
-                                                     type: 'POST',
-                                                     data: {TableId: tableId},
-                                                     dataType: 'json',
-                                                     success: function (response) {
-                                                         if (response.success) {
-                                                             Swal.fire({
-                                                                 icon: 'success',
-                                                                 title: 'Success!',
-                                                                 text: 'Table deleted successfully.',
-                                                                 timer: 2000,
-                                                                 showConfirmButton: false
-                                                             }).then(() => {
-                                                                 location.reload();
-                                                             });
-                                                         } else {
-                                                             Swal.fire('Error!', response.message || 'Failed to delete table.', 'error');
-                                                         }
-                                                     },
-                                                     error: function (xhr, status, error) {
-                                                         Swal.fire('Error!', 'An error occurred while deleting the table.', 'error');
-                                                     }
-                                                 });
-                                             }
-                                         });
-                                     }
+                                                const tableHtml = '<div class="' + tableClass + '" id="tableItem-' + table.tableId + '">' +
+                                                        '<div class="table-info">' +
+                                                        '<div class="table-id">ID: ' + table.tableId + '</div>' +
+                                                        '<div class="table-floor">Floor: ' + table.floorNumber + '</div>' +
+                                                        '<div class="table-seats">Seats: ' + table.numberOfSeats + '</div>' +
+                                                        '<div class="table-status">Status: <span>' + statusText + '</span></div>' +
+                                                        '</div>' +
+                                                        '<div class="table-buttons">' +
+                                                        '<a href="#" class="btn-edit-table edit-table-btn" data-bs-toggle="modal" data-bs-target="#editTableModal"' +
+                                                        ' data-tableid="' + table.tableId + '" data-floornumber="' + table.floorNumber + '"' +
+                                                        ' data-numberofseats="' + table.numberOfSeats + '" data-tablestatus="' + table.tableStatus + '">' +
+                                                        '<i class="fas fa-edit"></i>' +
+                                                        '</a>' +
+                                                        '<a href="#" class="btn-delete-table" onclick="confirmDelete(\'' + table.tableId + '\', \'' + table.tableStatus + '\')">' +
+                                                        '<i class="fas fa-trash-alt"></i>' +
+                                                        '</a>' +
+                                                        '</div>' +
+                                                        '</div>';
+                                                tableGrid.append(tableHtml);
+                                            });
+                                        } else {
+                                            tableGrid.append(
+                                                    '<div class="no-data">' +
+                                                    '<i class="fas fa-chair"></i>' +
+                                                    '<span>NO TABLES MATCH CURRENT FILTERS OR PAGE.</span>' +
+                                                    '</div>'
+                                                    );
+                                        }
+
+                                        // Cập nhật phân trang
+                                        const pagination = $('nav[aria-label="Table navigation"]');
+                                        pagination.show();
+                                        const paginationUl = pagination.find('ul');
+                                        paginationUl.empty();
+
+                                        if (totalPages > 1) {
+                                            let paginationHtml = '<li class="page-item ' + (currentPage <= 1 ? "disabled" : "") + '">' +
+                                                    '<a class="page-link" href="?page=' + (currentPage - 1) + getFilterParams() + '" aria-label="Previous">' +
+                                                    '<span aria-hidden="true">«</span>' +
+                                                    '</a>' +
+                                                    '</li>';
+                                            const startPage = Math.max(1, currentPage - 2);
+                                            const endPage = Math.min(totalPages, currentPage + 2);
+
+                                            if (startPage > 1) {
+                                                paginationHtml += '<li class="page-item"><a class="page-link" href="?page=1' + getFilterParams() + '">1</a></li>';
+                                                if (startPage > 2) {
+                                                    paginationHtml += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                                                }
+                                            }
+
+                                            for (let i = startPage; i <= endPage; i++) {
+                                                paginationHtml += '<li class="page-item ' + (currentPage === i ? "active" : "") + '">' +
+                                                        '<a class="page-link" href="?page=' + i + getFilterParams() + '">' + i + '</a>' +
+                                                        '</li>';
+                                            }
+
+                                            if (endPage < totalPages) {
+                                                if (endPage < totalPages - 1) {
+                                                    paginationHtml += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                                                }
+                                                paginationHtml += '<li class="page-item"><a class="page-link" href="?page=' + totalPages + getFilterParams() + '">' + totalPages + '</a></li>';
+                                            }
+
+                                            paginationHtml += '<li class="page-item ' + (currentPage >= totalPages ? "disabled" : "") + '">' +
+                                                    '<a class="page-link" href="?page=' + (currentPage + 1) + getFilterParams() + '" aria-label="Next">' +
+                                                    '<span aria-hidden="true">»</span>' +
+                                                    '</a>' +
+                                                    '</li>';
+                                            paginationUl.html(paginationHtml);
+                                        } else {
+                                            pagination.hide();
+                                        }
+                                    }
+
+                                    function getFilterParams() {
+                                        const searchText = $('#searchInput').val();
+                                        const selectedStatus = $('#statusFilter').val();
+                                        const selectedFloor = $('#floorFilter').val();
+                                        let params = '';
+                                        if (searchText)
+                                            params += '&search=' + encodeURIComponent(searchText);
+                                        if (selectedStatus)
+                                            params += '&status=' + encodeURIComponent(selectedStatus);
+                                        if (selectedFloor && selectedFloor !== 'all')
+                                            params += '&floor=' + encodeURIComponent(selectedFloor);
+                                        return params;
+                                    }
+
+                                    function displayError(fieldId, errorMessage) {
+                                        const $field = $('#' + fieldId);
+                                        $field.addClass('is-invalid');
+                                        $field.siblings('.invalid-feedback').text(errorMessage);
+                                    }
+
+                                    function clearErrors(formId) {
+                                        $('#' + formId + ' .is-invalid').removeClass('is-invalid');
+                                        $('#' + formId + ' .invalid-feedback').text('');
+                                    }
+
+                                    function validateCreateTableForm() {
+                                        clearErrors('createTableForm');
+                                        let isValid = true;
+                                        const floorNumber = $('#CreateFloorNumber').val().trim();
+                                        const numberOfSeats = $('#CreateNumberOfSeats').val().trim();
+                                        const tableStatus = $('#CreateTableStatus').val();
+                                        if (!floorNumber || isNaN(floorNumber) || parseInt(floorNumber) <= 0) {
+                                            displayError('CreateFloorNumber', 'Please enter a valid positive floor number.');
+                                            isValid = false;
+                                        }
+                                        if (!numberOfSeats || isNaN(numberOfSeats) || parseInt(numberOfSeats) <= 0) {
+                                            displayError('CreateNumberOfSeats', 'Please enter a valid positive number of seats.');
+                                            isValid = false;
+                                        }
+                                        if (!tableStatus) {
+                                            displayError('CreateTableStatus', 'Please select a table status.');
+                                            isValid = false;
+                                        }
+                                        return isValid;
+                                    }
+
+                                    function validateEditTableForm() {
+                                        clearErrors('editTableForm');
+                                        let isValid = true;
+                                        const floorNumber = $('#EditFloorNumber').val().trim();
+                                        const numberOfSeats = $('#EditNumberOfSeats').val().trim();
+                                        const tableStatus = $('#EditTableStatus').val();
+                                        if (!floorNumber || isNaN(floorNumber) || parseInt(floorNumber) <= 0) {
+                                            displayError('EditFloorNumber', 'Please enter a valid positive floor number.');
+                                            isValid = false;
+                                        }
+                                        if (!numberOfSeats || isNaN(numberOfSeats) || parseInt(numberOfSeats) <= 0) {
+                                            displayError('EditNumberOfSeats', 'Please enter a valid positive number of seats.');
+                                            isValid = false;
+                                        }
+                                        if (!tableStatus) {
+                                            displayError('EditTableStatus', 'Please select a table status.');
+                                            isValid = false;
+                                        }
+                                        return isValid;
+                                    }
+
+                                    function confirmDelete(tableId, tableStatus) {
+                                        Swal.fire({
+                                            title: 'Are you sure?',
+                                            text: 'You are about to delete Table ID: ' + tableId + '. This action cannot be undone!',
+                                            icon: 'warning',
+                                            showCancelButton: true,
+                                            confirmButtonColor: '#dc3545',
+                                            cancelButtonColor: '#6c757d',
+                                            confirmButtonText: 'Yes, delete it!'
+                                        }).then((result) => {
+                                            if (result.isConfirmed) {
+                                                if (tableStatus.toLowerCase() === 'reserved') {
+                                                    Swal.fire('Error!', 'The table is reserved and cannot be deleted.', 'error');
+                                                    return;
+                                                } else if (tableStatus.toLowerCase() === 'occupied') {
+                                                    Swal.fire('Error!', 'The table is occupied and cannot be deleted.', 'error');
+                                                    return;
+                                                }
+
+                                                $.ajax({
+                                                    url: 'DeleteTable',
+                                                    type: 'POST',
+                                                    data: {TableId: tableId},
+                                                    dataType: 'json',
+                                                    success: function (response) {
+                                                        if (response.success) {
+                                                            Swal.fire({
+                                                                icon: 'success',
+                                                                title: 'Success!',
+                                                                text: 'Table deleted successfully.',
+                                                                timer: 2000,
+                                                                showConfirmButton: false
+                                                            }).then(() => {
+                                                                location.reload();
+                                                            });
+                                                        } else {
+                                                            Swal.fire('Error!', response.message || 'Failed to delete table.', 'error');
+                                                        }
+                                                    },
+                                                    error: function (xhr, status, error) {
+                                                        Swal.fire('Error!', 'An error occurred while deleting the table.', 'error');
+                                                    }
+                                                });
+                                            }
+                                        });
+                                    }
         </script>
     </body>
 </html>
