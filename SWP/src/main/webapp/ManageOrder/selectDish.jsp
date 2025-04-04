@@ -1,5 +1,4 @@
 <%@page import="Model.Account"%>
-<%@page import="Model.Account"%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="Model.Dish, java.util.List" %>
 <%
@@ -11,6 +10,10 @@
     Account account = (Account) session.getAttribute("account");
     String UserRole = account.getUserRole();
     List<Dish> dishes = (List<Dish>) request.getAttribute("dishes");
+    String returnTo = (String) request.getAttribute("returnTo");
+    if (returnTo == null) {
+        returnTo = "listTables"; // Mặc định là listTables nếu không có returnTo
+    }
 %>
 <html>
 <head>
@@ -33,12 +36,9 @@
 <body>
     <div class="container">
         <h1>Chọn món ăn cho bàn <%= request.getAttribute("tableId") %></h1>
-
-        <!-- Thông báo lỗi -->
         <% if (request.getAttribute("error") != null) { %>
             <p class="error"><%= request.getAttribute("error") %></p>
         <% } %>
-
         <form action="${pageContext.request.contextPath}/order" method="post">
             <input type="hidden" name="action" value="submitOrder">
             <input type="hidden" name="tableId" value="<%= request.getAttribute("tableId") %>">
@@ -70,7 +70,15 @@
             </table>
             <div style="text-align: center; margin-top: 20px;">
                 <button type="submit" class="button btn-success">Thêm vào đơn hàng</button>
-                <a href="${pageContext.request.contextPath}/order?action=tableOverview&tableId=<%= request.getAttribute("tableId") %>" class="button btn-primary" style="margin-left: 10px;">Quay lại</a>
+                <%
+                    String returnUrl;
+                    if ("tableOverview".equals(returnTo)) {
+                        returnUrl = request.getContextPath() + "/order?action=tableOverview&tableId=" + request.getAttribute("tableId");
+                    } else {
+                        returnUrl = request.getContextPath() + "/order?action=listTables";
+                    }
+                %>
+                <a href="<%= returnUrl %>" class="button btn-primary" style="margin-left: 10px;">Quay lại</a>
             </div>
         </form>
     </div>

@@ -2,6 +2,8 @@ package Controller.ManageTable;
 
 import DAO.TableDAO;
 import Model.Table;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -10,69 +12,100 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @WebServlet("/CreateTable")
 public class CreateTableController extends HttpServlet {
 
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet CreateTableController</title>");
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet CreateTableController at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
-        }
-    }
-
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        request.getRequestDispatcher("ManageTable/CreateTable.jsp").forward(request, response);
-    }
+    private static final Logger LOGGER = Logger.getLogger(CreateTableController.class.getName());
+    private final Gson gson = new Gson();
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        PrintWriter out = response.getWriter();
+        JsonObject jsonResponse = new JsonObject();
 
         try {
-            String TableStatus = request.getParameter("TableStatus");
-            int NumberOfSeats = Integer.parseInt(request.getParameter("NumberOfSeats"));
-            int FloorNumber = Integer.parseInt(request.getParameter("FloorNumber")); // Lấy thông tin FloorNumber
+            // Lấy tham số từ form, khớp với JSP
+            String tableStatus = request.getParameter("tableStatus");
+            int numberOfSeats = 0;
+            int floorNumber = 0;
+            boolean valid = true;
+            Map<String, String> errors = new HashMap<>();
 
-            // Tạo đối tượng Table, không truyền ID
-            Table table = new Table(TableStatus, NumberOfSeats, FloorNumber);
+            // Debug để kiểm tra giá trị nhận được
+            LOGGER.log(Level.INFO, "Received tableStatus: {0}", tableStatus);
+            LOGGER.log(Level.INFO, "Received numberOfSeats: {0}", request.getParameter("numberOfSeats"));
+            LOGGER.log(Level.INFO, "Received floorNumber: {0}", request.getParameter("floorNumber"));
 
+            try {
+                numberOfSeats = Integer.parseInt(request.getParameter("numberOfSeats"));
+                if (numberOfSeats <= 0) {
+                    errors.put("numberOfSeats", "Number of seats must be positive.");
+                    valid = false;
+                }
+            } catch (NumberFormatException e) {
+                errors.put("numberOfSeats", "Invalid number format for seats.");
+                valid = false;
+            }
+            try {
+                floorNumber = Integer.parseInt(request.getParameter("floorNumber"));
+                if (floorNumber <= 0) {
+                    errors.put("floorNumber", "Floor number must be positive.");
+                    valid = false;
+                }
+            } catch (NumberFormatException e) {
+                errors.put("floorNumber", "Invalid number format for floor.");
+                valid = false;
+            }
+            if (tableStatus == null || tableStatus.trim().isEmpty() || 
+                !("Available".equals(tableStatus) || "Reserved".equals(tableStatus) || "Occupied".equals(tableStatus))) {
+                errors.put("tableStatus", "Please select a valid status (Available, Reserved, Occupied).");
+                valid = false;
+            }
+
+            if (!valid) {
+                jsonResponse.addProperty("success", false);
+                JsonObject errorsJson = new JsonObject();
+                errors.forEach(errorsJson::addProperty);
+                jsonResponse.add("errors", errorsJson);
+                out.print(gson.toJson(jsonResponse));
+                out.flush();
+                return;
+            }
+
+            // Tạo đối tượng Table với trạng thái chính xác
+            Table table = new Table(tableStatus, numberOfSeats, floorNumber);
             TableDAO tableDAO = new TableDAO();
-            int count = tableDAO.createTable(table); // Gọi createTable() từ DAO
+            int count = tableDAO.createTable(table);
 
             if (count > 0) {
-                response.sendRedirect("ViewTableList"); // Chuyển hướng đến trang danh sách (thành công)
+                jsonResponse.addProperty("success", true);
+                jsonResponse.addProperty("message", "Table created successfully with status: " + tableStatus);
             } else {
-                request.getRequestDispatcher("ManageTable/CreateTable.jsp").forward(request, response); // Quay lại trang tạo
+                jsonResponse.addProperty("success", false);
+                jsonResponse.addProperty("message", "Failed to create table in database.");
             }
         } catch (NumberFormatException e) {
-            // Xử lý lỗi nếu NumberOfSeats hoặc FloorNumber không phải là số
-            request.setAttribute("errorMessage", "Invalid input for Number of Seats or Floor Number.");
-            request.getRequestDispatcher("ManageTable/CreateTable.jsp").forward(request, response);
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "Invalid number input.");
         } catch (ClassNotFoundException | SQLException ex) {
-            // Xử lý các exception khác (ClassNotFoundException, SQLException)
-            Logger.getLogger(CreateTableController.class.getName()).log(Level.SEVERE, null, ex);
-            request.setAttribute("errorMessage", "An error occurred: " + ex.getMessage()); // Thông báo lỗi chi tiết hơn
-            request.getRequestDispatcher("ManageTable/CreateTable.jsp").forward(request, response);
+            LOGGER.log(Level.SEVERE, "Database error", ex);
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "Database error occurred: " + ex.getMessage());
+        } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, "Unexpected error", ex);
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "An unexpected server error occurred.");
         }
-    }
 
-    @Override
-    public String getServletInfo() {
-        return "Short description";
+        out.print(gson.toJson(jsonResponse));
+        out.flush();
     }
 }
