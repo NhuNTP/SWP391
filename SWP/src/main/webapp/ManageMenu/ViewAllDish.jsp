@@ -110,7 +110,7 @@
             cursor: not-allowed;
         }
         .pagination button.active {
-            background: #454d55;
+            background: #4CAF50;
             color: white;
             border-color: #4CAF50;
         }
@@ -121,7 +121,7 @@
             margin-bottom: 15px;
         }
         .controls-container .btn {
-            margin: 0;  
+            margin: 0;
         }
         .controls-container form {
             flex: 1;
@@ -168,7 +168,6 @@
             border-color: #138496;
             color: white;
         }
-       
     </style>
 </head>
 <body>
@@ -179,6 +178,7 @@
                 <li class="nav-item"><a href="${pageContext.request.contextPath}/dashboard" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
                 <li class="nav-item"><a href="${pageContext.request.contextPath}/view-revenue" class="nav-link"><i class="fas fa-chart-line me-2"></i>View Revenue</a></li>
                 <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-list-alt me-2"></i>Menu Management</a></li>
+                
                 <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewAccountList" class="nav-link"><i class="fas fa-users me-2"></i>Employee Management</a></li>
                 <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewTableList" class="nav-link"><i class="fas fa-building me-2"></i>Table Management</a></li>
                 <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewOrderList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Order Management</a></li>
