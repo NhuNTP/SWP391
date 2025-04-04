@@ -333,6 +333,9 @@
                                     <option value="unavailable">Unavailable</option>
                                 </select>
                                 <input type="text" id="ingredientSearch" placeholder="Search ingredients...">
+                                  <div class="header-buttons">
+                                    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#addInventoryModal"><i class="fas fa-plus"></i>Add New</button>
+                                </div>
                             </div>
                             <div class="ingredient-list" id="ingredientList">
                                 <%
@@ -371,7 +374,79 @@
             </form>
         </div>
     </div>
+      <!-- Add Inventory Modal -->
+        <div class="modal fade" id="addInventoryModal" tabindex="-1" aria-labelledby="addInventoryModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addInventoryModalLabel">Add New Inventory Item</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="addInventoryForm">
 
+                            <div class="mb-3 row">
+                                <label for="itemName" class="col-sm-4 col-form-label">Name:</label>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" id="itemName" name="itemName" required>
+                                </div>
+                            </div>
+                            <div class="mb-3 row">
+                                <label for="itemType" class="col-sm-4 col-form-label">Type:</label>
+                                <div class="col-sm-8">
+                                    <select class="form-control" id="itemType" name="itemType" required >
+                                        <option value="">Select type...</option>
+                                        <option value="food">Food</option>
+                                        <option value="drink">Drink</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3 row">
+                                <label for="itemPrice" class="col-sm-4 col-form-label">Price:</label>
+                                <div class="col-sm-8">
+                                    <input type="number" class="form-control" id="itemPrice" name="itemPrice" required min="0" step="0.01">
+                                    <small class="text-muted">Enter a non-negative number.</small>
+                                </div>
+                            </div>
+                            <div class="mb-3 row">
+                                <label for="itemQuantity" class="col-sm-4 col-form-label">Quantity:</label>
+                                <div class="col-sm-8">
+                                    <input type="number" class="form-control" id="itemQuantity" name="itemQuantity" required min="0">
+                                    <small class="text-muted">Enter a non-negative integer.</small>
+                                </div>
+                            </div>
+                            <div class="mb-3 row">
+                                <label for="itemUnit" class="col-sm-4 col-form-label">Unit:</label>
+                                <div class="col-sm-8">
+                                    <select class="form-control" id="itemUnit" name="itemUnit" required>
+                                        <option value="">Select unit...</option> <!-- Tùy chọn mặc định -->
+                                        <option value="piece">Piece</option>
+                                        <option value="kg">Kg</option>
+                                        <option value="gram">Gram</option>
+                                        <option value="liter">Liter</option>
+                                        <option value="ml">ml</option>
+                                        <option value="box">Box</option>
+                                        <option value="pack">Pack</option>
+                                        <option value="bottle">Bottle</option>
+                                        <option value="set">Set</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3 row">
+                                <label for="itemDescription" class="col-sm-4 col-form-label">Description:</label>
+                                <div class="col-sm-8">
+                                    <textarea class="form-control" id="itemDescription" name="itemDescription" rows="2"></textarea>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="btnAddInventory">Add Item</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -553,6 +628,102 @@
                 showPopupAndRedirect("<%= request.getAttribute("message") %>");
             <% } %>
         };
+                    $(document).ready(function () {
+                // **Xử lý Thêm Inventory Item**
+                $('#btnAddInventory').click(function () {
+                    // Xóa các thông báo lỗi cũ (nếu có)
+                    $('.error-message').remove();
+                    $('.is-invalid').removeClass('is-invalid');
+
+                    var itemNameInput = $('#itemName');
+                    var itemTypeInput = $('#itemType');
+                    var itemPriceInput = $('#itemPrice');
+                    var itemQuantityInput = $('#itemQuantity');
+                    var itemUnitInput = $('#itemUnit');
+                    var itemDescriptionInput = $('#itemDescription');
+
+
+                    var itemName = itemNameInput.val().trim(); // trim() để loại bỏ khoảng trắng đầu cuối
+                    var itemType = itemTypeInput.val();
+                    var itemPrice = itemPriceInput.val();
+                    var itemQuantity = itemQuantityInput.val();
+                    var itemUnit = itemUnitInput.val();
+                    var itemDescription = itemDescriptionInput.val();
+
+                    var isValid = true; // Biến cờ để theo dõi trạng thái hợp lệ của form
+
+                    // Kiểm tra trường Name
+                    if (itemName === '') {
+                        isValid = false;
+                        displayError('itemName', 'Please input this field.');
+                    }
+
+                    // Kiểm tra trường Type
+                    if (itemType === '') {
+                        isValid = false;
+                        displayError('itemType', 'Please select item type.');
+                    }
+
+                    // Kiểm tra trường Price
+                    if (itemPrice === '' || isNaN(itemPrice) || parseFloat(itemPrice) <= 0) {
+                        isValid = false;
+                        displayError('itemPrice', 'Price must be a valid non-negative number and greater than 0.');
+                    }
+
+                    // Kiểm tra trường Quantity
+                    if (itemQuantity === '' || isNaN(itemQuantity) || parseFloat(itemQuantity) <= 0) {
+                        isValid = false;
+                        displayError('itemQuantity', 'Quantity must be a non-negative number.');
+                    }
+                    // Kiểm tra trường Unit
+                    if (itemUnit === '') {
+                        isValid = false;
+                        displayError('itemUnit', 'Please select item unit.');
+                    }
+
+                    if (isValid) {
+                        // Nếu tất cả các trường hợp lệ, gửi AJAX request
+                        $.ajax({
+                            url: 'AddInventoryItemController',
+                            type: 'POST',
+                            data: {
+                                itemName: itemName,
+                                itemType: itemType,
+                                itemPrice: itemPrice,
+                                itemQuantity: itemQuantity,
+                                itemUnit: itemUnit,
+                                itemDescription: itemDescription
+                            },
+                            success: function () {
+                                var addInventoryModal = bootstrap.Modal.getInstance(document.getElementById('addInventoryModal'));
+                                addInventoryModal.hide();
+                                reloadViewInventory(); // Giả sử hàm này reload lại bảng dữ liệu
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success!',
+                                    text: 'Inventory item added successfully.',
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
+                                $('#addInventoryForm')[0].reset();
+                            },
+                            error: function (xhr, status, error) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error!',
+                                    text: 'Error adding inventory item: ' + error
+                                });
+                            }
+                        });
+                    }
+                });
+
+                // Hàm hiển thị thông báo lỗi bên dưới trường nhập liệu
+                function displayError(fieldId, message) {
+                    $('#' + fieldId).addClass('is-invalid'); // Thêm class 'is-invalid' để hiển thị lỗi CSS nếu cần
+                    $('#' + fieldId).after('<div class="error-message" style="color: red;">' + message + '</div>'); // Thêm thông báo lỗi
+                }
+            });
     </script>
 </body>
 </html>
