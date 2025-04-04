@@ -2,6 +2,8 @@ package Controller.ManageTable;
 
 import DAO.TableDAO;
 import Model.Table;
+import com.google.gson.Gson; // Import Gson
+import com.google.gson.JsonObject; // Import JsonObject
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -10,93 +12,115 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.sql.SQLException;
+import java.util.HashMap; // For errors map
+import java.util.Map; // For errors map
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @WebServlet("/UpdateTable")
 public class UpdateTableController extends HttpServlet {
 
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet UpdateTableController</title>");
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet UpdateTableController at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
-        }
-    }
-
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        String tableId = request.getParameter("id"); // Lấy ID dưới dạng String
-
-        if (tableId == null || tableId.isEmpty()) {
-            response.sendRedirect("ViewTableList"); // Chuyển hướng nếu không có ID
-            return;
-        }
-
-        try {
-            TableDAO dao = new TableDAO();
-            Table table = dao.getTableById(tableId); // Sử dụng getTableById(String)
-
-            if (table == null) {
-                response.sendRedirect("ViewTableList"); // Chuyển hướng nếu không tìm thấy bàn
-                return;
-            }
-
-            request.setAttribute("table", table);
-            request.getRequestDispatcher("ManageTable/UpdateTable.jsp").forward(request, response);
-
-        } catch (Exception e) {
-            e.printStackTrace(); // In ra lỗi (cho mục đích debugging)
-            response.sendRedirect("ViewTableList"); // Chuyển hướng nếu có lỗi
-        }
-    }
+    private static final Logger LOGGER = Logger.getLogger(UpdateTableController.class.getName());
+    private final Gson gson = new Gson(); // Create a Gson instance
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
+        // --- Set up for JSON response ---
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        PrintWriter out = response.getWriter();
+        Gson gson = new Gson(); // Make sure Gson library is added
+        JsonObject jsonResponse = new JsonObject();
+
         try {
-            String TableId = request.getParameter("TableIdHidden"); // Lấy ID dưới dạng String, từ hidden field
-            String TableStatus = request.getParameter("TableStatus");
-            int NumberOfSeats = Integer.parseInt(request.getParameter("NumberOfSeats"));
-            int FloorNumber = Integer.parseInt(request.getParameter("FloorNumber")); // Lấy FloorNumber
+            String tableId = request.getParameter("TableIdHidden");
+            String tableStatus = request.getParameter("TableStatus");
 
-            // Tạo đối tượng Table
-            Table table = new Table(TableId, TableStatus, NumberOfSeats, FloorNumber); // Không cần truyền IsDeleted
+            // Basic Server-Side Validation (example)
+            int numberOfSeats = 0;
+            int floorNumber = 0;
+            boolean valid = true;
+            Map<String, String> errors = new HashMap<>();
 
+            if (tableId == null || tableId.trim().isEmpty()) {
+                // This indicates a problem with the form/JS sending data
+                jsonResponse.addProperty("success", false);
+                jsonResponse.addProperty("message", "Table ID is missing. Cannot update.");
+                out.print(gson.toJson(jsonResponse));
+                out.flush();
+                return;
+            }
+
+            try {
+                numberOfSeats = Integer.parseInt(request.getParameter("NumberOfSeats"));
+                if (numberOfSeats <= 0) {
+                    errors.put("NumberOfSeats", "Number of seats must be positive.");
+                    valid = false;
+                }
+            } catch (NumberFormatException e) {
+                errors.put("NumberOfSeats", "Invalid number format for seats.");
+                valid = false;
+            }
+            try {
+                floorNumber = Integer.parseInt(request.getParameter("FloorNumber"));
+                if (floorNumber <= 0) {
+                    errors.put("FloorNumber", "Floor number must be positive.");
+                    valid = false;
+                }
+            } catch (NumberFormatException e) {
+                errors.put("FloorNumber", "Invalid number format for floor.");
+                valid = false;
+            }
+            if (tableStatus == null || tableStatus.trim().isEmpty()) {
+                errors.put("TableStatus", "Status cannot be empty.");
+                valid = false;
+            }
+
+            // If validation fails, return error JSON
+            if (!valid) {
+                jsonResponse.addProperty("success", false);
+                JsonObject errorsJson = new JsonObject();
+                errors.forEach(errorsJson::addProperty);
+                jsonResponse.add("errors", errorsJson);
+                out.print(gson.toJson(jsonResponse));
+                out.flush();
+                return; // Stop processing
+            }
+
+            // Proceed if valid
+            Table table = new Table(tableId, tableStatus, numberOfSeats, floorNumber);
             TableDAO dao = new TableDAO();
-            int count = dao.updateTable(TableId, table); // Truyền ID dạng String
+            int count = dao.updateTable(tableId, table); // Ensure DAO method is correct
 
             if (count > 0) {
-                response.sendRedirect("ViewTableList"); // Chuyển hướng nếu cập nhật thành công
+                // --- Send SUCCESS JSON response ---
+                jsonResponse.addProperty("success", true);
+                jsonResponse.addProperty("message", "Table updated successfully!");
             } else {
-                request.setAttribute("errorMessage", "Update table failed!");
-                request.setAttribute("table", table); // Giữ lại thông tin cũ để hiển thị lại trên form
-                request.getRequestDispatcher("ManageTable/UpdateTable.jsp").forward(request, response);
+                // --- Send FAILURE JSON response (e.g., ID not found) ---
+                jsonResponse.addProperty("success", false);
+                jsonResponse.addProperty("message", "Update failed. Table not found or no changes detected.");
             }
-        } catch (NumberFormatException e) {
-            // Xử lý lỗi nếu NumberOfSeats hoặc FloorNumber không phải là số
-            request.setAttribute("errorMessage", "Invalid input for Number of Seats or Floor Number.");
-            request.getRequestDispatcher("ManageTable/UpdateTable.jsp").forward(request, response);
+        } catch (NumberFormatException e) { // Catch specifically for parsing errors if not handled above
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "Invalid number input.");
         } catch (ClassNotFoundException | SQLException ex) {
-            // Xử lý các exception khác
             Logger.getLogger(UpdateTableController.class.getName()).log(Level.SEVERE, null, ex);
-            request.setAttribute("errorMessage", "An error occurred: " + ex.getMessage());
-            request.getRequestDispatcher("ManageTable/UpdateTable.jsp").forward(request, response);
+            // --- Send ERROR JSON response ---
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "Database error occurred: " + ex.getMessage());
+        } catch (Exception ex) { // Catch any other unexpected errors
+            Logger.getLogger(UpdateTableController.class.getName()).log(Level.SEVERE, "Unexpected error", ex);
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "An unexpected server error occurred.");
         }
+
+        // --- Write the JSON response ---
+        out.print(gson.toJson(jsonResponse));
+        out.flush();
+
     }
 
-    @Override
-    public String getServletInfo() {
-        return "Short description";
-    }
 }

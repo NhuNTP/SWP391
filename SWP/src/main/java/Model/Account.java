@@ -4,6 +4,8 @@
  */
 package Model;
 
+import java.sql.Timestamp;
+
 /**
  *
  * @author ADMIN
@@ -17,25 +19,31 @@ public class Account {
     private String UserRole;
     private String IdentityCard;
     private String UserAddress;
+    private String UserPhone;
     private String UserImage;
+    private String confirmationToken;
     private boolean IsDeleted;
+    private Timestamp CodeExpiration; // Thêm thuộc tính CodeExpiration
 
     // Constructors
     public Account() {
     }
 
-    public Account(String UserEmail, String UserPassword, String UserName, String UserRole, String IdentityCard, String UserAddress, String UserImage) {
+    public Account(String UserEmail, String UserPassword, String UserName, String UserRole, 
+                   String IdentityCard, String UserAddress, String UserPhone, String UserImage) {
         this.UserEmail = UserEmail;
         this.UserPassword = UserPassword;
         this.UserName = UserName;
         this.UserRole = UserRole;
         this.IdentityCard = IdentityCard;
         this.UserAddress = UserAddress;
+        this.UserPhone = UserPhone;
         this.UserImage = UserImage;
     }
 
     public Account(String UserId, String UserEmail, String UserPassword, String UserName,
-            String UserRole, String IdentityCard, String UserAddress, String UserImage, boolean IsDeleted) {
+                   String UserRole, String IdentityCard, String UserAddress, String UserPhone, 
+                   String UserImage, boolean IsDeleted) {
         this.UserId = UserId;
         this.UserEmail = UserEmail;
         this.UserPassword = UserPassword;
@@ -43,11 +51,14 @@ public class Account {
         this.UserRole = UserRole;
         this.IdentityCard = IdentityCard;
         this.UserAddress = UserAddress;
+        this.UserPhone = UserPhone;
         this.UserImage = UserImage;
         this.IsDeleted = IsDeleted;
     }
 
-    public Account(String UserId, String UserEmail, String UserPassword, String UserName, String UserRole, String IdentityCard, String UserAddress, String UserImage) {
+    public Account(String UserId, String UserEmail, String UserPassword, String UserName, 
+                   String UserRole, String IdentityCard, String UserAddress, String UserPhone, 
+                   String UserImage) {
         this.UserId = UserId;
         this.UserEmail = UserEmail;
         this.UserPassword = UserPassword;
@@ -55,21 +66,42 @@ public class Account {
         this.UserRole = UserRole;
         this.IdentityCard = IdentityCard;
         this.UserAddress = UserAddress;
+        this.UserPhone = UserPhone;
         this.UserImage = UserImage;
     }
 
     public Account(String UserEmail, String UserPassword, String UserName,
-            String UserRole, String IdentityCard, String UserAddress, String UserImage, boolean IsDeleted) {
+                   String UserRole, String IdentityCard, String UserAddress, String UserPhone, 
+                   String UserImage, boolean IsDeleted) {
         this.UserEmail = UserEmail;
         this.UserPassword = UserPassword;
         this.UserName = UserName;
         this.UserRole = UserRole;
         this.IdentityCard = IdentityCard;
         this.UserAddress = UserAddress;
+        this.UserPhone = UserPhone;
         this.UserImage = UserImage;
         this.IsDeleted = IsDeleted;
     }
 
+    // Thêm constructor mới bao gồm CodeExpiration
+    public Account(String UserId, String UserEmail, String UserPassword, String UserName,
+                   String UserRole, String IdentityCard, String UserAddress, String UserPhone, 
+                   String UserImage, boolean IsDeleted, Timestamp CodeExpiration) {
+        this.UserId = UserId;
+        this.UserEmail = UserEmail;
+        this.UserPassword = UserPassword;
+        this.UserName = UserName;
+        this.UserRole = UserRole;
+        this.IdentityCard = IdentityCard;
+        this.UserAddress = UserAddress;
+        this.UserPhone = UserPhone;
+        this.UserImage = UserImage;
+        this.IsDeleted = IsDeleted;
+        this.CodeExpiration = CodeExpiration;
+    }
+
+    // Getters and Setters
     public String getUserId() {
         return UserId;
     }
@@ -141,5 +173,29 @@ public class Account {
     public void setIsDeleted(boolean IsDeleted) {
         this.IsDeleted = IsDeleted;
     }
-    // Bỏ phương thức getAccountId() không liên quan.
+
+    public String getUserPhone() {
+        return UserPhone;
+    }
+
+    public void setUserPhone(String UserPhone) {
+        this.UserPhone = UserPhone;
+    }
+
+    public String getConfirmationToken() {
+        return confirmationToken;
+    }
+
+    public void setConfirmationToken(String confirmationToken) {
+        this.confirmationToken = confirmationToken;
+    }
+
+    // Getter và Setter cho CodeExpiration
+    public Timestamp getCodeExpiration() {
+        return CodeExpiration;
+    }
+
+    public void setCodeExpiration(Timestamp CodeExpiration) {
+        this.CodeExpiration = CodeExpiration;
+    }
 }

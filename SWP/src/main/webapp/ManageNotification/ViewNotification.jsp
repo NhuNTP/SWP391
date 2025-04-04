@@ -2,6 +2,12 @@
 <%@ page import="Model.Account" %>
 <%@ page import="java.util.List" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%!
+    // Declare canDelete as a page-level variable
+    private boolean canDelete(String userRole) {
+        return "Admin".equals(userRole) || "Manager".equals(userRole);
+    }
+%>
 <%
     if (session == null || session.getAttribute("account") == null) {
         response.sendRedirect(request.getContextPath() + "/LoginPage.jsp");
@@ -52,6 +58,11 @@
                 margin-bottom: 10px;
                 padding: 10px;
             }
+
+            .notification-checkbox, #selectAll, #deleteSelectedBtn {
+                display: none;
+            }
+            
         </style>
     </head>
     <body>
@@ -90,29 +101,99 @@
                 <% session.removeAttribute("errorMessage"); %>
                 <% } %>
 
-                <ul class="notification-list">
-                    <% List<Notification> notifications = (List<Notification>) request.getAttribute("notifications");
-                if (notifications != null && !notifications.isEmpty()) {
-                    for (Notification notification : notifications) {%>
-                    <li class="notification-item">
-                        <p><strong><%= notification.getNotificationContent()%></strong></p>
-                        <p><small>Created at: <%= notification.getNotificationCreateAt()%></small></p>
-                        <% if (notification.getUserId() != null && notification.getUserName() != null) {%>
-                        <p><small>For: <%= notification.getUserName()%> (<%= notification.getUserId()%>)</small></p>
-                        <% } else if (notification.getUserRole() != null) {%>
-                        <p><small>For Role: <%= notification.getUserRole()%></small></p>
-                        <% } else { %>
-                        <p><small>For: All Users</small></p>
+                <% if (canDelete(UserRole)) { %>
+                <form action="${pageContext.request.contextPath}/DeleteNotification" method="post" id="deleteForm">
+                    <button type="button" class="btn btn-danger btn-sm mt-2" id="enableDeleteBtn">
+                        <i class="fas fa-trash me-1"></i> Enable Delete
+                    </button>
+                    <div class="select-all-container" style="display: none;" id="selectControls">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="selectAll">
+                            <label class="form-check-label" for="selectAll">Select All</label>
+                        </div>
+                        <button type="submit" class="btn btn-danger btn-sm mt-2" id="deleteSelectedBtn"
+                                onclick="return confirm('Are you sure you want to delete the selected notifications?')">
+                            <i class="fas fa-trash me-1"></i> Delete Selected
+                        </button>
+                    </div>
+                    <% } %>
+
+                    <ul class="notification-list">
+                        <%
+                            List<Notification> notifications = (List<Notification>) request.getAttribute("notifications");
+                            if (notifications != null && !notifications.isEmpty()) {
+                                for (Notification notification : notifications) {
+                        %>
+                        <li class="notification-item">
+                            <div class="form-check" style="display: none;">
+                                <input type="checkbox" class="form-check-input notification-checkbox"
+                                       name="notificationIds" value="<%= notification.getNotificationId()%>">
+                            </div>
+                            <div class="notification-content">
+                                <p><strong><%= notification.getNotificationContent()%></strong></p>
+                                <p><small>Created at: <%= notification.getNotificationCreateAt()%></small></p>
+                                <% if (notification.getUserId() != null && notification.getUserName() != null) {%>
+                                <p><small>For: <%= notification.getUserName()%> (<%= notification.getUserId()%>)</small></p>
+                                <% } else if (notification.getUserRole() != null) {%>
+                                <p><small>For Role: <%= notification.getUserRole()%></small></p>
+                                <% } else { %>
+                                <p><small>For: All Users</small></p>
+                                <% } %>
+                            </div>
+                        </li>
+                        <%
+                            } // End for loop
+                        } else {
+                        %>
+                        <p>No notifications available.</p>
                         <% } %>
-                    </li>
-                    <% }
-            } else { %>
-                    <p>No notifications available.</p>
-                    <% }%>
-                </ul>
+                    </ul>
+                    <% if (canDelete(UserRole)) { %>
+                </form>
+                <% }%>
             </div>
         </div>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+                                    $(document).ready(function () {
+
+                                        // Ẩn/hiện các checkbox và các nút chức năng
+                                        $('#enableDeleteBtn').click(function () {
+                                            $('.notification-checkbox').show();
+                                            $('#selectAll').show();
+                                            $('#deleteSelectedBtn').show();
+                                            $(this).hide(); // Ẩn nút Enable Delete
+                                            $('.form-check').show();
+                                            $('#selectControls').show();
+                                        });
+
+                                        // Handle Select All checkbox
+                                        $('#selectAll').click(function () {
+                                            $('.notification-checkbox').prop('checked', this.checked);
+                                        });
+
+                                        // Handle individual checkbox changes
+                                        $('#selectAll').change(function () { // Sử dụng #selectAll thay vì .notification-checkbox
+                                            var allChecked = true;
+                                            $('.notification-checkbox').each(function () {
+                                                if (!this.checked) {
+                                                    allChecked = false;
+                                                    return false; // Exit the loop early if one is unchecked
+                                                }
+                                            });
+                                            $('#selectAll').prop('checked', allChecked);
+                                        });
+
+
+                                        // Prevent form submission if no checkboxes are selected
+                                        $('#deleteForm').submit(function (e) {
+                                            if ($('.notification-checkbox:checked').length === 0) {
+                                                alert('Please select at least one notification to delete.');
+                                                e.preventDefault();
+                                            }
+                                        });
+                                    });
+        </script>
     </body>
 </html>

@@ -13,17 +13,18 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DBContext {
+
     private static final String URL = "jdbc:sqlserver://localhost:1433;databaseName=db1;encrypt=true;trustServerCertificate=true";
     private static final String USER = "sa";
     private static final String PASSWORD = "123456";
 
     public static Connection getConnection() throws SQLException, ClassNotFoundException {
         try {
-    Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-} catch (ClassNotFoundException e) {
-    System.err.println("Lỗi: Không tìm thấy driver SQL Server!");
-    e.printStackTrace();
-}
+            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+        } catch (ClassNotFoundException e) {
+            System.err.println("Lỗi: Không tìm thấy driver SQL Server!");
+            e.printStackTrace();
+        }
 
         return DriverManager.getConnection(URL, USER, PASSWORD);
     }
