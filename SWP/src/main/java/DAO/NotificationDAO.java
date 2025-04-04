@@ -5,6 +5,7 @@ import Model.Notification;
 import Model.Account;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -16,8 +17,7 @@ public class NotificationDAO {
     // Phương thức tạo thông báo
     public void createNotification(Notification notification) {
         String sql = "INSERT INTO Notification (UserId, NotificationContent, NotificationCreateAt, UserRole, UserName) VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, notification.getUserId());
             pstmt.setString(2, notification.getNotificationContent());
             pstmt.setTimestamp(3, new Timestamp(notification.getNotificationCreateAt().getTime()));
@@ -36,9 +36,7 @@ public class NotificationDAO {
     public List<Notification> getAllNotifications() {
         List<Notification> notifications = new ArrayList<>();
         String sql = "SELECT * FROM Notification";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql); ResultSet rs = pstmt.executeQuery()) {
             while (rs.next()) {
                 Notification notification = new Notification();
                 notification.setNotificationId(rs.getInt("NotificationId"));
@@ -62,8 +60,7 @@ public class NotificationDAO {
     public List<Notification> getNotificationsByCreator(String creatorUserId) {
         List<Notification> notifications = new ArrayList<>();
         String sql = "SELECT * FROM Notification WHERE UserId = ?"; // UserId ở đây là người tạo
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, creatorUserId);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
@@ -89,8 +86,7 @@ public class NotificationDAO {
     public List<Notification> getNotificationsForUser(String userId, String userRole) {
         List<Notification> notifications = new ArrayList<>();
         String sql = "SELECT * FROM Notification WHERE UserId = ? OR UserRole = ? OR (UserId IS NULL AND UserRole IS NULL)";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, userId); // Thông báo cá nhân
             pstmt.setString(2, userRole); // Thông báo theo role
             ResultSet rs = pstmt.executeQuery();
@@ -117,9 +113,7 @@ public class NotificationDAO {
     public List<Account> getAllAccounts() {
         List<Account> accounts = new ArrayList<>();
         String sql = "SELECT UserId, UserName, UserRole FROM Account";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql); ResultSet rs = pstmt.executeQuery()) {
             while (rs.next()) {
                 Account account = new Account();
                 account.setUserId(rs.getString("UserId"));
@@ -140,8 +134,7 @@ public class NotificationDAO {
     public List<Notification> getNotificationsByRole(String userRole) {
         List<Notification> notifications = new ArrayList<>();
         String sql = "SELECT * FROM Notification WHERE UserRole = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, userRole);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
@@ -166,8 +159,7 @@ public class NotificationDAO {
     public List<Notification> getNotificationsByUserId(String userId) {
         List<Notification> notifications = new ArrayList<>();
         String sql = "SELECT * FROM Notification WHERE UserId = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, userId);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
@@ -191,8 +183,7 @@ public class NotificationDAO {
 
     public void deleteNotification(int notificationId) {
         String sql = "DELETE FROM Notification WHERE NotificationId = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, notificationId);
             pstmt.executeUpdate();
             LOGGER.info("Notification deleted successfully: ID " + notificationId);
@@ -203,10 +194,30 @@ public class NotificationDAO {
         }
     }
 
+    public void deleteNotifications(List<Integer> notificationIds) {
+        if (notificationIds == null || notificationIds.isEmpty()) {
+            LOGGER.info("No notifications to delete");
+            return;
+        }
+        String sql = "DELETE FROM Notification WHERE NotificationId IN (";
+        sql += String.join(",", Collections.nCopies(notificationIds.size(), "?")) + ")";
+
+        try (Connection conn = DBContext.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            for (int i = 0; i < notificationIds.size(); i++) {
+                pstmt.setInt(i + 1, notificationIds.get(i));
+            }
+            int rowsAffected = pstmt.executeUpdate();
+            LOGGER.info("Deleted " + rowsAffected + " notifications successfully");
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error deleting notifications", e);
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(NotificationDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
     public void updateNotification(Notification notification) {
         String sql = "UPDATE Notification SET NotificationContent = ?, UserRole = ?, UserName = ? WHERE NotificationId = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, notification.getNotificationContent());
             pstmt.setString(2, notification.getUserRole());
             pstmt.setString(3, notification.getUserName());
@@ -219,4 +230,5 @@ public class NotificationDAO {
             Logger.getLogger(NotificationDAO.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
 }

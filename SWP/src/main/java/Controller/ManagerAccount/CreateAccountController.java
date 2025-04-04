@@ -1,13 +1,8 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
+
 package Controller.ManagerAccount;
 
 import DAO.AccountDAO;
 import Model.Account;
-import java.io.IOException;
-import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -16,174 +11,122 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
-/**
- *
- * @author ADMIN
- */
 @WebServlet("/CreateAccount")
-
 @MultipartConfig(
-        fileSizeThreshold = 1024 * 1024, // 1MB
-        maxFileSize = 1024 * 1024 * 50, // 50MB (tăng từ 10MB)
-        maxRequestSize = 1024 * 1024 * 100 // 100MB (tăng từ 50MB)
+        fileSizeThreshold = 1024 * 1024,
+        maxFileSize = 1024 * 1024 * 50,
+        maxRequestSize = 1024 * 1024 * 100
 )
-
 public class CreateAccountController extends HttpServlet {
 
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet CreateAccountController</title>");
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet CreateAccountController at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
-        }
-    }
-
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        request.getRequestDispatcher("ManageAccount/CreateAccount.jsp").forward(request, response);
-    }
-
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
+        response.setContentType("application/json;charset=UTF-8");
+        PrintWriter out = response.getWriter();
+        StringBuilder jsonResponse = new StringBuilder();
+
         try {
-            // Step 1: Get all text form parameters (giữ nguyên)
-            String UserId = request.getParameter("UserId");
-            String UserEmail = request.getParameter("UserEmail");
-            String UserPassword = request.getParameter("UserPassword");
-            String UserName = request.getParameter("UserName");
-            String UserRole = request.getParameter("UserRole");
-            String IdentityCard = request.getParameter("IdentityCard");
-            String UserAddress = request.getParameter("UserAddress");
+            String action = request.getParameter("action");
 
-            // 2. Xử lý upload hình ảnh
-            Part filePart = request.getPart("UserImage");
-            String UserImage = null; // Khởi tạo relativeImagePath là null
+            if ("submitForm".equals(action)) {
+                String UserEmail = request.getParameter("UserEmail");
+                String UserPassword = request.getParameter("UserPassword");
+                String UserName = request.getParameter("UserName");
+                String UserRole = request.getParameter("UserRole");
+                String IdentityCard = request.getParameter("IdentityCard");
+                String UserAddress = request.getParameter("UserAddress");
+                String UserPhone = request.getParameter("UserPhone");
 
-            if (filePart != null && filePart.getSize() > 0 && filePart.getSubmittedFileName() != null && !filePart.getSubmittedFileName().isEmpty()) {
-                // Hình ảnh đã được chọn và tải lên
+                Part filePart = request.getPart("UserImage");
+                String UserImage = null;
 
-                String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
-                String fileExtension = "";
-                int dotIndex = fileName.lastIndexOf('.');
-                if (dotIndex > 0 && dotIndex < fileName.length() - 1) {
-                    fileExtension = fileName.substring(dotIndex);
+                if (filePart != null && filePart.getSize() > 0 && filePart.getSubmittedFileName() != null && !filePart.getSubmittedFileName().isEmpty()) {
+                    String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+                    String uniqueFileName = UUID.randomUUID().toString() + "_" + fileName;
+
+                    String webAppRoot = getServletContext().getRealPath("/");
+                    File webAppRootDir = new File(webAppRoot);
+                    File targetDir = webAppRootDir.getParentFile();
+                    File projectRootDir = targetDir.getParentFile();
+                    String srcWebAppPath = new File(projectRootDir, "src/main/webapp").getAbsolutePath();
+                    String uploadPath = srcWebAppPath + File.separator + "ManageAccount/account_img";
+
+                    File uploadDir = new File(uploadPath);
+                    if (!uploadDir.exists()) {
+                        uploadDir.mkdirs();
+                    }
+
+                    String filePath = uploadPath + File.separator + uniqueFileName;
+                    UserImage = "ManageAccount/account_img/" + uniqueFileName;
+
+                    try (InputStream fileContent = filePart.getInputStream()) {
+                        Files.copy(fileContent, Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
+                    }
                 }
 
-                // Lấy tên hình ảnh người dùng nhập (nếu có)
-                String userImageName = request.getParameter("UserImage");
-                String uniqueFileName;
+                Account account = new Account(null, UserEmail, UserPassword, UserName, UserRole, IdentityCard, UserAddress, UserPhone, UserImage, false);
+                AccountDAO dao = new AccountDAO();
 
-                if (userImageName != null && !userImageName.trim().isEmpty()) {
-                    String sanitizedImageName = userImageName.replaceAll("[^a-zA-Z0-9_\\-]", "_");
-                    uniqueFileName = sanitizedImageName + fileExtension; // Sử dụng tên người dùng, bỏ UUID prefix (nếu bạn muốn)
+                if (dao.isEmailExists(UserEmail, null)) {
+                    jsonResponse.append("{\"success\":false,\"message\":\"Email already exists. Please enter a different email.\"}");
+                } else if (IdentityCard != null && !IdentityCard.isEmpty() && dao.isIdentityCardExists(IdentityCard, null)) {
+                    jsonResponse.append("{\"success\":false,\"message\":\"Identity card/CCCD already exists. Please enter a different number.\"}");
                 } else {
-                    uniqueFileName = UUID.randomUUID().toString() + "_" + fileName; // Sử dụng UUID + tên file gốc
+                    int count = dao.createAccount(account);
+                    if (count > 0) {
+                        request.getSession().setAttribute("tempAccount", account);
+                        jsonResponse.append("{\"success\":true,\"message\":\"A confirmation code has been sent to your email. Please enter it within 3 minutes to complete registration.\"}");
+                    } else if (count == -3) {
+                        jsonResponse.append("{\"success\":false,\"message\":\"Failed to send email. Please check if the email address is valid.\"}");
+                    } else {
+                        jsonResponse.append("{\"success\":false,\"message\":\"An error occurred while processing your request.\"}");
+                    }
                 }
+            } else if ("confirmCode".equals(action)) {
+                String confirmationCode = request.getParameter("confirmationCode");
+                Account tempAccount = (Account) request.getSession().getAttribute("tempAccount");
+                AccountDAO dao = new AccountDAO();
 
-                // 3. Tạo đường dẫn lưu trữ hình ảnh (giữ nguyên phần đường dẫn)
-                String webAppRoot = getServletContext().getRealPath("/");
-                File webAppRootDir = new File(webAppRoot);
-                File targetDir = webAppRootDir.getParentFile();
-                File projectRootDir = targetDir.getParentFile();
-                String srcWebAppPath = new File(projectRootDir, "src/main/webapp").getAbsolutePath();
-                String relativePath = "ManageAccount/account_img";
-                String uploadPath = srcWebAppPath + File.separator + relativePath;
-
-                File uploadDir = new File(uploadPath);
-                if (!uploadDir.exists()) {
-                    uploadDir.mkdirs();
+                if (tempAccount != null) {
+                    int result = dao.confirmAndCreateAccount(tempAccount, confirmationCode);
+                    if (result > 0) {
+                        request.getSession().removeAttribute("tempAccount");
+                        jsonResponse.append("{\"success\":true,\"message\":\"Account created successfully. Check your email for account details.\"}");
+                    } else if (result == -4) {
+                        jsonResponse.append("{\"success\":false,\"message\":\"Confirmation code has expired. Please try again.\"}");
+                    } else {
+                        jsonResponse.append("{\"success\":false,\"message\":\"Invalid confirmation code.\"}");
+                    }
+                } else {
+                    jsonResponse.append("{\"success\":false,\"message\":\"Session expired. Please try again.\"}");
                 }
-
-                // 4. Xử lý tên file an toàn
-                String filePath = uploadPath + File.separator + uniqueFileName;
-                UserImage = "ManageAccount/account_img/" + uniqueFileName; // Cập nhật relativeImagePath ở đây
-
-                // Lưu file
-                try (InputStream fileContent = filePart.getInputStream()) {
-                    Files.copy(fileContent, Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
-                    System.out.println("File saved successfully to: " + filePath);
-                }
-
-            } else {
-                // Không có hình ảnh nào được chọn
-                UserImage = null; // Đặt relativeImagePath thành null khi không có hình ảnh
-                System.out.println("No image uploaded for item: " + UserName); // Log để theo dõi
             }
 
-            // Step 3: Create Account object
-            Account account = new Account(UserId, UserEmail, UserPassword, UserName, UserRole, IdentityCard, UserAddress, UserImage);
-            AccountDAO dao = new AccountDAO();
-
-            // Step 4: Create account in database
-            int count = dao.createAccount(account);
-
-            // Step 5: Handle result and redirect
-            if (count > 0) {
-                response.sendRedirect("ViewAccountList");
-            } else {
-                response.sendRedirect("CreateAccount"); // Có thể forward lại trang create và hiển thị thông báo lỗi
-            }
-
-        } catch (ServletException | IOException | NumberFormatException e) {
-            e.printStackTrace(); // Log lỗi chi tiết hơn (nên dùng logger thay vì printStackTrace trong production)
-            response.getWriter().println("Có lỗi xảy ra trong quá trình tạo tài khoản: " + e.getMessage()); // Hiển thị thông báo lỗi cho người dùng
-        } catch (Exception e) { // Bắt các exception khác (ví dụ SQLException)
-            e.printStackTrace();
-            response.getWriter().println("Lỗi không xác định: " + e.getMessage());
+            out.print(jsonResponse.toString());
+        } catch (Exception e) {
+            jsonResponse.append("{\"success\":false,\"message\":\"Unknown error: ").append(escapeJson(e.getMessage())).append("\"}");
+            out.print(jsonResponse.toString());
+        } finally {
+            out.close();
         }
     }
 
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
-    @Override
-    public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
+    private String escapeJson(String str) {
+        if (str == null) {
+            return "";
+        }
+        return str.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
+    }
 }

@@ -1,82 +1,38 @@
-<%--
-    Document   : test
-    Created on : Feb 28, 2025, 9:42:15 PM
-    Author     : ADMIN
---%>
-
 <%@page import="java.util.List"%>
 <%@page import="Model.Account"%>
 <%@page import="DAO.AccountDAO"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 
+<%
+    if (session == null || session.getAttribute("account") == null) {
+        response.sendRedirect(request.getContextPath() + "/LoginPage.jsp");
+        return;
+    }
+
+    Account account = (Account) session.getAttribute("account");
+    String UserRole = account.getUserRole();
+%>
+
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Employee Account List - Admin Dashboard</title>
-        <script>
-            function confirmDelete(userId, userName) {
-                if (confirm('Are you sure you want to delete the account with ID: ' + userId + ' - user name: ' + userName + '?')) {
-                    window.location.href = 'DeleteAccount?UserId=' + userId; // **Đổi 'id' thành 'UserId'**
-                }
-            }
-            function validateForm() {
-                let email = document.getElementById("UserEmail").value.trim();
-                let password = document.getElementById("UserPassword").value.trim();
-                let name = document.getElementById("UserName").value.trim();
-                let role = document.getElementById("UserRole").value;
-                let idCard = document.getElementById("IdentityCard").value.trim();
-                let address = document.getElementById("UserAddress").value.trim();
 
-                if (!email || !password || !name || !role || !idCard || !address) {
-                    alert("Please complete all fields.");
-                    return false;
-                }
+        <!-- jQuery -->
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-                if (!email.endsWith("@gmail.com")) {
-                    alert("Emails must end with '@gmail.com'.");
-                    return false;
-                }
-
-                if (!/^\d{12}$/.test(idCard)) {
-                    alert("ID card/CCCD number must be exactly 12 digits.");
-                    return false;
-                }
-
-                return true;
-            }
-            function validateUpdateForm() {
-                let email = document.getElementById("EditUserEmail").value.trim();
-                let password = document.getElementById("EditUserPassword").value.trim();
-                let name = document.getElementById("EditUserName").value.trim();
-                let role = document.getElementById("EditUserRole").value;
-                let idCard = document.getElementById("EditIdentityCard").value.trim();
-                let address = document.getElementById("EditUserAddress").value.trim();
-
-                if (!email || !password || !name || !role || !idCard || !address) {
-                    alert("Vui lòng điền đầy đủ tất cả các trường.");
-                    return false;
-                }
-
-                if (!email.endsWith("@gmail.com")) {
-                    alert("Email phải kết thúc bằng '@gmail.com'.");
-                    return false;
-                }
-
-                if (!/^\d{12}$/.test(idCard)) {
-                    alert("Số CMND/CCCD phải đúng 12 chữ số.");
-                    return false;
-                }
-
-                return true;
-            }
-        </script>
-        <link rel="stylesheet" href="style.css">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <!-- Bootstrap 5 CSS -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+        <!-- SweetAlert2 -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
         <style>
-            /* Existing styles... */
             body {
                 font-family: 'Roboto', sans-serif;
                 background-color: #f8f9fa;
@@ -97,173 +53,15 @@
                 background-color: #1A252F;
             }
 
-            .card-stats {
-                background: linear-gradient(to right, #4CAF50, #81C784);
-                color: white;
+            .sidebar .nav-link {
+                font-size: 0.9rem;
             }
 
-            .card-stats i {
-                font-size: 2rem;
+            .sidebar h4 {
+                font-size: 1.5rem;
             }
 
-            .chart-container {
-                position: relative;
-                height: 300px;
-            }
-
-            body {
-                font-size: 14px;
-                line-height: 1.5;
-            }
-
-            .main-header {
-                background-color: #f8f8f8;
-                border-bottom: 1px solid #eee;
-                padding: 15px 0;
-            }
-
-            .header-container, .nav-container, .container {
-                max-width: 1200px;
-                margin: 0 auto;
-                display: flex;
-                align-items: center;
-            }
-
-            .logo img {
-                height: 30px;
-            }
-
-            .top-nav {
-                margin-left: auto;
-            }
-
-            .top-nav ul {
-                display: flex;
-            }
-
-            .top-nav li {
-                margin-left: 20px;
-                position: relative;
-            }
-
-            .top-nav a {
-                display: block;
-                padding: 8px 12px;
-                color: #555;
-            }
-
-            .main-nav {
-                background-color: #fff;
-                border-bottom: 1px solid #eee;
-            }
-
-            .main-menu, .right-menu {
-                display: flex;
-            }
-
-            .main-menu li, .right-menu li {
-                position: relative;
-            }
-
-            .main-menu > li > a {
-                display: block;
-                padding: 15px 20px;
-                color: #333;
-                font-weight: bold;
-            }
-
-            .main-menu li.active > a, .right-menu li a:hover, .main-menu li a:hover {
-                background-color: #e0e0e0;
-                color: #007bff;
-            }
-
-            .sub-menu {
-                display: none;
-                position: absolute;
-                top: 100%;
-                left: 0;
-                background-color: #fff;
-                border: 1px solid #eee;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-                z-index: 10;
-            }
-
-            .main-menu li:hover > .sub-menu {
-                display: block;
-            }
-
-            .sub-menu li a {
-                display: block;
-                padding: 10px 20px;
-                color: #555;
-                white-space: nowrap;
-            }
-
-            .sub-menu li a:hover {
-                background-color: #f0f0f0;
-            }
-
-            .right-menu {
-                margin-left: auto;
-            }
-
-            .right-menu li {
-                margin-left: 10px;
-            }
-
-            .right-menu li a {
-                display: block;
-                padding: 10px 15px;
-                background-color: #007bff;
-                color: #fff;
-                border-radius: 5px;
-                font-weight: bold;
-            }
-
-
-
-            .container {
-                display: flex;
-            }
-
-
-            .sidebar-box {
-                margin-bottom: 20px;
-                padding: 15px;
-                border: 1px solid #eee;
-                background-color: #fff;
-                border-radius: 5px;
-            }
-
-            .sidebar-box h3 {
-                margin-bottom: 10px;
-                font-size: 16px;
-            }
-
-            .sidebar-box label {
-                display: block;
-                margin-bottom: 5px;
-            }
-
-            .sidebar-box select {
-                width: 100%;
-                padding: 8px;
-                border: 1px solid #ccc;
-                border-radius: 3px;
-                box-sizing: border-box;
-            }
-
-            .sidebar-box .add-button {
-                float: right;
-                margin-top: -25px;
-                margin-right: 5px;
-                color: #007bff;
-                font-size: 1.2em;
-            }
-
-            .content-area {
-                flex: 1;
-                background-color: #fff;
+            .main-content-area {
                 padding: 20px;
             }
 
@@ -272,9 +70,15 @@
                 justify-content: space-between;
                 align-items: center;
                 margin-bottom: 20px;
+                flex-wrap: nowrap;
             }
 
-            /* Style cho ô input tìm kiếm */
+            .search-filter {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
             .search-bar input {
                 padding: 8px 12px;
                 border: 1px solid #ccc;
@@ -286,255 +90,115 @@
                 padding: 8px 12px;
                 border: 1px solid #ccc;
                 border-radius: 3px;
-                width: auto;
-                background-color: white;
-                font-size: 14px;
-                font-family: inherit;
-                -webkit-appearance: none;
-                -moz-appearance: none;
-                appearance: none;
-                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Cpath fill='%23333' d='M2 0L0 2h4zm0 5L0 3h4z'/%3E%3C/svg%3E");
-                background-repeat: no-repeat;
-                background-position: right 0.7em top 50%, 0 0;
-                background-size: 0.65em auto, 100%;
-                padding-right: 30px;
+                width: 150px;
             }
 
-            /* Đặt search, filter và button cạnh nhau */
-            .search-filter {
-                display: flex;         /* Bật Flexbox */
-                align-items: center;    /* Căn giữa theo chiều dọc */
-                gap: 10px;            /* Khoảng cách giữa các phần tử */
-                flex-wrap: wrap;       /* Cho phép xuống dòng nếu không đủ chỗ */
-                justify-content: flex-start; /* Căn các phần tử về bên trái */
-            }
-
-            .header-buttons button {
-                padding: 8px 15px;
+            .header-buttons .btn-info {
                 background-color: #007bff;
-                color: #fff;
+                color: white;
                 border: none;
+                padding: 8px 15px;
                 border-radius: 5px;
                 cursor: pointer;
-                margin-left: 10px;
             }
 
-            .header-buttons button.export-btn {
-                background-color: #28a745;
+            .header-buttons .btn-info:hover {
+                background-color: #0056b3;
             }
 
-            .employee-grid {
-                border: 1px solid #ddd;
-                border-radius: 5px;
-                padding: 10px;
-                text-align: center;
+            .table-responsive {
+                overflow-x: auto;
             }
 
-            .employee-grid .no-data {
-                padding: 50px 0;
-                color: #777;
-            }
-
-            .employee-grid .no-data i {
-                font-size: 2em;
-                display: block;
-                margin-bottom: 10px;
-            }
-
-            .mobile-menu-button {
-                display: none;
-                flex-direction: column;
-                justify-content: space-around;
-                width: 30px;
-                height: 20px;
-                cursor: pointer;
-                margin-right: 20px;
-            }
-
-            .mobile-menu-button span {
-                display: block;
-                height: 2px;
+            .table {
                 width: 100%;
-                background-color: #333;
-                border-radius: 2px;
+                margin-bottom: 1rem;
+                background-color: #fff; /* Solid white background for the table */
             }
 
-            .main-nav {
-                /* ... (styles desktop) ... */
+            .table thead th {
+                background-color: #343a40;
+                color: white;
+                border-color: #454d55;
             }
 
-            .main-nav.mobile-open {
-                display: block !important;
-                position: absolute;
-                top: 100%;
-                left: 0;
-                width: 100%;
-                background-color: #fff;
-                z-index: 100;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            .table-hover tbody tr:hover {
+                background-color: #f1f1f1;
             }
 
-            .main-nav.mobile-open .nav-container {
-                flex-direction: column;
-                align-items: flex-start;
+            /* Fix the width of the Actions column to fit the two buttons */
+            .table th.actions-column,
+            .table td.actions-column {
+                width: 150px; /* Adjust this value as needed to fit the two buttons */
+                white-space: nowrap;
             }
 
-            .main-nav.mobile-open .main-menu, .main-nav.mobile-open .right-menu {
-                flex-direction: column;
-                width: 100%;
+            .btn-warning {
+                background-color: #ffca28;
+                border-color: #ffca28;
+                color: white;
+                transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
             }
 
-            .main-nav.mobile-open .main-menu li, .main-nav.mobile-open .right-menu li {
-                width: 100%;
+            .btn-warning:hover {
+                background-color: #ffda6a;
+                border-color: #ffda6a;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             }
 
-            .main-nav.mobile-open .main-menu > li > a, .main-nav.mobile-open .right-menu li a {
-                padding: 15px 20px;
-                border-bottom: 1px solid #eee;
-                text-align: left;
+            .btn-danger {
+                background-color: #f44336;
+                border-color: #f44336;
+                color: white;
+                transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
             }
 
-            .main-nav.mobile-open .right-menu {
-                margin-left: 0;
-            }
-
-            .main-nav.mobile-open .right-menu li a {
-                border-radius: 0;
-                background-color: transparent;
-                color: #007bff;
-                font-weight: normal;
-                text-align: left;
-            }
-
-            .main-nav.mobile-open .sub-menu {
-                position: static;
-                border: none;
-                box-shadow: none;
-                display: none;
-            }
-
-            .main-nav.mobile-open .main-menu li.has-sub > a::after {
-                content: "\f107";
-                font-family: 'Font Awesome 6 Free';
-                font-weight: 900;
-                float: right;
-                margin-left: 10px;
-            }
-
-            .main-nav.mobile-open .main-menu li.has-sub.sub-open > a::after {
-                content: "\f106";
-            }
-
-            .main-nav.mobile-open .sub-menu li a {
-                padding-left: 40px;
-                border-bottom: 1px solid #eee;
-            }
-
-            @media (max-width: 768px) {
-                .header-container {
-                    display: flex;
-                    justify-content: space-between;
-                }
-
-                .mobile-menu-button {
-                    display: flex;
-                }
-
-                .top-nav, .branch-selector, .language-selector, .user-section, .right-menu {
-                    display: none;
-                }
-
-                .main-nav {
-                    display: none;
-                }
-
-                .container {
-                    flex-direction: column;
-                }
-
-                .sidebar {
-                    width: 100%;
-                    margin-right: 0;
-                    margin-bottom: 20px;
-                }
-
-                .content-area {
-                    border: none;
-                    padding: 0;
-                }
-
-                .content-header {
-                    flex-direction: column;
-                    align-items: flex-start;
-                }
-
-                .header-buttons {
-                    margin-top: 15px;
-                    display: flex;
-                    flex-wrap: wrap;
-                }
-
-                .header-buttons button {
-                    margin-bottom: 10px;
-                }
-            }
-            /* Kết thúc nội dung CSS */
-
-            /* CSS cho Modal - GIỮ NGUYÊN */
-            .modal {
-                display: none;
-                position: fixed;
-                z-index: 1;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
-                overflow: auto;
-                background-color: rgba(0,0,0,0.4);
-                justify-content: center;
-                align-items: center;
-            }
-
-            .modal-content {
-                background-color: #fefefe;
-                margin-top: 4%;
-                margin-left: auto; /* Giữ margin-left và margin-right là auto để căn giữa ngang */
-                margin-right: auto;
-                padding: 20px;
-                border: 1px solid #888;
-                width: 60%;
-                border-radius: 5px;
-                position: relative;
-            }
-
-            .close-button {
-                color: #aaa;
-                float: right;
-                font-size: 28px;
-                font-weight: bold;
-                cursor: pointer;
-            }
-
-            .close-button:hover,
-            .close-button:focus {
+            .btn-danger:hover {
+                background-color: #e53935;
+                border-color: #e53935;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
                 color: black;
+            }
+
+            .btn-edit, .btn-delete {
+                padding: 5px 10px;
+                border-radius: 5px;
+                color: white;
                 text-decoration: none;
-                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
             }
 
-            .modal-form-container div {
-                margin-bottom: 15px;
+            .btn-edit {
+                background-color: #007bff;
             }
 
-            .modal-form-container label {
-                display: block;
-                margin-bottom: 5px;
-                font-weight: bold;
+            .btn-edit:hover {
+                background-color: #0056b3;
+            }
+
+            .btn-delete {
+                background-color: #dc3545;
+                margin-left: 5px;
+            }
+
+            .btn-delete:hover {
+                background-color: #c82333;
+            }
+
+            .btn-edit i, .btn-delete i {
+                margin-right: 5px;
+            }
+
+            .modal-header {
+                background-color: #f7f7f0;
             }
 
             .modal-form-container input[type="text"],
             .modal-form-container input[type="email"],
             .modal-form-container input[type="password"],
+            .modal-form-container input[type="number"],
             .modal-form-container select,
             .modal-form-container input[type="file"] {
                 width: calc(100% - 22px);
@@ -544,156 +208,86 @@
                 box-sizing: border-box;
                 font-size: 14px;
             }
-            .modal-actions {
-                text-align: right;
-                margin-top: 20px;
-            }
 
-            .modal-actions input[type="submit"],
-            .modal-actions button.close-button {
-                padding: 10px 20px;
-                border: none;
-                border-radius: 5px;
-                cursor: pointer;
-                font-size: 14px;
-                margin-left: 10px; /* Khoảng cách giữa các nút */
-            }
-
-            .modal-actions input[type="submit"] {
-                background-color: #007bff;
+            .text-left.mb-4 {
+                overflow: hidden;
+                background: linear-gradient(to right, #2C3E50, #42A5F5);
+                padding: 1rem;
                 color: white;
+                margin-left: -24px !important;
+                margin-top: -25px !important;
+                margin-right: -25px !important;
             }
 
-            .modal-actions button.close-button {
-                background-color: #dc3545;
-                color: white;
-            }
-
-
-            .card-stats {
-                background: linear-gradient(to right, #4CAF50, #81C784);
-                color: white;
-            }
-
-            .card-stats i {
-                font-size: 2rem;
-            }
-            .btn-edit {
-                background-color: #007bff; /* Blue color for edit */
-                color: white;
-                border: none;
-                padding: 5px 10px;
-                border-radius: 5px;
-                cursor: pointer;
-                text-decoration: none; /* Remove underline if it's an <a> tag */
-                display: inline-flex; /* To align icon and text */
-                align-items: center;
-                justify-content: center;
-            }
-
-            .btn-edit:hover {
-                background-color: #0056b3; /* Darker blue on hover */
-            }
-
-            .btn-delete {
-                background-color: #dc3545; /* Red color for delete */
-                color: white;
-                border: none;
-                padding: 5px 10px;
-                border-radius: 5px;
-                cursor: pointer;
-                text-decoration: none; /* Remove underline if it's an <a> tag */
-                display: inline-flex; /* To align icon and text */
-                align-items: center;
-                justify-content: center;
-                margin-left: 5px; /* Add some spacing between buttons */
-            }
-
-            .btn-delete:hover {
-                background-color: #c82333; /* Darker red on hover */
-            }
-
-            .btn-edit i, .btn-delete i {
-                margin-right: 5px; /* Spacing between icon and text */
-            }
-
-            .button-container {
-                display: flex; /* Kích hoạt Flexbox cho container */
-                flex-direction: row; /* Sắp xếp các nút theo hàng ngang */
-                align-items: center; /* Căn chỉnh các nút theo chiều dọc (tùy chọn) */
-                gap: 5px; /* Khoảng cách giữa các nút (tùy chỉnh) */
-            }
-
-
-            /* Basic table styling for better look */
-            .employee-grid table {
-                width: 100%;
-                border-collapse: collapse;
-                margin-top: 10px;
-            }
-
-            .employee-grid th, .employee-grid td {
-                border: 1px solid #ddd;
-                padding: 8px;
-                text-align: left;
-            }
-
-            .employee-grid th {
-                background-color: #f4f4f4;
-                font-weight: bold;
-            }
-
-            .employee-grid tbody tr:nth-child(even) {
-                background-color: #f9f9f9; /* Optional: Even row highlight */
-            }
-
-            .employee-grid tbody tr:hover {
-                background-color: #f0f0f0; /* Optional: Hover effect */
-            }
-
-            .sidebar .nav-link {
-                font-size: 0.9rem; /* Hoặc 16px, tùy vào AdminDashboard.jsp */
-            }
-
-            .sidebar h4{
-                font-size: 1.5rem;
-            }
-
-            .table-bordered {
-                border-radius: 20px; /* Bo tròn viền ngoài của bảng */
-            }
             .rounded-image {
-                width: 100px;  /* Giữ nguyên kích thước, hoặc điều chỉnh nếu cần */
+                width: 100px;
                 height: 100px;
-                border-radius: 50%; /* Làm tròn ảnh */
-                object-fit: cover; /* Đảm bảo ảnh lấp đầy khung tròn */
-                object-position: center; /* Căn giữa ảnh */
+                border-radius: 50%;
+                object-fit: cover;
             }
 
-            /* Style phân trang */
+            /* Bootstrap-like error styling */
+            .is-invalid {
+                border-color: #dc3545 !important;
+                padding-right: calc(1.5em + 0.75rem);
+                background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+                background-repeat: no-repeat;
+                background-position: right calc(0.375em + 0.1875rem) center;
+                background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+            }
+
+            .invalid-feedback {
+                display: none;
+                width: 100%;
+                margin-top: 0.25rem;
+                font-size: 0.875em;
+                color: #dc3545;
+            }
+
+            .is-invalid ~ .invalid-feedback {
+                display: block;
+            }
+
+
             .pagination {
                 display: flex;
-                justify-content: center;
+                justify-content: center; /* Căn giữa các nút pagination */
                 list-style: none;
                 padding: 0;
-                margin-top: 20px;
+                margin-top: 30px;
             }
 
             .pagination li {
-                margin: 0 5px;
+                margin: 0 3px;
             }
 
-            .pagination a {
-                padding: 5px 10px;
-                border: 1px solid #ccc;
+            .pagination a, .pagination span {
+                padding: 6px 12px;
+                border: 1px solid #dee2e6;
                 text-decoration: none;
-                color: black;
-                border-radius: 3px;
+                color: #0d6efd;
+                background-color: #fff;
+                border-radius: .25rem;
+                transition: background-color 0.2s ease, color 0.2s ease;
+                font-size: 0.9rem;
+            }
+
+            .pagination a:hover {
+                background-color: #e9ecef;
+                color: #0a58ca;
             }
 
             .pagination a.active {
-                background-color: #3498db;
+                background-color: #0d6efd;
                 color: white;
+                border-color: #0d6efd;
+                font-weight: bold;
+            }
+
+            .pagination .disabled span {
+                color: #6c757d;
+                pointer-events: none;
+                background-color: #e9ecef;
             }
 
         </style>
@@ -704,8 +298,8 @@
             <div class="sidebar col-md-2 p-3">
                 <h4 class="text-center mb-4">Admin</h4>
                 <ul class="nav flex-column">
-                   <li class="nav-item"><a href="${pageContext.request.contextPath}/dashboard" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
-                   <li class="nav-item"><a href="${pageContext.request.contextPath}/view-revenue" class="nav-link"><i class="fas fa-chart-line me-2"></i>View Revenue</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/dashboard" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
+                    <li class="nav-item"><a href="${pageContext.request.contextPath}/view-revenue" class="nav-link"><i class="fas fa-chart-line me-2"></i>View Revenue</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-list-alt me-2"></i>Menu Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewAccountList" class="nav-link"><i class="fas fa-users me-2"></i>Employee Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewTableList" class="nav-link"><i class="fas fa-building me-2"></i>Table Management</a></li>
@@ -714,384 +308,1025 @@
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCouponController" class="nav-link"><i class="fas fa-tag me-2"></i>Coupon Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewInventoryController" class="nav-link"><i class="fas fa-boxes me-2"></i>Inventory Management</a></li>
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/view-notifications" class="nav-link"><i class="fas fa-bell me-2"></i>View Notifications</a></li>
-
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/create-notification" class="nav-link"><i class="fas fa-plus me-2"></i>Create Notification</a></li>
-
                     <li class="nav-item"><a href="${pageContext.request.contextPath}/logout" class="nav-link"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                 </ul>
             </div>
 
             <!-- Main Content -->
-            <div class="col-md-10 bg-white p-3 main-content-area">
-                <section class="main-content">
-                    <div class="container-fluid">
-                        <div class="text-left mb-4">
-                            <h4>Employee Management</h4>
-                        </div>
-                        <div class="content-header">
-                            <div class="search-filter">
-                                <div class="search-bar">
-                                    <input type="text" id="searchInput" placeholder="Search">  <!-- Thêm id="searchInput" -->
-                                </div>
-                                <div class="filter-bar">
-                                    <select id="roleFilter">
-                                        <option value="">All Roles</option>  <!-- Thêm option "All Roles" -->
-                                        <option value="Admin">Admin</option>
-                                        <option value="Waiter">Waiter</option>
-                                        <option value="Manager">Manager</option>
-                                        <option value="Kitchen staff">Kitchen staff</option>
-                                        <option value="Cashier">Cashier</option>
-                                    </select>
-                                </div>
+            <div class="col-md-10 p-4 main-content-area">
+                <div class="text-left mb-4">
+                    <h4>Employee Management</h4>
+                </div>
+                <div class="container-fluid">
+                    <div class="content-header">
+                        <div class="search-filter">
+                            <div class="search-bar">
+                                <input type="text" id="searchInput" placeholder="Search">
                             </div>
-                            <div class="header-buttons">
-                                <button class="add-employee-btn"><i class="far fa-plus"></i> Employee </button>
+                            <div class="filter-bar">
+                                <select id="roleFilter">
+                                    <option value="">All Roles</option>
+                                    <option value="Admin">Admin</option>
+                                    <option value="Manager">Manager</option>
+                                    <option value="Cashier">Cashier</option>
+                                    <option value="Waiter">Waiter</option>
+                                    <option value="Kitchen staff">Kitchen staff</option>
+                                </select>
                             </div>
                         </div>
-                        <div class="employee-grid">
-                            <table class="table table-striped table-bordered table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>No.</th>
-                                        <th>ID</th>
-                                        <th>Image</th>
-                                        <th>Account Email</th>
-                                        <th>Account Password</th>
-                                        <th>Account Name</th>
-                                        <th>Account Role</th>
-                                        <th>Identity Card</th>
-                                        <th>User Address</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <%
-                                        List<Account> accounts = (List<Account>) request.getAttribute("accountList");
-                                        int pageSize = 4; // Số tài khoản trên mỗi trang
-                                        int totalAccounts = (accounts != null) ? accounts.size() : 0;
-                                        int totalPages = (int) Math.ceil((double) totalAccounts / pageSize);
-                                        int currentPage = 1; // Mặc định là trang 1
+                        <div class="header-buttons">
+                            <button class="btn btn-info add-employee-btn" data-bs-toggle="modal" data-bs-target="#createEmployeeModal"><i class="fas fa-plus"></i> Create</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <!-- Removed table-striped class to remove alternating gray rows -->
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>No.</th>
+                                    <th>User ID</th>
+                                    <th>User Name</th>
+                                    <th>User Email</th>
+                                    <th>User Role</th>
+                                    <th class="actions-column">Actions</th> <!-- Added class for Actions column -->
+                                </tr>
+                            </thead>
+                            <tbody id="accountTableBody">
+                                <%
+                                    List<Account> accounts = (List<Account>) request.getAttribute("accountList");
+                                    int pageSize = 10;
+                                    int totalAccounts = (accounts != null) ? accounts.size() : 0;
+                                    int totalPages = (int) Math.ceil((double) totalAccounts / pageSize);
+                                    int currentPage = 1;
 
-                                        // Lấy trang hiện tại từ request
-                                        String pageParam = request.getParameter("page");
-                                        if (pageParam != null && !pageParam.isEmpty()) {
-                                            try {
-                                                currentPage = Integer.parseInt(pageParam);
-                                                if (currentPage < 1) {
-                                                    currentPage = 1;
-                                                }
-                                                if (currentPage > totalPages) {
-                                                    currentPage = totalPages;
-                                                }
-                                            } catch (NumberFormatException e) {
+                                    String pageParam = request.getParameter("page");
+                                    if (pageParam != null && !pageParam.isEmpty()) {
+                                        try {
+                                            currentPage = Integer.parseInt(pageParam);
+                                            if (currentPage < 1) {
                                                 currentPage = 1;
                                             }
+                                            if (currentPage > totalPages) {
+                                                currentPage = totalPages;
+                                            }
+                                        } catch (NumberFormatException e) {
+                                            currentPage = 1;
                                         }
+                                    }
 
-                                        // Xác định phạm vi hiển thị
-                                        int startIndex = (currentPage - 1) * pageSize;
-                                        int endIndex = Math.min(startIndex + pageSize, totalAccounts);
-                                        List<Account> paginatedAccounts = (accounts != null) ? accounts.subList(startIndex, endIndex) : null;
+                                    int startIndex = (currentPage - 1) * pageSize;
+                                    int endIndex = Math.min(startIndex + pageSize, totalAccounts);
+                                    List<Account> paginatedAccounts = (accounts != null) ? accounts.subList(startIndex, endIndex) : null;
 
-                                        if (paginatedAccounts != null && !paginatedAccounts.isEmpty()) {
-                                            int counter = startIndex + 1;
-                                            for (Account account : paginatedAccounts) {
-                                    %>
-                                    <tr>
-                                        <td><%= counter++%></td>
-                                        <td><%= account.getUserId()%></td>
-                                        <td>
-                                            <%
-                                                String imagePath = account.getUserImage();
-                                                if (imagePath != null && !imagePath.trim().isEmpty()) {
-                                            %>
-                                            <img src="<%= imagePath%>" alt="<%= account.getUserName()%> " class="rounded-image">
-                                            <%
-                                            } else {
-                                            %>
-                                            No Image
-                                            <%
-                                                }
-                                            %>
-                                        </td>
-                                        <td><%= account.getUserEmail()%></td>
-                                        <td><%= account.getUserPassword()%></td> 
-                                        <td><%= account.getUserName()%></td>
-                                        <td><%= account.getUserRole()%></td>
-                                        <td><%= account.getIdentityCard()%></td>
-                                        <td><%= account.getUserAddress()%></td>
-                                        <td >
-                                            <% if (!account.getUserRole().equalsIgnoreCase("admin")) {%>
-                                            <div class="button-container"> <%-- Thêm div container với class="button-container" --%>
-                                                <a href="#" class="edit-employee-btn btn-edit"
-                                                   data-userid="<%=account.getUserId()%>"
-                                                   data-useremail="<%=account.getUserEmail()%>"
-                                                   data-username="<%=account.getUserName()%>"
-                                                   data-userpassword="<%=account.getUserPassword()%>"
-                                                   data-userrole="<%=account.getUserRole()%>"
-                                                   data-identitycard="<%=account.getIdentityCard()%>"
-                                                   data-useraddress="<%=account.getUserAddress()%>"
-                                                   data-userimage="<%=account.getUserImage()%>">
-                                                    <i class="fas fa-edit"></i> Edit
-                                                </a>
-                                                <a href="#" onclick="confirmDelete('<%= account.getUserId()%>', '<%= account.getUserName()%>')" class="btn-delete">
-                                                    <i class="fas fa-trash-alt"></i> Delete
-                                                </a>
-                                            </div> <%-- Đóng div container --%>
-                                            <% } %>
-                                        </td>
-                                    </tr>
-                                    <%
-                                        }
-                                    } else {
-                                    %>
-                                    <tr>
-                                        <td colspan="10">
-                                            <div class="no-data">
-                                                <i class="fal fa-user"></i>
-                                                <span>
-                                                    <% if (request.getParameter("search") != null) { %>
-                                                    Can not find result.
-                                                    <% } else { %>
-                                                    NOT ACCOUNT HERE. CLICK <a href="#">HERE</a> TO ADD NEW EMPLOYEE.
-                                                    <% } %>
-                                                </span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <%
-                                        }
-                                    %>
-                                </tbody>
-                            </table>
-                        </div>  
+                                    if (paginatedAccounts != null && !paginatedAccounts.isEmpty()) {
+                                        int counter = startIndex + 1;
+                                        for (Account acc : paginatedAccounts) {
+                                %>
+                                <tr id="accountRow<%= acc.getUserId()%>">
+                                    <td><%= counter++%></td>
+                                    <td><%= acc.getUserId()%></td>
+                                    <td><%= acc.getUserName()%></td>
+                                    <td><%= acc.getUserEmail()%></td>
+                                    <td><%= acc.getUserRole()%></td>
+                                    <td class="actions-column">
+                                        <a href="#" class="btn-edit view-detail-btn"
+                                           data-userid="<%= acc.getUserId()%>"
+                                           data-useremail="<%= acc.getUserEmail()%>"
+                                           data-userpassword="<%= acc.getUserPassword()%>"
+                                           data-username="<%= acc.getUserName()%>"
+                                           data-userrole="<%= acc.getUserRole()%>"
+                                           data-identitycard="<%= acc.getIdentityCard()%>"
+                                           data-useraddress="<%= acc.getUserAddress()%>"
+                                           data-userphone="<%= acc.getUserPhone()%>"
+                                           data-userimage="<%= acc.getUserImage()%>"><i class="fas fa-eye"></i> View</a>
+                                        <% if (!acc.getUserRole().equalsIgnoreCase("Admin")) {%>
+                                        <a href="#" class="btn-delete btn-delete-account"
+                                           data-bs-toggle="modal" data-bs-target="#deleteAccountModal"
+                                           data-account-id="<%= acc.getUserId()%>"
+                                           data-account-name="<%= acc.getUserName()%>"><i class="fas fa-trash-alt"></i> Delete</a>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                                <%
+                                    }
+                                } else {
+                                %>
+                                <tr><td colspan="6">No accounts found.</td></tr>
+                                <%
+                                    }
+                                %>
+                            </tbody>
+                        </table>
+                    </div>
 
-                        <%-- Phân trang --%>
-                        <% if (totalPages > 1) { %>
-                        <ul class="pagination">
-                            <%-- Nút Previous --%>
-                            <% if (currentPage > 1) {%>
-                            <li><a href="?page=<%= currentPage - 1%>">Back</a></li>
-                                <% } %>
-
-                            <%-- Các số trang --%>
-                            <% for (int i = 1; i <= totalPages; i++) {%>
-                            <li><a href="?page=<%= i%>" <% if (currentPage == i) { %>class="active"<% }%>><%= i%></a></li>
-                                <% } %>
-
-                            <%-- Nút Next --%>
-                            <% if (currentPage < totalPages) {%>
-                            <li><a href="?page=<%= currentPage + 1%>">Next</a></li>
-                                <% } %>
+                    <!-- Pagination -->
+                    <% if (totalPages > 1) {%>
+                    <nav aria-label="Account navigation">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item <%= (currentPage <= 1) ? "disabled" : ""%>">
+                                <a class="page-link" href="?page=<%= currentPage - 1%>" aria-label="Previous">
+                                    <span aria-hidden="true">«</span>
+                                </a>
+                            </li>
+                            <% int startPage = Math.max(1, currentPage - 2);
+                                int endPage = Math.min(totalPages, currentPage + 2);
+                                if (startPage > 1) {
+                                    out.println("<li class='page-item'><a class='page-link' href='?page=1'>1</a></li>");
+                                    if (startPage > 2) {
+                                        out.println("<li class='page-item disabled'><span class='page-link'>...</span></li>");
+                                    }
+                                }
+                                for (int i = startPage; i <= endPage; i++) {%>
+                            <li class="page-item <%= (currentPage == i) ? "active" : ""%>">
+                                <a class="page-link" href="?page=<%= i%>"><%= i%></a>
+                            </li>
+                            <% }
+                                if (endPage < totalPages) {
+                                    if (endPage < totalPages - 1) {
+                                        out.println("<li class='page-item disabled'><span class='page-link'>...</span></li>");
+                                    }
+                                    out.println("<li class='page-item'><a class='page-link' href='?page=" + totalPages + "'>" + totalPages + "</a></li>");
+                                }%>
+                            <li class="page-item <%= (currentPage >= totalPages) ? "disabled" : ""%>">
+                                <a class="page-link" href="?page=<%= currentPage + 1%>" aria-label="Next">
+                                    <span aria-hidden="true">»</span>
+                                </a>
+                            </li>
                         </ul>
-                        <% }%>                
-                </section>
+                    </nav>
+                    <% }%>
+                </div>
             </div>
         </div>
 
         <!-- Modal Create Employee Account -->
-        <div id="createEmployeeModal" class="modal">
-            <div class="modal-content">
-                <span class="close-button">×</span>
-                <h2>Create New Employee Account</h2>
-                <div class="modal-form-container">
-                    <form method="post" action="CreateAccount" enctype="multipart/form-data" onsubmit="return validateForm()">
-                        <div>
-                            <label for="UserEmail">Email Address</label>
-                            <input type="email" id="UserEmail" name="UserEmail" placeholder="Enter email" required="Please fill in this field">
-                        </div>
-                        <div>
-                            <label for="UserPassword">Password</label>
-                            <input type="password" id="UserPassword" name="UserPassword" placeholder="Password" required="Please fill in this field">
-                        </div>
-                        <div>
-                            <label for="UserName">Full Name</label>
-                            <input type="text" id="UserName" name="UserName" placeholder="Enter full name" required="Please fill in this field">
-                        </div>
-                        <div>
-                            <label for="UserRole">Role</label>
-                            <select id="UserRole" name="UserRole" required="Please select in this field">
-                                <option value="Manager">Manager</option>
-                                <option value="Cashier">Cashier</option>
-                                <option value="Waiter">Waiter</option>
-                                <option value="Kitchen staff">Kitchen staff</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="IdentityCard">Identity Card (12 digits)</label>
-                            <input type="text" id="IdentityCard" name="IdentityCard" placeholder="Enter 12-digit ID Card number" required="Please fill in this field">
-                        </div>
-                        <div>
-                            <label for="UserAddress">Address</label>
-                            <input type="text" id="UserAddress" name="UserAddress" placeholder="Enter address" required="Please fill in this field">
-                        </div>
-                        <div>
-                            <label for="UserImage">Profile Image</label>
-                            <input type="file" id="UserImage" name="UserImage" required="Please fill in this field">
-                        </div>
-                        <div class="modal-actions">
-                            <input type="submit" class="btn btn-primary" name="btnSubmit" value="Create Account"/>
-                            <button type="button" class="btn btn-secondary close-button">Cancel</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal Edit Employee Account -->
-        <div id="editEmployeeModal" class="modal">
-            <div class="modal-content">
-                <span class="close-button">×</span>
-                <h2>Edit Employee Account</h2>
-                <div class="modal-form-container">
-                    <form method="post" action="UpdateAccount" enctype="multipart/form-data" onsubmit="return validateUpdateForm()">
-                        <input type="hidden" id="EditUserIdHidden" name="UserIdHidden" value=""/>
-                        <div>
-                            <div>
-                                <div>
-                                    <img id="EditCurrentImage" src="" alt="Current Image" style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover;"/>
+        <div class="modal fade" id="createEmployeeModal" tabindex="-1" aria-labelledby="createEmployeeModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="createEmployeeModalLabel">Create New Employee Account</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="modal-form-container">
+                            <form id="createAccountForm" enctype="multipart/form-data" novalidate>
+                                <div class="mb-3">
+                                    <label for="UserEmail" class="form-label">Email Address</label>
+                                    <input type="email" class="form-control" id="UserEmail" name="UserEmail" placeholder="Enter email">
+                                    <div class="invalid-feedback"></div>
                                 </div>
-                                <label for="EditUserImage">Update Profile Image</label>
-                                <input type="file" id="EditUserImage" name="UserImage"/>
-                            </div>
-                            <div>
-                                <div>
-                                    <label for="EditUserId">User ID</label>
-                                    <input type="text" id="EditUserId" name="UserId" value="" readonly/>
+                                <div class="mb-3">
+                                    <label for="UserPassword" class="form-label">Password</label>
+                                    <input type="password" class="form-control" id="UserPassword" name="UserPassword" placeholder="Enter password">
+                                    <div class="invalid-feedback"></div>
                                 </div>
-                                <div>
-                                    <label for="EditUserEmail">Email Address</label>
-                                    <input type="email" id="EditUserEmail" name="UserEmail" value="" required="Please fill in this field"/>
+                                <div class="mb-3">
+                                    <label for="UserName" class="form-label">Full Name</label>
+                                    <input type="text" class="form-control" id="UserName" name="UserName" placeholder="Enter full name">
+                                    <div class="invalid-feedback"></div>
                                 </div>
-                                <div>
-                                    <label for="EditUserPassword">Password</label>
-                                    <input type="password" id="EditUserPassword" name="UserPassword" value="" required="Please fill in this field"/>
-                                </div>
-                                <div>
-                                    <label for="EditUserName">Full Name</label>
-                                    <input type="text" id="EditUserName" name="UserName" value="" required="Please fill in this field"/>
-                                </div>
-                                <div>
-                                    <label for="EditUserRole">Role</label>
-                                    <select id="EditUserRole" name="UserRole" required="Please select in this field">
+                                <div class="mb-3">
+                                    <label for="UserRole" class="form-label">Role</label>
+                                    <select class="form-control" id="UserRole" name="UserRole">
+                                        <option value="">Select Role</option>
                                         <option value="Manager">Manager</option>
                                         <option value="Cashier">Cashier</option>
                                         <option value="Waiter">Waiter</option>
                                         <option value="Kitchen staff">Kitchen staff</option>
                                     </select>
+                                    <div class="invalid-feedback"></div>
                                 </div>
-                                <div>
-                                    <label for="EditIdentityCard">Identity Card (12 digits)</label>
-                                    <input type="text" id="EditIdentityCard" name="IdentityCard" value="" required="Please fill in this field"/>
+                                <div class="mb-3">
+                                    <label for="IdentityCard" class="form-label">Identity Card (12 digits)</label>
+                                    <input type="text" class="form-control" id="IdentityCard" name="IdentityCard" placeholder="Enter 12-digit ID card number" maxlength="12" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 12)">
+                                    <div class="invalid-feedback"></div>
                                 </div>
-                                <div>
-                                    <label for="EditUserAddress">Address</label>
-                                    <input type="text" id="EditUserAddress" name="UserAddress" value="" required="Please fill in this field"/>
+                                <div class="mb-3">
+                                    <label for="UserAddress" class="form-label">Address</label>
+                                    <input type="text" class="form-control" id="UserAddress" name="UserAddress" placeholder="Enter address">
+                                    <div class="invalid-feedback"></div>
                                 </div>
-                            </div>
+                                <div class="mb-3">
+                                    <label for="UserPhone" class="form-label">Phone (10 digits, starts with 0)</label>
+                                    <input type="text" class="form-control" id="UserPhone" name="UserPhone" placeholder="Enter 10-digit phone (e.g., 0123456789)" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)">
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="UserImage" class="form-label">Profile Image</label>
+                                    <img id="createCurrentImage" src="" alt="Profile Image" class="rounded-image" style="display:none;">
+                                    <p id="createNoImageMessage" style="color: gray;">No image selected</p>
+                                    <div class="custom-file-upload">
+                                        <input type="file" id="UserImage" name="UserImage" onchange="checkImageSelected('create')" accept="image/*" style="display: none;">
+                                        <button type="button" id="createCustomFileButton" class="btn btn-secondary">Choose File</button>
+                                        <span id="createFileNameDisplay">No file chosen</span>
+                                    </div>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <input type="submit" class="btn btn-primary" value="Create">
+                                </div>
+                            </form>
                         </div>
-
-                        <!-- Save and Back to List Buttons -->
-                        <div class="modal-actions">
-                            <input type="submit" class="btn btn-primary" name="btnSubmit" value="Save Changes"/>
-                            <button type="button" class="btn btn-secondary close-button">Cancel</button>
-                        </div>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
 
+        <!-- Modal View Account Detail -->
+        <div class="modal fade" id="viewAccountDetailModal" tabindex="-1" aria-labelledby="viewAccountDetailModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="detailModalHeading">Account Detail</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="modal-form-container">
+                            <form id="updateAccountDetailForm" enctype="multipart/form-data" novalidate>
+                                <input type="hidden" id="DetailUserIdHidden" name="UserIdHidden">
+                                <input type="hidden" id="DetailUserRoleHidden" name="UserRoleHidden">
+                                <div class="mb-3">
+                                    <label class="form-label">Current Image</label>
+                                    <img id="DetailCurrentImage" src="" alt="Current Image" class="rounded-image">
+                                    <p id="noImageMessage" style="display:none; color: gray;">No image selected</p>
+                                </div>
+                                <div id="imageUpdateSection" style="display:none;" class="mb-3">
+                                    <label for="DetailUserImage" class="form-label">Update Image</label>
+                                    <div class="custom-file-upload">
+                                        <input type="file" id="DetailUserImage" name="UserImage" onchange="checkImageSelected('update')" accept="image/*" style="display: none;">
+                                        <button type="button" id="updateCustomFileButton" class="btn btn-secondary">Choose File</button>
+                                        <span id="updateFileNameDisplay">No file chosen</span>
+                                    </div>
+                                    <input type="hidden" name="oldImagePath" id="DetailOldImagePath">
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="DetailUserId" class="form-label">User ID</label>
+                                    <input type="text" class="form-control" id="DetailUserId" name="UserId" readonly>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="DetailUserEmail" class="form-label">Email Address</label>
+                                    <input type="email" class="form-control" id="DetailUserEmail" name="UserEmail" readonly>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="DetailUserPassword" class="form-label">Password</label>
+                                    <input type="password" class="form-control" id="DetailUserPassword" name="UserPassword" readonly>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="DetailUserName" class="form-label">Full Name</label>
+                                    <input type="text" class="form-control" id="DetailUserName" name="UserName" readonly>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="DetailUserRole" class="form-label">Role</label>
+                                    <select class="form-control" id="DetailUserRole" name="UserRole" disabled>
+                                        <option value="">Select Role</option>
+                                        <option value="Manager">Manager</option>
+                                        <option value="Cashier">Cashier</option>
+                                        <option value="Waiter">Waiter</option>
+                                        <option value="Kitchen staff">Kitchen staff</option>
+                                    </select>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="DetailIdentityCard" class="form-label">Identity Card (12 digits)</label>
+                                    <input type="text" class="form-control" id="DetailIdentityCard" name="IdentityCard" readonly maxlength="12" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 12)">
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="DetailUserAddress" class="form-label">Address</label>
+                                    <input type="text" class="form-control" id="DetailUserAddress" name="UserAddress" readonly>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="DetailUserPhone" class="form-label">Phone (10 digits, starts with 0)</label>
+                                    <input type="text" class="form-control" id="DetailUserPhone" name="UserPhone" readonly maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)">
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                <div class="modal-footer" id="modalActions">
+                                    <!-- Dynamic buttons added via JavaScript -->
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Account Modal -->
+        <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteAccountModalLabel">Confirm Delete</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to delete this account?</p>
+                        <input type="hidden" id="accountIdDelete">
+                        <input type="hidden" id="accountNameDelete">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" id="btnDeleteAccountConfirm">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Confirm Code -->
+        <div class="modal fade" id="confirmCodeModal" tabindex="-1" aria-labelledby="confirmCodeModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="confirmCodeModalLabel">Enter Confirmation Code</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="confirmCodeForm">
+                            <div class="mb-3">
+                                <label for="confirmationCode" class="form-label">Confirmation Code</label>
+                                <input type="text" class="form-control" id="confirmationCode" name="confirmationCode" placeholder="Enter 6-digit code" maxlength="6" required>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <input type="submit" class="btn btn-primary" value="Confirm">
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Bootstrap 5.3.0 JS -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
 
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                // Modal Create Account
-                var createModal = document.getElementById("createEmployeeModal");
-                var createBtn = document.querySelector(".add-employee-btn");
-                var closeCreateButtons = document.querySelectorAll("#createEmployeeModal .close-button");
+// Display error message
+                                            function displayError(fieldId, errorMessage) {
+                                                const $field = $('#' + fieldId);
+                                                $field.addClass('is-invalid');
+                                                $field.siblings('.invalid-feedback').text(errorMessage);
+                                            }
 
-                if (createBtn && createModal) {
-                    createBtn.onclick = function () {
-                        createModal.style.display = "block";
-                    }
-                }
+// Validate create form
+                                            function validateCreateForm() {
+                                                $('.invalid-feedback').text('');
+                                                $('.is-invalid').removeClass('is-invalid');
 
-                if (closeCreateButtons) {
-                    closeCreateButtons.forEach(function (btnClose) {
-                        btnClose.onclick = function () {
-                            createModal.style.display = "none";
-                        }
-                    });
-                }
+                                                let email = $("#UserEmail").val().trim();
+                                                let password = $("#UserPassword").val().trim();
+                                                let name = $("#UserName").val().trim();
+                                                let role = $("#UserRole").val();
+                                                let idCard = $("#IdentityCard").val().trim();
+                                                let address = $("#UserAddress").val().trim();
+                                                let phone = $("#UserPhone").val().trim();
+                                                let image = $("#UserImage")[0].files.length;
 
-                // Modal Edit Account
-                var editModal = document.getElementById("editEmployeeModal");
-                var editButtons = document.querySelectorAll(".edit-employee-btn");
-                var closeEditButtons = document.querySelectorAll("#editEmployeeModal .close-button");
+                                                let isValid = true;
 
-                if (editButtons) {
-                    editButtons.forEach(function (btnEdit) {
-                        btnEdit.onclick = function (e) {
-                            e.preventDefault();
-                            document.getElementById('EditUserIdHidden').value = btnEdit.dataset.userid;
-                            document.getElementById('EditUserId').value = btnEdit.dataset.userid;
-                            document.getElementById('EditUserEmail').value = btnEdit.dataset.useremail;
-                            document.getElementById('EditUserName').value = btnEdit.dataset.username;
-                            document.getElementById('EditUserPassword').value = btnEdit.dataset.userpassword;
-                            document.getElementById('EditUserRole').value = btnEdit.dataset.userrole;
-                            document.getElementById('EditIdentityCard').value = btnEdit.dataset.identitycard;
-                            document.getElementById('EditUserAddress').value = btnEdit.dataset.useraddress;
-                            document.getElementById('EditCurrentImage').src = '<%= request.getContextPath()%>' + btnEdit.dataset.userimage;
+                                                if (!email) {
+                                                    isValid = false;
+                                                    displayError('UserEmail', 'Please enter an email address.');
+                                                } else if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(email)) {
+                                                    isValid = false;
+                                                    displayError('UserEmail', 'Email must be valid and end with "@gmail.com".');
+                                                }
 
-                            editModal.style.display = "block";
-                        }
-                    });
-                }
+                                                if (!password) {
+                                                    isValid = false;
+                                                    displayError('UserPassword', 'Please enter a password.');
+                                                } else if (password.length < 6) {
+                                                    isValid = false;
+                                                    displayError('UserPassword', 'Password must be at least 6 characters long.');
+                                                }
 
-                if (closeEditButtons) {
-                    closeEditButtons.forEach(function (btnClose) {
-                        btnClose.onclick = function () {
-                            editModal.style.display = "none";
-                        }
-                    });
-                }
+                                                if (!name) {
+                                                    isValid = false;
+                                                    displayError('UserName', 'Please enter a full name.');
+                                                } else if (name.length < 2 || name.length > 50) {
+                                                    isValid = false;
+                                                    displayError('UserName', 'Name must be between 2 and 50 characters.');
+                                                }
 
-                window.onclick = function (event) {
-                    if (event.target == createModal) {
-                        createModal.style.display = "none";
-                    }
-                    if (event.target == editModal) {
-                        editModal.style.display = "none";
-                    }
-                }
-            });
-            const searchInput = document.getElementById('searchInput');
-            const roleFilter = document.getElementById('roleFilter'); // Lấy phần tử select
-            const table = document.querySelector('.table');
-            const rows = table.querySelectorAll('tbody tr');
+                                                if (!role) {
+                                                    isValid = false;
+                                                    displayError('UserRole', 'Please select a role.');
+                                                }
 
-            function filterTable() {
-                const searchText = searchInput.value.toLowerCase();
-                const selectedRole = roleFilter.value; // Lấy role được chọn
+                                                if (!idCard) {
+                                                    isValid = false;
+                                                    displayError('IdentityCard', 'Please enter an identity card number.');
+                                                } else if (!/^\d{12}$/.test(idCard)) {
+                                                    isValid = false;
+                                                    displayError('IdentityCard', 'Identity card must be 12 digits.');
+                                                }
 
-                rows.forEach(row => {
-                    const id = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-                    const name = row.querySelector('td:nth-child(6)').textContent.toLowerCase();
-                    const email = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
-                    const role = row.querySelector('td:nth-child(7)').textContent; // Lấy role của hàng, không chuyển thành chữ thường
+                                                if (!address) {
+                                                    isValid = false;
+                                                    displayError('UserAddress', 'Please enter an address.');
+                                                } else if (address.length < 5 || address.length > 100) {
+                                                    isValid = false;
+                                                    displayError('UserAddress', 'Address must be between 5 and 100 characters.');
+                                                }
 
-                    let matchesSearch = id.includes(searchText) || name.includes(searchText) || email.includes(searchText);
-                    let matchesRole = selectedRole === '' || role === selectedRole; // So sánh với role được chọn, hoặc hiển thị tất cả nếu chọn "All Roles"
+                                                if (!phone) {
+                                                    isValid = false;
+                                                    displayError('UserPhone', 'Please enter a phone number.');
+                                                } else if (!/^0\d{9}$/.test(phone)) {
+                                                    isValid = false;
+                                                    displayError('UserPhone', 'Phone number must start with 0 and be 10 digits.');
+                                                }
 
-                    if (matchesSearch && matchesRole) {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = 'none';
-                    }
-                });
-            }
-            searchInput.addEventListener('keyup', filterTable); // Gọi hàm filterTable khi gõ vào ô tìm kiếm
-            roleFilter.addEventListener('change', filterTable); // Gọi hàm filterTable khi thay đổi lựa chọn trong dropdown
+                                                if (!image) {
+                                                    isValid = false;
+                                                    displayError('UserImage', 'Please select a profile image.');
+                                                }
 
+                                                return isValid;
+                                            }
+
+// Submit create form
+                                            function submitCreateForm(event) {
+                                                event.preventDefault();
+                                                if (!validateCreateForm())
+                                                    return;
+
+                                                var formData = new FormData($("#createAccountForm")[0]);
+                                                formData.append("action", "submitForm");
+
+                                                $.ajax({
+                                                    url: "CreateAccount",
+                                                    type: "POST",
+                                                    data: formData,
+                                                    contentType: false,
+                                                    processData: false,
+                                                    dataType: "json",
+                                                    success: function (response) {
+                                                        if (response.success) {
+                                                            var createModal = bootstrap.Modal.getInstance(document.getElementById('createEmployeeModal'));
+                                                            createModal.hide();
+                                                            Swal.fire({
+                                                                icon: 'info',
+                                                                title: 'Check Your Email',
+                                                                text: response.message,
+                                                                timer: 3000,
+                                                                showConfirmButton: true
+                                                            }).then(() => {
+                                                                var confirmModal = new bootstrap.Modal(document.getElementById('confirmCodeModal'));
+                                                                confirmModal.show();
+                                                            });
+                                                        } else {
+                                                            if (response.message === "Email not found.") {
+                                                                displayError('UserEmail', 'Email not found.');
+                                                            } else {
+                                                                displayError('UserEmail', response.message || 'Failed to process request.');
+                                                            }
+                                                        }
+                                                    },
+                                                    error: function (xhr, status, error) {
+                                                        try {
+                                                            var errorResponse = JSON.parse(xhr.responseText);
+                                                            displayError('UserEmail', errorResponse.message || 'Error processing request: ' + error);
+                                                        } catch (e) {
+                                                            displayError('UserEmail', 'Error processing request: ' + error);
+                                                        }
+                                                    }
+                                                });
+                                            }
+
+// Submit confirmation code
+                                            function submitConfirmCodeForm(event) {
+                                                event.preventDefault();
+                                                var confirmationCode = $("#confirmationCode").val().trim();
+
+                                                if (!/^\d{6}$/.test(confirmationCode)) {
+                                                    displayError('confirmationCode', 'Please enter a valid 6-digit code.');
+                                                    return;
+                                                }
+
+                                                var formData = new FormData();
+                                                formData.append("action", "confirmCode");
+                                                formData.append("confirmationCode", confirmationCode);
+
+                                                $.ajax({
+                                                    url: "CreateAccount",
+                                                    type: "POST",
+                                                    data: formData,
+                                                    contentType: false,
+                                                    processData: false,
+                                                    dataType: "json",
+                                                    success: function (response) {
+                                                        if (response.success) {
+                                                            var confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmCodeModal'));
+                                                            confirmModal.hide();
+                                                            Swal.fire({
+                                                                icon: 'success',
+                                                                title: 'Success!',
+                                                                text: response.message,
+                                                                timer: 2000,
+                                                                showConfirmButton: false
+                                                            }).then(() => {
+                                                                location.reload();
+                                                            });
+                                                        } else {
+                                                            displayError('confirmationCode', response.message || 'Invalid confirmation code.');
+                                                        }
+                                                    },
+                                                    error: function (xhr, status, error) {
+                                                        displayError('confirmationCode', 'Error confirming code: ' + error);
+                                                    }
+                                                });
+                                            }
+
+// Validate update form
+                                            function validateUpdateDetailForm() {
+                                                $('.invalid-feedback').text('');
+                                                $('.is-invalid').removeClass('is-invalid');
+                                                let email = $("#DetailUserEmail").val().trim();
+                                                let password = $("#DetailUserPassword").val().trim();
+                                                let name = $("#DetailUserName").val().trim();
+                                                let role = $("#DetailUserRole").val();
+                                                let idCard = $("#DetailIdentityCard").val().trim();
+                                                let address = $("#DetailUserAddress").val().trim();
+                                                let phone = $("#DetailUserPhone").val().trim();
+                                                let isValid = true;
+
+                                                if (!email) {
+                                                    isValid = false;
+                                                    displayError('DetailUserEmail', 'Please enter an email address.');
+                                                } else if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(email)) {
+                                                    isValid = false;
+                                                    displayError('DetailUserEmail', 'Email must be valid and end with "@gmail.com".');
+                                                }
+
+                                                if (!password) {
+                                                    isValid = false;
+                                                    displayError('DetailUserPassword', 'Please enter a password.');
+                                                } else if (password.length < 6) {
+                                                    isValid = false;
+                                                    displayError('DetailUserPassword', 'Password must be at least 6 characters long.');
+                                                }
+
+                                                if (!name) {
+                                                    isValid = false;
+                                                    displayError('DetailUserName', 'Please enter a full name.');
+                                                } else if (name.length < 2 || name.length > 50) {
+                                                    isValid = false;
+                                                    displayError('DetailUserName', 'Name must be between 2 and 50 characters.');
+                                                }
+
+                                                if (!role) {
+                                                    isValid = false;
+                                                    displayError('DetailUserRole', 'Please select a role.');
+                                                }
+
+                                                if (!idCard) {
+                                                    isValid = false;
+                                                    displayError('DetailIdentityCard', 'Please enter an identity card number.');
+                                                } else if (!/^\d{12}$/.test(idCard)) {
+                                                    isValid = false;
+                                                    displayError('DetailIdentityCard', 'Identity card must be 12 digits.');
+                                                }
+
+                                                if (!address) {
+                                                    isValid = false;
+                                                    displayError('DetailUserAddress', 'Please enter an address.');
+                                                } else if (address.length < 5 || address.length > 100) {
+                                                    isValid = false;
+                                                    displayError('DetailUserAddress', 'Address must be between 5 and 100 characters.');
+                                                }
+
+                                                if (!phone) {
+                                                    isValid = false;
+                                                    displayError('DetailUserPhone', 'Please enter a phone number.');
+                                                } else if (!/^0\d{9}$/.test(phone)) {
+                                                    isValid = false;
+                                                    displayError('DetailUserPhone', 'Phone number must start with 0 and be 10 digits.');
+                                                }
+
+                                                return isValid;
+                                            }
+
+// Submit update form
+                                            function submitUpdateDetailForm(event) {
+                                                event.preventDefault();
+                                                if (!validateUpdateDetailForm())
+                                                    return;
+
+                                                var formData = new FormData($("#updateAccountDetailForm")[0]);
+                                                $.ajax({
+                                                    url: "UpdateAccount",
+                                                    type: "POST",
+                                                    data: formData,
+                                                    contentType: false,
+                                                    processData: false,
+                                                    dataType: "json",
+                                                    success: function (response) {
+                                                        if (response.success) {
+                                                            var detailModal = bootstrap.Modal.getInstance(document.getElementById('viewAccountDetailModal'));
+                                                            detailModal.hide();
+                                                            Swal.fire({
+                                                                icon: 'success',
+                                                                title: 'Success!',
+                                                                text: 'Account updated successfully.',
+                                                                timer: 2000,
+                                                                showConfirmButton: false
+                                                            }).then(() => {
+                                                                location.reload();
+                                                            });
+                                                        } else {
+                                                            if (response.errors) {
+                                                                for (let field in response.errors) {
+                                                                    displayError('DetailUser' + field.charAt(0).toUpperCase() + field.slice(1), response.errors[field]);
+                                                                }
+                                                            } else {
+                                                                displayError('DetailUserEmail', response.message || 'Failed to update account.');
+                                                            }
+                                                        }
+                                                    },
+                                                    error: function (xhr, status, error) {
+                                                        try {
+                                                            var errorResponse = JSON.parse(xhr.responseText);
+                                                            if (errorResponse.errors) {
+                                                                for (let field in errorResponse.errors) {
+                                                                    displayError('DetailUser' + field.charAt(0).toUpperCase() + field.slice(1), errorResponse.errors[field]);
+                                                                }
+                                                            } else {
+                                                                displayError('DetailUserEmail', errorResponse.message || 'Error updating account: ' + error);
+                                                            }
+                                                        } catch (e) {
+                                                            displayError('DetailUserEmail', 'Error updating account: ' + error);
+                                                        }
+                                                    }
+                                                });
+                                            }
+
+// Check selected image
+                                            function checkImageSelected(mode) {
+                                                if (mode === 'create') {
+                                                    var imageInput = $("#UserImage")[0];
+                                                    var noImageMessage = $("#createNoImageMessage");
+                                                    var currentImage = $("#createCurrentImage");
+                                                    var fileNameDisplay = $("#createFileNameDisplay");
+                                                    if (imageInput.files.length === 0) {
+                                                        fileNameDisplay.text("No file chosen");
+                                                        noImageMessage.show();
+                                                        currentImage.hide();
+                                                    } else {
+                                                        fileNameDisplay.text(imageInput.files[0].name);
+                                                        noImageMessage.hide();
+                                                        currentImage.show();
+                                                        var reader = new FileReader();
+                                                        reader.onload = function (e) {
+                                                            currentImage.attr('src', e.target.result);
+                                                        };
+                                                        reader.readAsDataURL(imageInput.files[0]);
+                                                    }
+                                                } else if (mode === 'update') {
+                                                    var imageInput = $("#DetailUserImage")[0];
+                                                    var noImageMessage = $("#noImageMessage");
+                                                    var currentImage = $("#DetailCurrentImage");
+                                                    var fileNameDisplay = $("#updateFileNameDisplay");
+                                                    if (imageInput.files.length === 0) {
+                                                        fileNameDisplay.text("No file chosen");
+                                                        if (!currentImage.attr('src') || currentImage.attr('src') === '') {
+                                                            noImageMessage.show();
+                                                            currentImage.hide();
+                                                        } else {
+                                                            noImageMessage.hide();
+                                                            currentImage.show();
+                                                        }
+                                                    } else {
+                                                        fileNameDisplay.text(imageInput.files[0].name);
+                                                        noImageMessage.hide();
+                                                        currentImage.show();
+                                                        var reader = new FileReader();
+                                                        reader.onload = function (e) {
+                                                            currentImage.attr('src', e.target.result);
+                                                        };
+                                                        reader.readAsDataURL(imageInput.files[0]);
+                                                    }
+                                                }
+                                            }
+
+// Enable edit mode
+                                            function enableEditMode() {
+                                                $("#detailModalHeading").text("Update Profile");
+                                                $("#DetailUserEmail, #DetailUserPassword, #DetailUserName, #DetailUserAddress, #DetailUserPhone, #DetailIdentityCard")
+                                                        .prop("readonly", false);
+                                                $("#DetailUserRole").prop("disabled", false);
+                                                $("#imageUpdateSection").show();
+                                                var modalActions = $("#modalActions");
+                                                modalActions.empty();
+                                                modalActions.append('<input type="submit" class="btn btn-primary" value="Save">');
+                                                modalActions.append('<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>');
+                                            }
+
+                                            $(document).ready(function () {
+                                                var createBtn = $(".add-employee-btn");
+                                                var detailButtons = $(".view-detail-btn");
+
+                                                // Gán sự kiện cho nút "Choose File" bằng event delegation
+                                                $(document).on("click", "#createCustomFileButton", function () {
+                                                    $("#UserImage").click();
+                                                });
+
+                                                $(document).on("click", "#updateCustomFileButton", function () {
+                                                    $("#DetailUserImage").click();
+                                                });
+
+                                                createBtn.on("click", function () {
+                                                    $("#createAccountForm")[0].reset();
+                                                    $("#createNoImageMessage").show();
+                                                    $("#createCurrentImage").hide().attr('src', '');
+                                                    $("#createFileNameDisplay").text("No file chosen");
+                                                    checkImageSelected('create');
+                                                    $('.invalid-feedback').text('');
+                                                    $('.is-invalid').removeClass('is-invalid');
+                                                    var createModal = new bootstrap.Modal(document.getElementById('createEmployeeModal'));
+                                                    createModal.show();
+                                                });
+
+                                                $('#createEmployeeModal').on('hidden.bs.modal', function () {
+                                                    $('.invalid-feedback').text('');
+                                                    $('.is-invalid').removeClass('is-invalid');
+                                                    $("#createAccountForm")[0].reset();
+                                                    $("#createNoImageMessage").show();
+                                                    $("#createCurrentImage").hide().attr('src', '');
+                                                    $("#createFileNameDisplay").text("No file chosen");
+                                                });
+
+                                                $("#createAccountForm").submit(submitCreateForm);
+                                                $("#confirmCodeForm").submit(submitConfirmCodeForm);
+
+                                                detailButtons.on("click", function (e) {
+                                                    e.preventDefault();
+                                                    var btn = $(this);
+                                                    var isAdmin = btn.data("userrole").toLowerCase() === "admin";
+                                                    $("#detailModalHeading").text("Account Detail");
+                                                    $("#DetailUserIdHidden").val(btn.data("userid"));
+                                                    $("#DetailUserRoleHidden").val(btn.data("userrole"));
+                                                    $("#DetailUserId").val(btn.data("userid"));
+                                                    $("#DetailUserEmail").val(btn.data("useremail")).prop("readonly", true);
+                                                    $("#DetailUserPassword").val(btn.data("userpassword")).prop("readonly", true);
+                                                    $("#DetailUserName").val(btn.data("username")).prop("readonly", true);
+                                                    $("#DetailUserRole").val(btn.data("userrole")).prop("disabled", true);
+                                                    $("#DetailIdentityCard").val(btn.data("identitycard")).prop("readonly", true);
+                                                    $("#DetailUserAddress").val(btn.data("useraddress")).prop("readonly", true);
+                                                    $("#DetailUserPhone").val(btn.data("userphone") || '').prop("readonly", true);
+                                                    var userImage = btn.data("userimage") || '';
+                                                    $("#DetailCurrentImage").attr("src", userImage);
+                                                    $("#DetailOldImagePath").val(userImage);
+                                                    if (userImage) {
+                                                        $("#noImageMessage").hide();
+                                                        $("#DetailCurrentImage").show();
+                                                    } else {
+                                                        $("#noImageMessage").show();
+                                                        $("#DetailCurrentImage").hide();
+                                                    }
+
+                                                    $("#imageUpdateSection").hide();
+                                                    $('.invalid-feedback').text('');
+                                                    $('.is-invalid').removeClass('is-invalid');
+                                                    var modalActions = $("#modalActions");
+                                                    modalActions.empty();
+                                                    if (!isAdmin) {
+                                                        modalActions.append('<button type="button" class="btn btn-warning" id="editButton"><i class="fas fa-edit"></i> Update</button>');
+                                                        modalActions.append('<button type="button" class="btn btn-danger btn-delete-account" data-bs-toggle="modal" data-bs-target="#deleteAccountModal" data-account-id="' + btn.data("userid") + '" data-account-name="' + btn.data("username") + '"><i class="fas fa-trash-alt"></i> Delete</button>');
+                                                    }
+                                                    modalActions.append('<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>');
+                                                    $("#editButton").off("click").on("click", function () {
+                                                        enableEditMode();
+                                                    });
+                                                    var detailModal = new bootstrap.Modal(document.getElementById('viewAccountDetailModal'));
+                                                    detailModal.show();
+                                                    checkImageSelected('update');
+                                                });
+
+                                                $('#viewAccountDetailModal').on('hidden.bs.modal', function () {
+                                                    $('.invalid-feedback').text('');
+                                                    $('.is-invalid').removeClass('is-invalid');
+                                                    $("#updateAccountDetailForm")[0].reset();
+                                                    $("#noImageMessage").show();
+                                                    $("#DetailCurrentImage").hide().attr('src', '');
+                                                    $("#updateFileNameDisplay").text("No file chosen");
+                                                });
+
+                                                $("#updateAccountDetailForm").submit(submitUpdateDetailForm);
+
+                                                // Xử lý input real-time
+                                                $("#UserEmail").on("input", function () {
+                                                    $(this).removeClass('is-invalid');
+                                                    $(this).siblings('.invalid-feedback').text('');
+                                                    let email = $(this).val().trim();
+                                                    if (!email) {
+                                                        displayError('UserEmail', 'Please enter an email address.');
+                                                    } else if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(email)) {
+                                                        displayError('UserEmail', 'Email must be valid and end with "@gmail.com".');
+                                                    }
+                                                });
+
+                                                $("#UserPassword").on("input", function () {
+                                                    $(this).removeClass('is-invalid');
+                                                    $(this).siblings('.invalid-feedback').text('');
+                                                    let password = $(this).val().trim();
+                                                    if (!password) {
+                                                        displayError('UserPassword', 'Please enter a password.');
+                                                    } else if (password.length < 6) {
+                                                        displayError('UserPassword', 'Password must be at least 6 characters long.');
+                                                    }
+                                                });
+
+                                                $("#UserName").on("input", function () {
+                                                    $(this).removeClass('is-invalid');
+                                                    $(this).siblings('.invalid-feedback').text('');
+                                                    let name = $(this).val().trim();
+                                                    if (!name) {
+                                                        displayError('UserName', 'Please enter a full name.');
+                                                    } else if (name.length < 2 || name.length > 50) {
+                                                        displayError('UserName', 'Name must be between 2 and 50 characters.');
+                                                    }
+                                                });
+
+                                                $("#UserRole").on("change", function () {
+                                                    $(this).removeClass('is-invalid');
+                                                    $(this).siblings('.invalid-feedback').text('');
+                                                    if (!$(this).val()) {
+                                                        displayError('UserRole', 'Please select a role.');
+                                                    }
+                                                });
+
+                                                $("#IdentityCard").on("input", function () {
+                                                    $(this).removeClass('is-invalid');
+                                                    $(this).siblings('.invalid-feedback').text('');
+                                                    let idCard = $(this).val().trim();
+                                                    if (!idCard) {
+                                                        displayError('IdentityCard', 'Please enter an identity card number.');
+                                                    } else if (!/^\d{12}$/.test(idCard)) {
+                                                        displayError('IdentityCard', 'Identity card must be 12 digits.');
+                                                    }
+                                                });
+
+                                                $("#UserAddress").on("input", function () {
+                                                    $(this).removeClass('is-invalid');
+                                                    $(this).siblings('.invalid-feedback').text('');
+                                                    let address = $(this).val().trim();
+                                                    if (!address) {
+                                                        displayError('UserAddress', 'Please enter an address.');
+                                                    } else if (address.length < 5 || address.length > 100) {
+                                                        displayError('UserAddress', 'Address must be between 5 and 100 characters.');
+                                                    }
+                                                });
+
+                                                $("#UserPhone").on("input", function () {
+                                                    $(this).removeClass('is-invalid');
+                                                    $(this).siblings('.invalid-feedback').text('');
+                                                    let phone = $(this).val().trim();
+                                                    if (!phone) {
+                                                        displayError('UserPhone', 'Please enter a phone number.');
+                                                    } else if (!/^0\d{9}$/.test(phone)) {
+                                                        displayError('UserPhone', 'Phone number must start with 0 and be 10 digits.');
+                                                    }
+                                                });
+
+                                                $("#confirmationCode").on("input", function () {
+                                                    $(this).removeClass('is-invalid');
+                                                    $(this).siblings('.invalid-feedback').text('');
+                                                });
+
+                                                // Các input real-time cho update form
+                                                $("#DetailUserEmail").on("input", function () {
+                                                    $(this).removeClass('is-invalid');
+                                                    $(this).siblings('.invalid-feedback').text('');
+                                                    let email = $(this).val().trim();
+                                                    if (!email) {
+                                                        displayError('DetailUserEmail', 'Please enter an email address.');
+                                                    } else if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(email)) {
+                                                        displayError('DetailUserEmail', 'Email must be valid and end with "@gmail.com".');
+                                                    }
+                                                });
+
+                                                $("#DetailUserPassword").on("input", function () {
+                                                    $(this).removeClass('is-invalid');
+                                                    $(this).siblings('.invalid-feedback').text('');
+                                                    let password = $(this).val().trim();
+                                                    if (!password) {
+                                                        displayError('DetailUserPassword', 'Please enter a password.');
+                                                    } else if (password.length < 6) {
+                                                        displayError('DetailUserPassword', 'Password must be at least 6 characters long.');
+                                                    }
+                                                });
+
+                                                $("#DetailUserName").on("input", function () {
+                                                    $(this).removeClass('is-invalid');
+                                                    $(this).siblings('.invalid-feedback').text('');
+                                                    let name = $(this).val().trim();
+                                                    if (!name) {
+                                                        displayError('DetailUserName', 'Please enter a full name.');
+                                                    } else if (name.length < 2 || name.length > 50) {
+                                                        displayError('DetailUserName', 'Name must be between 2 and 50 characters.');
+                                                    }
+                                                });
+
+                                                $("#DetailUserRole").on("change", function () {
+                                                    $(this).removeClass('is-invalid');
+                                                    $(this).siblings('.invalid-feedback').text('');
+                                                    if (!$(this).val()) {
+                                                        displayError('DetailUserRole', 'Please select a role.');
+                                                    }
+                                                });
+
+                                                $("#DetailIdentityCard").on("input", function () {
+                                                    $(this).removeClass('is-invalid');
+                                                    $(this).siblings('.invalid-feedback').text('');
+                                                    let idCard = $(this).val().trim();
+                                                    if (!idCard) {
+                                                        displayError('DetailIdentityCard', 'Please enter an identity card number.');
+                                                    } else if (!/^\d{12}$/.test(idCard)) {
+                                                        displayError('DetailIdentityCard', 'Identity card must be 12 digits.');
+                                                    }
+                                                });
+
+                                                $("#DetailUserAddress").on("input", function () {
+                                                    $(this).removeClass('is-invalid');
+                                                    $(this).siblings('.invalid-feedback').text('');
+                                                    let address = $(this).val().trim();
+                                                    if (!address) {
+                                                        displayError('DetailUserAddress', 'Please enter an address.');
+                                                    } else if (address.length < 5 || address.length > 100) {
+                                                        displayError('DetailUserAddress', 'Address must be between 5 and 100 characters.');
+                                                    }
+                                                });
+
+                                                $("#DetailUserPhone").on("input", function () {
+                                                    $(this).removeClass('is-invalid');
+                                                    $(this).siblings('.invalid-feedback').text('');
+                                                    let phone = $(this).val().trim();
+                                                    if (!phone) {
+                                                        displayError('DetailUserPhone', 'Please enter a phone number.');
+                                                    } else if (!/^0\d{9}$/.test(phone)) {
+                                                        displayError('DetailUserPhone', 'Phone number must start with 0 and be 10 digits.');
+                                                    }
+                                                });
+
+                                                $("#searchInput").on("keyup", filterTable);
+                                                $("#roleFilter").on("change", filterTable);
+
+                                                function filterTable() {
+                                                    const searchText = $("#searchInput").val().toLowerCase();
+                                                    const selectedRole = $("#roleFilter").val();
+                                                    $("table tbody tr").each(function () {
+                                                        const id = $(this).find("td:nth-child(2)").text().toLowerCase();
+                                                        const name = $(this).find("td:nth-child(3)").text().toLowerCase();
+                                                        const email = $(this).find("td:nth-child(4)").text().toLowerCase();
+                                                        const role = $(this).find("td:nth-child(5)").text();
+                                                        let matchesSearch = id.includes(searchText) || name.includes(searchText) || email.includes(searchText);
+                                                        let matchesRole = selectedRole === '' || role === selectedRole;
+                                                        $(this).css("display", (matchesSearch && matchesRole) ? '' : 'none');
+                                                    });
+                                                }
+
+                                                $(document).on('click', '.btn-delete-account', function () {
+                                                    var accountId = $(this).data('account-id');
+                                                    var accountName = $(this).data('account-name');
+                                                    $('#accountIdDelete').val(accountId);
+                                                    $('#accountNameDelete').val(accountName);
+                                                    $('#deleteAccountModal .modal-body p').text('Are you sure you want to delete the account of ' + accountName + ' (ID: ' + accountId + ')?');
+                                                });
+
+                                                $('#btnDeleteAccountConfirm').click(function () {
+                                                    var accountId = $('#accountIdDelete').val();
+                                                    $.ajax({
+                                                        url: 'DeleteAccount',
+                                                        type: 'GET',
+                                                        data: {UserId: accountId},
+                                                        success: function () {
+                                                            var deleteAccountModal = bootstrap.Modal.getInstance(document.getElementById('deleteAccountModal'));
+                                                            deleteAccountModal.hide();
+                                                            $('#accountRow' + accountId).remove();
+                                                            if ($('#accountTableBody tr').length === 0) {
+                                                                $('#accountTableBody').html('<tr><td colspan="6">No accounts found.</td></tr>');
+                                                            }
+                                                            Swal.fire({
+                                                                icon: 'success',
+                                                                title: 'Success!',
+                                                                text: 'Account deleted successfully.',
+                                                                timer: 2000,
+                                                                showConfirmButton: false
+                                                            });
+                                                        },
+                                                        error: function (xhr, status, error) {
+                                                            $('#deleteAccountModal .modal-body p').after('<div class="invalid-feedback d-block">Error deleting account: ' + error + '</div>');
+                                                        }
+                                                    });
+                                                });
+                                            });
         </script>
     </body>
 </html>
