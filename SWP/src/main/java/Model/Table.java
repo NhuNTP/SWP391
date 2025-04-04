@@ -1,20 +1,13 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package Model;
 
-/**
- *
- * @author ADMIN
- */
 public class Table {
 
-    private String TableId; // Sửa thành String
+    private String TableId;
     private String TableStatus;
     private int NumberOfSeats;
-    private int FloorNumber; // Sửa thành int (cho phép null)
+    private int FloorNumber;
     private boolean IsDeleted;
+    private boolean hasOrder;
 
     // Constructor không tham số (default constructor)
     public Table() {
@@ -22,12 +15,13 @@ public class Table {
     }
 
     // Constructor đầy đủ
-    public Table(String TableId, String TableStatus, int NumberOfSeats, int FloorNumber, boolean IsDeleted) {
+    public Table(String TableId, String TableStatus, int NumberOfSeats, int FloorNumber, boolean IsDeleted, boolean hasOrder) {
         this.TableId = TableId;
         this.TableStatus = TableStatus;
         this.NumberOfSeats = NumberOfSeats;
         this.FloorNumber = FloorNumber;
         this.IsDeleted = IsDeleted;
+        this.hasOrder = hasOrder;
     }
 
     // Constructor không có TableId (cho trường hợp insert)
@@ -35,16 +29,18 @@ public class Table {
         this.TableStatus = TableStatus;
         this.NumberOfSeats = NumberOfSeats;
         this.FloorNumber = FloorNumber;
+        this.IsDeleted = false;
     }
 
+    // Constructor cho trường hợp lấy dữ liệu từ DB
     public Table(String TableId, String TableStatus, int NumberOfSeats, int FloorNumber) {
         this.TableId = TableId;
         this.TableStatus = TableStatus;
         this.NumberOfSeats = NumberOfSeats;
         this.FloorNumber = FloorNumber;
+        this.IsDeleted = false;
     }
-    
-    // Các constructor khác có thể không cần thiết, tùy vào cách bạn sử dụng
+
     // Getters and Setters
     public String getTableId() {
         return TableId;
@@ -84,5 +80,13 @@ public class Table {
 
     public void setIsDeleted(boolean IsDeleted) {
         this.IsDeleted = IsDeleted;
+    }
+
+    public boolean isHasOrder() {
+        return hasOrder;
+    }
+
+    public void setHasOrder(boolean hasOrder) {
+        this.hasOrder = hasOrder;
     }
 }
