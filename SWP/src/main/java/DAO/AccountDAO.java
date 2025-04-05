@@ -457,4 +457,19 @@ public class AccountDAO {
         }
         return userIds;
     }
+    public Account getAccountById(String userId) throws SQLException, ClassNotFoundException {
+    String query = "SELECT UserName FROM Account WHERE UserId = ? AND IsDeleted = 0";
+    try (Connection conn = DBContext.getConnection();
+         PreparedStatement ps = conn.prepareStatement(query)) {
+        ps.setString(1, userId);
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                Account account = new Account();
+                account.setUserName(rs.getString("UserName"));
+                return account;
+            }
+        }
+    }
+    return null;
+}
 }

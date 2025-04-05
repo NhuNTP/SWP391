@@ -1,14 +1,15 @@
+<%@page import="java.text.SimpleDateFormat"%>
 <%@page import="Model.OrderDetail"%>
-<%@page import="Model.Table"%>
-<%@page import="DAO.TableDAO"%>
+<%@page import="DAO.CustomerDAO"%>
+<%@page import="DAO.AccountDAO"%>
 <%@page import="java.util.ArrayList"%>
 <%@page import="Model.Account"%>
 <%@page import="DAO.MenuDAO"%>
 <%@page import="Model.Dish"%>
 <%@page import="java.util.List"%>
 <%@page import="Model.Order"%>
-<%@page import="com.google.gson.Gson"%>
-<%@ page contentType="text/html" pageEncoding="UTF-8"%>
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
+
 <%!
     List<Dish> dishList = null;
 %>
@@ -36,6 +37,10 @@
             System.out.println("Dish ID: " + dish.getDishId() + ", Name: " + dish.getDishName());
         }
     }
+
+    AccountDAO accountDAO = new AccountDAO();
+    CustomerDAO customerDAO = new CustomerDAO();
+    SimpleDateFormat timeFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm"); // Định dạng giờ:phút
 %>
 <!DOCTYPE html>
 <html lang="vi">
@@ -88,7 +93,7 @@
                 <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-list-alt me-2"></i>Menu Management</a></li>
                 <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewAccountList" class="nav-link"><i class="fas fa-users me-2"></i>Employee Management</a></li>
                 <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewTableList" class="nav-link"><i class="fas fa-building me-2"></i>Table Management</a></li>
-                <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewOrderList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Order Management</a></li>
+                <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewOrderList" class="nav-link active"><i class="fas fa-shopping-cart me-2"></i>Order Management</a></li>
                 <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCustomerList" class="nav-link"><i class="fas fa-user-friends me-2"></i>Customer Management</a></li>
                 <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCouponController" class="nav-link"><i class="fas fa-tag me-2"></i>Coupon Management</a></li>
                 <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewInventoryController" class="nav-link"><i class="fas fa-boxes me-2"></i>Inventory Management</a></li>
@@ -113,7 +118,6 @@
                                     <input type="text" id="searchInput" placeholder="Search">
                                 </div>
                             </div>
-
                         </div>
 
                         <div class="table-responsive">
@@ -122,16 +126,14 @@
                                     <tr>
                                         <th>No.</th>
                                         <th>Order ID</th>
-                                        <th>User ID</th>
-                                        <th>Customer ID</th>
-                                        <th>Order Date</th>
+                                        <th>Username</th>
+                                        <th>Customer Name</th>
+                                        <th>Order Time</th>
                                         <th>Order Status</th>
-                                        <th>Order Type</th>
                                         <th>Dishes</th>
-
                                     </tr>
                                     <tr id="noResultsRow" style="display: none;">
-                                        <td colspan="9" style="text-align: center; color: gray">Order Not Found.</td>
+                                        <td colspan="7" style="text-align: center; color: gray">Order Not Found.</td>
                                     </tr>
                                 </thead>
                                 <tbody id="orderTableBody">
@@ -140,16 +142,16 @@
                                         if (orderList != null && !orderList.isEmpty()) {
                                             int displayIndex = 1;
                                             for (Order order : orderList) {
-                                                String orderDetailsJson = new Gson().toJson(order.getOrderDetails() != null ? order.getOrderDetails() : new ArrayList<>());
+                                                String userName = order.getUserId() != null ? accountDAO.getAccountById(order.getUserId()).getUserName() : "N/A";
+                                                String customerName = order.getCustomerId() != null ? customerDAO.getCustomerById(order.getCustomerId()).getCustomerName() : "N/A";
                                     %>
                                     <tr id="orderRow<%=order.getOrderId()%>">
                                         <td><%= displayIndex++%></td>
                                         <td><%= order.getOrderId()%></td>
-                                        <td><%= order.getUserId()%></td>
-                                        <td><%= order.getCustomerId()%></td>
-                                        <td><%= order.getOrderDate()%></td>
+                                        <td><%= userName%></td>
+                                        <td><%= customerName%></td>
+                                        <td><%= timeFormat.format(order.getOrderDate())%></td>
                                         <td><%= order.getOrderStatus()%></td>
-                                        <td><%= order.getOrderType()%></td>
                                         <td>
                                             <%
                                                 List<OrderDetail> details = order.getOrderDetails();
@@ -170,7 +172,7 @@
                                         } else {
                                     %>
                                     <tr>
-                                        <td colspan="9"><div class="no-data">No Orders Found.</div></td>
+                                        <td colspan="7"><div class="no-data">No Orders Found.</div></td>
                                     </tr>
                                     <% } %>
                                 </tbody>
@@ -182,310 +184,33 @@
         </div>
     </div>
 
-    <!-- Add Order Modal -->
-    <div class="modal fade" id="addOrderModal" tabindex="-1" aria-labelledby="addOrderModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addOrderModalLabel">Add New Order</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="addOrderForm">
-                        <div class="mb-3 row">
-                            <label for="userId" class="col-sm-4 col-form-label">User ID:</label>
-                            <div class="col-sm-8">
-                                <input type="text" class="form-control" id="userId" name="userId" required>
-                            </div>
-                        </div>
-                        <div class="mb-3 row">
-                            <label for="customerId" class="col-sm-4 col-form-label">Customer ID:</label>
-                            <div class="col-sm-8">
-                                <input type="text" class="form-control" id="customerId" name="customerId" required>
-                            </div>
-                        </div>
-                        <div class="mb-3 row">
-                            <label for="orderStatus" class="col-sm-4 col-form-label">Order Status:</label>
-                            <div class="col-sm-8">
-                                <select class="form-control" id="orderStatus" name="orderStatus" required>
-                                    <option value="Pending">Pending</option>
-                                    <option value="Completed">Completed</option>
-                                    <option value="Cancelled">Cancelled</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="mb-3 row">
-                            <label for="orderType" class="col-sm-4 col-form-label">Order Type:</label>
-                            <div class="col-sm-8">
-                                <select class="form-control" id="orderType" name="orderType" required>
-                                    <option value="Dine-in">Dine-in</option>
-                                    <option value="Takeaway">Takeaway</option>
-                                    <option value="Delivery">Delivery</option>
-                                </select>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="btnAddOrder">Add Order</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Update Order Modal -->
-    <div class="modal fade" id="updateOrderModal" tabindex="-1" aria-labelledby="updateOrderModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="updateOrderModalLabel">Update Order</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="updateOrderForm">
-                        <div class="mb-3 row">
-                            <label for="orderIdUpdateDisplay" class="col-sm-4 col-form-label">Order ID:</label>
-                            <div class="col-sm-8">
-                                <input type="text" class="form-control" id="orderIdUpdateDisplay" readonly>
-                                <input type="hidden" id="orderIdUpdate" name="orderId">
-                            </div>
-                        </div>
-                        <div class="mb-3 row">
-                            <label for="userIdUpdate" class="col-sm-4 col-form-label">User ID:</label>
-                            <div class="col-sm-8">
-                                <input type="text" class="form-control" id="userIdUpdate" name="userId" required>
-                            </div>
-                        </div>
-                        <div class="mb-3 row">
-                            <label for="customerIdUpdate" class="col-sm-4 col-form-label">Customer ID:</label>
-                            <div class="col-sm-8">
-                                <input type="text" class="form-control" id="customerIdUpdate" name="customerId" required>
-                            </div>
-                        </div>
-                        <div class="mb-3 row">
-                            <label for="orderStatusUpdate" class="col-sm-4 col-form-label">Order Status:</label>
-                            <div class="col-sm-8">
-                                <select class="form-control" id="orderStatusUpdate" name="orderStatus" required>
-                                    <option value="Pending">Pending</option>
-                                    <option value="Completed">Completed</option>
-                                    <option value="Cancelled">Cancelled</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="mb-3 row">
-                            <label for="orderTypeUpdate" class="col-sm-4 col-form-label">Order Type:</label>
-                            <div class="col-sm-8">
-                                <select class="form-control" id="orderTypeUpdate" name="orderType" required>
-                                    <option value="Dine-in">Dine-in</option>
-                                    <option value="Takeaway">Takeaway</option>
-                                    <option value="Delivery">Delivery</option>
-                                </select>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="btnUpdateOrder">Save Changes</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Delete Order Modal -->
-    <div class="modal fade" id="deleteOrderModal" tabindex="-1" aria-labelledby="deleteOrderModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="deleteOrderModalLabel">Confirm Delete</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to delete this order?</p>
-                    <input type="hidden" id="orderIdDelete">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger" id="btnDeleteOrderConfirm">Delete</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
     <script>
-    $(document).ready(function () {
-        // Gắn sự kiện ban đầu
-        bindEventHandlers();
-        reloadViewOrders();
+        $(document).ready(function () {
+            // Gắn sự kiện tìm kiếm
+            $('#searchInput').on('keyup', function () {
+                var searchText = $(this).val().trim().toLowerCase();
+                var $rows = $('#orderTableBody tr:not(#noResultsRow)');
+                var foundMatch = false;
 
-        // Xử lý thêm đơn hàng
-        $('#btnAddOrder').click(function () {
-            var userId = $('#userId').val().trim();
-            var customerId = $('#customerId').val().trim();
-            var orderStatus = $('#orderStatus').val();
-            var orderType = $('#orderType').val();
+                $rows.each(function () {
+                    var orderId = $(this).find('td:nth-child(2)').text().toLowerCase();
+                    var userName = $(this).find('td:nth-child(3)').text().toLowerCase();
+                    var customerName = $(this).find('td:nth-child(4)').text().toLowerCase();
+                    var orderStatus = $(this).find('td:nth-child(6)').text().toLowerCase();
 
-            var isValid = true;
-            $('.error-message').remove();
-            $('.is-invalid').removeClass('is-invalid');
-
-            if (!userId) {
-                isValid = false;
-                displayError('userId', 'Please enter user ID');
-            }
-            if (!customerId) {
-                isValid = false;
-                displayError('customerId', 'Please enter customer ID');
-            }
-
-            if (isValid) {
-                $.ajax({
-                    url: 'AddOrder', // Thay bằng URL endpoint thực tế
-                    type: 'POST',
-                    data: { userId: userId, customerId: customerId, orderStatus: orderStatus, orderType: orderType },
-                    success: function () {
-                        $('#addOrderModal').modal('hide');
-                        reloadViewOrders();
-                        Swal.fire('Success', 'Order added successfully', 'success');
-                        $('#addOrderForm')[0].reset();
-                    },
-                    error: function (xhr) {
-                        Swal.fire('Error', xhr.responseText || 'Failed to add order', 'error');
+                    if (orderId.includes(searchText) || userName.includes(searchText) || 
+                        customerName.includes(searchText) || orderStatus.includes(searchText)) {
+                        $(this).show();
+                        foundMatch = true;
+                    } else {
+                        $(this).hide();
                     }
                 });
-            }
-        });
 
-        // Xử lý cập nhật đơn hàng
-        $('#btnUpdateOrder').click(function () {
-            var orderId = $('#orderIdUpdate').val();
-            var userId = $('#userIdUpdate').val().trim();
-            var customerId = $('#customerIdUpdate').val().trim();
-            var orderStatus = $('#orderStatusUpdate').val();
-            var orderType = $('#orderTypeUpdate').val();
-
-            var isValid = true;
-            $('.error-message').remove();
-            $('.is-invalid').removeClass('is-invalid');
-
-            if (!userId) {
-                isValid = false;
-                displayError('userIdUpdate', 'Please enter user ID');
-            }
-            if (!customerId) {
-                isValid = false;
-                displayError('customerIdUpdate', 'Please enter customer ID');
-            }
-
-            if (isValid) {
-                $.ajax({
-                    url: 'UpdateOrder', // Thay bằng URL endpoint thực tế
-                    type: 'POST',
-                    data: { orderId: orderId, userId: userId, customerId: customerId, orderStatus: orderStatus, orderType: orderType },
-                    success: function () {
-                        $('#updateOrderModal').modal('hide');
-                        reloadViewOrders();
-                        Swal.fire('Success', 'Order updated successfully', 'success');
-                    },
-                    error: function (xhr) {
-                        Swal.fire('Error', xhr.responseText || 'Failed to update order', 'error');
-                    }
-                });
-            }
-        });
-
-        // Xử lý xóa đơn hàng
-        $('#btnDeleteOrderConfirm').click(function () {
-            var orderId = $('#orderIdDelete').val();
-            $.ajax({
-                url: 'DeleteOrder', // Thay bằng URL endpoint thực tế
-                type: 'GET',
-                data: { orderId: orderId },
-                success: function () {
-                    $('#deleteOrderModal').modal('hide');
-                    $('#orderRow' + orderId).remove();
-                    if ($('#orderTableBody tr').length === 0) {
-                        $('#orderTableBody').html('<tr><td colspan="9"><div class="no-data">No Orders Found.</div></td></tr>');
-                    }
-                    reloadViewOrders();
-                    Swal.fire('Success', 'Order deleted successfully', 'success');
-                },
-                error: function (xhr) {
-                    $('#deleteOrderModal').modal('hide');
-                    Swal.fire('Error', xhr.responseText || 'Failed to delete order', 'error');
-                }
+                $('#noResultsRow').toggle(!foundMatch && searchText !== '');
             });
         });
-
-        // Hàm hiển thị lỗi
-        function displayError(fieldId, message) {
-            $('#' + fieldId).addClass('is-invalid');
-            $('#' + fieldId).after('<div class="error-message" style="color: red;">' + message + '</div>');
-        }
-
-        // Gắn sự kiện cho nút Update và Delete
-        function bindEventHandlers() {
-            $('.btn-update-order').off('click').on('click', function () {
-                var orderId = $(this).data('order-id');
-                var orderDetails = $(this).data('order-details'); // JSON của order details
-                $('#orderIdUpdate').val(orderId);
-                $('#orderIdUpdateDisplay').val(orderId);
-                $('#userIdUpdate').val($(this).closest('tr').find('td:nth-child(3)').text());
-                $('#customerIdUpdate').val($(this).closest('tr').find('td:nth-child(4)').text());
-                $('#orderStatusUpdate').val($(this).closest('tr').find('td:nth-child(6)').text());
-                $('#orderTypeUpdate').val($(this).closest('tr').find('td:nth-child(7)').text());
-            });
-
-            $('.btn-delete-order').off('click').on('click', function () {
-                var orderId = $(this).data('order-id');
-                $('#orderIdDelete').val(orderId);
-            });
-        }
-
-        // Tải lại danh sách đơn hàng
-        function reloadViewOrders() {
-            $.ajax({
-                url: 'ViewOrderList', // Thay bằng URL endpoint thực tế
-                type: 'GET',
-                cache: false,
-                success: function (data) {
-                    var newBody = $(data).find('#orderTableBody').html();
-                    $('#orderTableBody').html(newBody);
-                    bindEventHandlers(); // Gắn lại sự kiện sau khi tải lại
-                },
-                error: function (xhr) {
-                    console.error('Error reloading order list:', xhr.responseText);
-                }
-            });
-        }
-
-        // Tìm kiếm đơn hàng
-        $('#searchInput').on('keyup', function () {
-            var searchText = $(this).val().trim().toLowerCase();
-            var $rows = $('#orderTableBody tr:not(#noResultsRow)');
-            var foundMatch = false;
-
-            $rows.each(function () {
-                var orderId = $(this).find('td:nth-child(2)').text().toLowerCase();
-                var userId = $(this).find('td:nth-child(3)').text().toLowerCase();
-                var customerId = $(this).find('td:nth-child(4)').text().toLowerCase();
-                var orderStatus = $(this).find('td:nth-child(6)').text().toLowerCase();
-                var orderType = $(this).find('td:nth-child(7)').text().toLowerCase();
-
-                if (orderId.includes(searchText) || userId.includes(searchText) || customerId.includes(searchText) || 
-                    orderStatus.includes(searchText) || orderType.includes(searchText)) {
-                    $(this).show();
-                    foundMatch = true;
-                } else {
-                    $(this).hide();
-                }
-            });
-
-            $('#noResultsRow').toggle(!foundMatch && searchText !== '');
-        });
-    });
     </script>
 </body>
 </html>
