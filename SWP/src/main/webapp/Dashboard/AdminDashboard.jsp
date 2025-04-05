@@ -22,7 +22,7 @@
     }
 
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-    DecimalFormat currencyFormat = new DecimalFormat("#,### VNĐ");
+    DecimalFormat currencyFormat = new DecimalFormat("#,# VNĐ");
 %>
 <!DOCTYPE html>
 <html lang="en">
