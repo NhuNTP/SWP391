@@ -154,33 +154,37 @@
                 <input type="hidden" name="action" value="payOrder">
                 <input type="hidden" name="orderId" value="<%=order.getOrderId()%>">
                 <input type="hidden" name="tableId" value="<%=order.getTableId() != null ? order.getTableId() : ""%>">
+                <%
+                    List<Coupon> coupons = (List<Coupon>) request.getAttribute("coupons");
+                    if (coupons != null) { // Chỉ hiển thị <select> nếu có danh sách coupon
+                %>
                 <select name="couponId" <%=isCompleted ? "disabled" : ""%>>
                     <option value="">-- Chọn coupon --</option>
                     <%
-                        List<Coupon> coupons = (List<Coupon>) request.getAttribute("coupons");
-                        if (coupons != null) {
-                            if (!coupons.isEmpty()) {
-                                for (Coupon coupon : coupons) {
+                        if (!coupons.isEmpty()) {
+                            for (Coupon coupon : coupons) {
                     %>
                     <option value="<%=coupon.getCouponId()%>" <%=order.getCouponId() != null && order.getCouponId().equals(coupon.getCouponId()) ? "selected" : ""%>>
                         <%=coupon.getCouponId()%> - Giảm <%=coupon.getDiscountAmount() != null ? coupon.getDiscountAmount() : "N/A"%> VND 
                         (Hết hạn: <%=coupon.getExpirationDate() != null ? coupon.getExpirationDate() : "N/A"%>)
                     </option>
                     <%
-                                }
-                            } else {
-                    %>
-                    <option value="">Không có coupon nào (danh sách rỗng)</option>
-                    <%
                             }
                         } else {
                     %>
-                    <option value="">Không có coupon (null từ server)</option>
+                    <option value="">Không có coupon nào (danh sách rỗng)</option>
                     <%
                         }
                     %>
                 </select>
-                <% if (isProcessing) { %>
+                <%
+                    } else {
+                %>
+                <p>Chỉ hiển thị coupon khi trạng thái là 'Processing'.</p>
+                <%
+                    }
+                %>
+                <% if (isProcessing && coupons != null) { %>
                     <button type="submit" class="button pay">Thanh toán</button>
                 <% } %>
                 <button type="button" class="button back" onclick="window.location.href='payment?action=listOrders'">Trở về</button>

@@ -102,6 +102,13 @@ public class PaymentController extends HttpServlet {
             return;
         }
 
+        // Chỉ lấy danh sách coupon nếu trạng thái là "Processing"
+        if ("Processing".equals(order.getOrderStatus())) {
+            List<Coupon> coupons = couponDAO.getAvailableCoupons();
+            request.setAttribute("coupons", coupons);
+        }
+
+        // Gửi order qua request
         request.setAttribute("order", order);
         request.getRequestDispatcher("/ManageOrder/paymentDetail.jsp").forward(request, response);
     }
