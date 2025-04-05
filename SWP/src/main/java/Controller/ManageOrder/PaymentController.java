@@ -113,6 +113,11 @@ public class PaymentController extends HttpServlet {
             return;
         }
 
+        if ("Processing".equals(order.getOrderStatus())) {
+            List<Coupon> coupons = couponDAO.getAvailableCoupons();
+            request.setAttribute("coupons", coupons);
+        }
+
         request.setAttribute("order", order);
         request.getRequestDispatcher("/ManageOrder/paymentDetail.jsp").forward(request, response);
     }
@@ -134,7 +139,9 @@ public class PaymentController extends HttpServlet {
             return;
         }
 
-        double originalTotal = order.getTotal();
+        double totalBeforeDiscount = order.getTotal();
+        double finalPrice = totalBeforeDiscount; // Khởi tạo FinalPrice
+
         if (couponId != null && !couponId.trim().isEmpty()) {
             Coupon coupon = couponDAO.getCouponById(couponId);
             if (coupon != null && coupon.getIsDeleted() == 0) {
@@ -144,12 +151,12 @@ public class PaymentController extends HttpServlet {
                     ResultSet rs = ps.executeQuery();
                     if (rs.next() && rs.getInt("isValid") == 1) {
                         BigDecimal discount = coupon.getDiscountAmount();
-                        BigDecimal currentTotal = BigDecimal.valueOf(order.getTotal());
+                        BigDecimal currentTotal = BigDecimal.valueOf(totalBeforeDiscount);
                         BigDecimal newTotal = currentTotal.subtract(discount).max(BigDecimal.ZERO);
-                        order.setTotal(newTotal.doubleValue());
+                        finalPrice = newTotal.doubleValue(); // Gán FinalPrice
                         order.setCouponId(couponId);
                         couponDAO.incrementTimesUsed(couponId);
-                        System.out.println("Applied coupon " + couponId + " with discount " + discount + ", New total: " + newTotal);
+                        System.out.println("Applied coupon " + couponId + " with discount " + discount + ", FinalPrice: " + finalPrice);
                     } else {
                         System.out.println("Coupon " + couponId + " is expired");
                     }
@@ -157,6 +164,8 @@ public class PaymentController extends HttpServlet {
             }
         }
 
+        order.setTotal(totalBeforeDiscount); // Giữ Total là giá gốc
+        order.setFinalPrice(finalPrice);     // Lưu FinalPrice
         order.setOrderStatus("Completed");
         orderDAO.updateOrder(order);
         customerDAO.incrementNumberOfPayment(order.getCustomerId());
@@ -165,7 +174,7 @@ public class PaymentController extends HttpServlet {
         List<Coupon> coupons = couponDAO.getAvailableCoupons();
         request.setAttribute("order", order);
         request.setAttribute("coupons", coupons);
-        request.setAttribute("message", "Đơn hàng đã thanh toán. Tổng mới: " + order.getTotal() + " VND");
+        request.setAttribute("message", "Đơn hàng đã thanh toán. Tổng mới: " + order.getFinalPrice() + " VND"); // Hiển thị FinalPrice
         request.getRequestDispatcher("/ManageOrder/paymentDetail.jsp").forward(request, response);
     }
 
@@ -174,6 +183,8 @@ public class PaymentController extends HttpServlet {
         String orderId = request.getParameter("orderId");
         String tableId = request.getParameter("tableId");
         String couponId = request.getParameter("couponId");
+
+        System.out.println("payCash - OrderId: " + orderId + ", TableId: " + tableId + ", CouponId: " + couponId);
 
         if (orderId == null || tableId == null) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing required parameters");
@@ -186,36 +197,37 @@ public class PaymentController extends HttpServlet {
             return;
         }
 
-        double originalTotal = order.getTotal();
+        double totalBeforeDiscount = order.getTotal();
+        double finalPrice = totalBeforeDiscount; // Khởi tạo FinalPrice
+
         if (couponId != null && !couponId.trim().isEmpty()) {
             Coupon coupon = couponDAO.getCouponById(couponId);
             if (coupon != null && coupon.getIsDeleted() == 0) {
-                String query = "SELECT CASE WHEN ? > GETDATE() THEN 1 ELSE 0 END AS isValid";
-                try (Connection conn = couponDAO.getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {
-                    ps.setDate(1, new java.sql.Date(coupon.getExpirationDate().getTime()));
-                    ResultSet rs = ps.executeQuery();
-                    if (rs.next() && rs.getInt("isValid") == 1) {
-                        BigDecimal discount = coupon.getDiscountAmount();
-                        BigDecimal currentTotal = BigDecimal.valueOf(order.getTotal());
-                        BigDecimal newTotal = currentTotal.subtract(discount).max(BigDecimal.ZERO);
-                        order.setTotal(newTotal.doubleValue());
-                        order.setCouponId(couponId);
-                        couponDAO.incrementTimesUsed(couponId);
-                        System.out.println("Applied coupon " + couponId + " with discount " + discount + ", New total: " + newTotal);
-                    } else {
-                        System.out.println("Coupon " + couponId + " is expired");
-                    }
+                boolean isValid = coupon.getExpirationDate() == null || coupon.getExpirationDate().after(new java.util.Date());
+                if (isValid) {
+                    BigDecimal discount = coupon.getDiscountAmount();
+                    BigDecimal currentTotal = BigDecimal.valueOf(totalBeforeDiscount);
+                    BigDecimal newTotal = currentTotal.subtract(discount).max(BigDecimal.ZERO);
+                    finalPrice = newTotal.doubleValue(); // Gán FinalPrice
+                    order.setCouponId(couponId);
+                    couponDAO.incrementTimesUsed(couponId);
+                    System.out.println("Applied coupon " + couponId + " with discount " + discount + ", FinalPrice: " + finalPrice);
+                } else {
+                    System.out.println("Coupon " + couponId + " is expired or invalid");
                 }
+            } else {
+                System.out.println("Coupon " + couponId + " not found or deleted");
             }
         }
 
+        order.setTotal(totalBeforeDiscount); // Giữ Total là giá gốc
+        order.setFinalPrice(finalPrice);     // Lưu FinalPrice
         order.setOrderStatus("Completed");
         orderDAO.updateOrder(order);
         customerDAO.incrementNumberOfPayment(order.getCustomerId());
         tableDAO.updateTableStatus(tableId, "Available");
 
-        // Chuyển hướng đến trang in hóa đơn
-        response.sendRedirect("printBill?orderId=" + orderId);
+        response.sendRedirect("/printBill?orderId=" + orderId);
     }
 
     private void payOnline(HttpServletRequest request, HttpServletResponse response)
@@ -235,7 +247,9 @@ public class PaymentController extends HttpServlet {
             return;
         }
 
-        double originalTotal = order.getTotal();
+        double totalBeforeDiscount = order.getTotal();
+        double finalPrice = totalBeforeDiscount; // Khởi tạo FinalPrice
+
         if (couponId != null && !couponId.trim().isEmpty()) {
             Coupon coupon = couponDAO.getCouponById(couponId);
             if (coupon != null && coupon.getIsDeleted() == 0) {
@@ -245,12 +259,12 @@ public class PaymentController extends HttpServlet {
                     ResultSet rs = ps.executeQuery();
                     if (rs.next() && rs.getInt("isValid") == 1) {
                         BigDecimal discount = coupon.getDiscountAmount();
-                        BigDecimal currentTotal = BigDecimal.valueOf(order.getTotal());
+                        BigDecimal currentTotal = BigDecimal.valueOf(totalBeforeDiscount);
                         BigDecimal newTotal = currentTotal.subtract(discount).max(BigDecimal.ZERO);
-                        order.setTotal(newTotal.doubleValue());
+                        finalPrice = newTotal.doubleValue(); // Gán FinalPrice
                         order.setCouponId(couponId);
                         couponDAO.incrementTimesUsed(couponId);
-                        System.out.println("Applied coupon " + couponId + " with discount " + discount + ", New total: " + newTotal);
+                        System.out.println("Applied coupon " + couponId + " with discount " + discount + ", FinalPrice: " + finalPrice);
                     } else {
                         System.out.println("Coupon " + couponId + " is expired");
                     }
@@ -258,6 +272,8 @@ public class PaymentController extends HttpServlet {
             }
         }
 
+        order.setTotal(totalBeforeDiscount); // Giữ Total là giá gốc
+        order.setFinalPrice(finalPrice);     // Lưu FinalPrice
         order.setOrderStatus("Completed");
         orderDAO.updateOrder(order);
         customerDAO.incrementNumberOfPayment(order.getCustomerId());
@@ -266,7 +282,7 @@ public class PaymentController extends HttpServlet {
         List<Coupon> coupons = couponDAO.getAvailableCoupons();
         request.setAttribute("order", order);
         request.setAttribute("coupons", coupons);
-        request.setAttribute("message", "Thanh toán online thành công. Tổng mới: " + order.getTotal() + " VNĐ");
+        request.setAttribute("message", "Thanh toán online thành công. Tổng mới: " + order.getFinalPrice() + " VNĐ"); // Hiển thị FinalPrice
         request.getRequestDispatcher("/ManageOrder/paymentDetail.jsp").forward(request, response);
     }
 }

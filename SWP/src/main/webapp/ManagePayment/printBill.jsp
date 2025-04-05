@@ -39,9 +39,9 @@
         <p>Ngày: <%= formattedDate %></p>
         <p>Số điện thoại khách hàng: <%= order.getCustomerPhone() %></p>
         <%
-            if (order.getCustomerName() != null) {
+            if (order.getCustomerId() != null) {
         %>
-        <p>Tên khách hàng: <%= order.getCustomerName() %></p>
+        <p>Tên khách hàng: <%= order.getCustomerId() %></p>
         <%
             }
         %>
@@ -58,16 +58,15 @@
             <tbody>
                 <%
                     List<OrderDetail> orderDetails = order.getOrderDetails();
-                    double originalTotal = 0;
                     if (orderDetails != null) {
                         for (OrderDetail detail : orderDetails) {
-                            originalTotal += detail.getSubtotal();
+                            double unitPrice = detail.getSubtotal() / detail.getQuantity();
                 %>
                 <tr>
                     <td><%= detail.getDishName() %></td>
                     <td><%= detail.getQuantity() %></td>
-                    <td><%= detail.getSubtotal() / detail.getQuantity() %></td>
-                    <td><%= detail.getSubtotal() %></td>
+                    <td><%= String.format("%.2f", unitPrice) %></td>
+                    <td><%= String.format("%.2f", detail.getSubtotal()) %></td>
                 </tr>
                 <%
                         }
@@ -76,7 +75,7 @@
             </tbody>
         </table>
 
-        <p>Tổng tiền trước giảm giá: <%= originalTotal %> VNĐ</p>
+        <p>Tổng tiền trước giảm giá: <%= String.format("%.2f", order.getTotal()) %> VNĐ</p>
         <%
             if (order.getCouponId() != null) {
         %>
@@ -84,7 +83,7 @@
         <%
             }
         %>
-        <p><strong>Tổng tiền sau giảm giá: <%= order.getTotal() %> VNĐ</strong></p>
+        <p><strong>Tổng tiền sau giảm giá: <%= String.format("%.2f", order.getFinalPrice()) %> VNĐ</strong></p>
 
         <%
             } else {
