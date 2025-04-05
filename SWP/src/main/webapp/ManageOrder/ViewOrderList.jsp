@@ -113,9 +113,7 @@
                                     <input type="text" id="searchInput" placeholder="Search">
                                 </div>
                             </div>
-                            <div class="header-buttons">
-                                <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#addOrderModal"><i class="fas fa-plus"></i> Add New</button>
-                            </div>
+
                         </div>
 
                         <div class="table-responsive">
@@ -130,7 +128,7 @@
                                         <th>Order Status</th>
                                         <th>Order Type</th>
                                         <th>Dishes</th>
-                                        <th>Actions</th>
+
                                     </tr>
                                     <tr id="noResultsRow" style="display: none;">
                                         <td colspan="9" style="text-align: center; color: gray">Order Not Found.</td>
@@ -165,16 +163,6 @@
                                                     out.print("No dishes");
                                                 }
                                             %>
-                                        </td>
-                                        <td>
-                                            <button type="button" class="btn btn-edit btn-update-order" data-bs-toggle="modal" data-bs-target="#updateOrderModal" 
-                                                    data-order-id="<%= order.getOrderId()%>" data-order-details='<%= orderDetailsJson%>'>
-                                                <i class="fas fa-edit"></i> Update
-                                            </button>
-                                            <button type="button" class="btn btn-delete btn-delete-order" data-bs-toggle="modal" data-bs-target="#deleteOrderModal" 
-                                                    data-order-id="<%= order.getOrderId()%>">
-                                                <i class="fas fa-trash-alt"></i> Delete
-                                            </button>
                                         </td>
                                     </tr>
                                     <%
