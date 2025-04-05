@@ -171,7 +171,6 @@
                                         <th>Order Status</th>
                                         <th>Order Type</th>
                                         <th>Dishes</th>
-                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="orderTableBody">
@@ -211,33 +210,12 @@
                                                     out.print("No dishes");
                                                 }
                                             %>
-                                        </td>
-                                        <td>
-                                            <button type="button" class="btn btn-edit"
-                                                    data-order-id="<%= order.getOrderId()%>"
-                                                    data-user-id="<%= order.getUserId()%>"
-                                                    data-customer-id="<%= order.getCustomerId()%>"
-                                                    data-order-date="<%= order.getOrderDate()%>"
-                                                    data-order-status="<%= order.getOrderStatus()%>"
-                                                    data-order-type="<%= order.getOrderType()%>"
-                                                    data-order-description="<%= order.getOrderDescription()%>"
-                                                    data-coupon-id="<%= order.getCouponId()%>"
-                                                    data-table-id="<%= order.getTableId()%>"
-                                                    data-order-details='<%= orderDetailsJson%>'
-                                                    onclick="openEditModal(this)">
-                                                <i class="fas fa-edit"></i> Update
-                                            </button>
-                                            <button type="button" class="btn btn-detail" onclick="viewOrderDetail('<%= order.getOrderId()%>')">
-                                                <i class="fas fa-info-circle"></i> Detail
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <%
-                                        }
-                                    } else {
-                                    %>
+                                            <%
+                                                }
+                                            } else {
+                                            %>
                                     <tr><td colspan="9"><div class="no-data">No Orders Found.</div></td></tr>
-                                    <% } %>
+                                    <% }%>
                                 </tbody>
                             </table>
                         </div>
@@ -245,253 +223,7 @@
                 </section>
             </div>
         </div>
-        <!-- Update Order Modal -->
-        <div id="updateOrderModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Update Order</h5>
-                    <button type="button" class="btn-close" onclick="closeModal('updateOrderModal')" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="updateOrderForm" method="POST">
-                        <input type="hidden" id="orderIdUpdate" name="orderId">
-                        <div class="mb-3">
-                            <label for="userIdUpdate" class="form-label">User ID:</label>
-                            <input type="text" class="form-control" id="userIdUpdate" name="userId" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="customerIdUpdate" class="form-label">Customer ID:</label>
-                            <input type="text" class="form-control" id="customerIdUpdate" name="customerId">
-                        </div>
-                        <div class="mb-3">
-                            <label for="orderDateUpdate" class="form-label">Order Date:</label>
-                            <input type="datetime-local" class="form-control" id="orderDateUpdate" name="orderDate" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="orderStatusUpdate" class="form-label">Order Status:</label>
-                            <select class="form-control" id="orderStatusUpdate" name="orderStatus" required>
-                                <option value="Pending">Pending</option>
-                                <option value="Processing">Processing</option>
-                                <option value="Completed">Completed</option>
-                                <option value="Cancelled">Cancelled</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="orderTypeUpdate" class="form-label">Order Type:</label>
-                            <select class="form-control" id="orderTypeUpdate" name="orderType" required>
-                                <option value="Dine-in">Dine-in</option>
-                                <option value="Takeaway">Takeaway</option>
-                                <option value="Delivery">Delivery</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="orderDescriptionUpdate" class="form-label">Order Description:</label>
-                            <textarea class="form-control" id="orderDescriptionUpdate" name="orderDescription" rows="3"></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label for="couponIdUpdate" class="form-label">Coupon ID:</label>
-                            <input type="text" class="form-control" id="couponIdUpdate" name="couponId">
-                        </div>
-                        <div class="mb-3">
-                            <label for="tableIdUpdate" class="form-label">Table ID:</label>
-                            <input type="text" class="form-control" id="tableIdUpdate" name="tableId">
-                        </div>
-                        <h6>Update Dishes</h6>
-                        <table class="table dish-table">
-                            <tbody>
-                                <%
-                                    if (dishList != null && !dishList.isEmpty()) {
-                                        for (Dish dish : dishList) {
-                                %>
-                                <tr>
-                                    <td><%= dish.getDishName()%></td>
-                                    <td>
-                                        <input type="hidden" id="price_<%= dish.getDishId()%>" value="<%= dish.getDishPrice()%>">
-                                        <%= dish.getDishPrice()%>
-                                    </td>
-                                    <td>
-                                        <button type="button" onclick="decreaseQuantity('<%= dish.getDishId()%>')">-</button>
-                                        <input type="number" id="quantity_<%= dish.getDishId()%>" name="quantity_<%= dish.getDishId()%>" value="0" min="0" onchange="updateSubtotal('<%= dish.getDishId()%>')">
-                                        <button type="button" onclick="increaseQuantity('<%= dish.getDishId()%>')">+</button>
-                                    </td>
-                                    <td><span id="subtotal_<%= dish.getDishId()%>">0.00</span></td>
-                                </tr>
-                                <%
-                                    }
-                                } else {
-                                %>
-                                <tr><td colspan="4">No dishes available.</td></tr>
-                                <% }%>
-                            </tbody>
-                        </table>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" onclick="closeModal('updateOrderModal')">Cancel</button>
-                            <button type="button" class="btn btn-primary" onclick="updateOrder()">Save changes</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- View Order Detail Modal -->
-        <div id="viewOrderDetailModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Order Detail - <span id="viewOrderId"></span></h5>
-                    <button type="button" class="btn-close" onclick="closeModal('viewOrderDetailModal')" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <table class="table table-bordered">
-                        <tr><th>User ID</th><td id="viewUserId"></td></tr>
-                        <tr><th>Customer ID</th><td id="viewCustomerId"></td></tr>
-                        <tr><th>Order Date</th><td id="viewOrderDate"></td></tr>
-                        <tr><th>Order Status</th><td id="viewOrderStatus"></td></tr>
-                        <tr><th>Order Type</th><td id="viewOrderType"></td></tr>
-                        <tr><th>Table ID</th><td id="viewTableId"></td></tr>
-                        <tr><th>Order Description</th><td id="viewOrderDescription"></td></tr>
-                        <tr><th>Coupon ID</th><td id="viewCouponId"></td></tr>
-                    </table>
-                    <h6>Ordered Dishes</h6>
-                    <table class="table dish-table" id="viewOrderDetailsTable">
-                        <thead>
-                            <tr>
-                                <th>Dish Name</th>
-                                <th>Quantity</th>
-                                <th>Subtotal</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('viewOrderDetailModal')">Close</button>
-                </div>
-            </div>
-        </div>
-
         <script>
-            function openModal(modalId) {
-                document.getElementById(modalId).style.display = "block";
-            }
-            function closeModal(modalId) {
-                document.getElementById(modalId).style.display = "none";
-            }
-            function increaseQuantity(dishId) {
-                var input = document.getElementById("quantity_" + dishId);
-                input.value = parseInt(input.value) + 1;
-                updateSubtotal(dishId);
-            }
-            function decreaseQuantity(dishId) {
-                var input = document.getElementById("quantity_" + dishId);
-                if (parseInt(input.value) > 0) {
-                    input.value = parseInt(input.value) - 1;
-                    updateSubtotal(dishId);
-                }
-            }
-            function updateSubtotal(dishId) {
-                var quantity = parseInt(document.getElementById("quantity_" + dishId).value);
-                var price = parseFloat(document.getElementById("price_" + dishId).value);
-                var subtotal = quantity * price;
-                document.getElementById("subtotal_" + dishId).innerText = isNaN(subtotal) ? "0.00" : subtotal.toFixed(2);
-            }
-
-            function selectTable(tableId, tableName) {
-                document.getElementById('addTableId').value = tableId;
-                document.getElementById('selectedTableName').innerText = tableName;
-                closeModal('selectTableModal');
-                openModal('addOrderModal');
-            }
-
-            function openEditModal(button) {
-                document.getElementById('orderIdUpdate').value = button.dataset.orderId;
-                document.getElementById('userIdUpdate').value = button.dataset.userId;
-                document.getElementById('customerIdUpdate').value = button.dataset.customerId;
-                document.getElementById('orderDateUpdate').value = button.dataset.orderDate.replace(" ", "T").slice(0, 16);
-                document.getElementById('orderStatusUpdate').value = button.dataset.orderStatus;
-                document.getElementById('orderTypeUpdate').value = button.dataset.orderType;
-                document.getElementById('orderDescriptionUpdate').value = button.dataset.orderDescription;
-                document.getElementById('couponIdUpdate').value = button.dataset.couponId;
-                document.getElementById('tableIdUpdate').value = button.dataset.tableId;
-
-                document.querySelectorAll('.dish-table input[id^="quantity_"]').forEach(input => {
-                    input.value = 0;
-                    const dishId = input.id.replace("quantity_", "");
-                    document.getElementById("subtotal_" + dishId).innerText = "0.00";
-                });
-
-                let orderDetails;
-                try {
-                    orderDetails = JSON.parse(button.dataset.orderDetails || '[]');
-                } catch (e) {
-                    console.error("Error parsing orderDetails:", e);
-                    orderDetails = [];
-                }
-
-                orderDetails.forEach(detail => {
-                    const quantityInput = document.getElementById("quantity_" + detail.dishId);
-                    const subtotalSpan = document.getElementById("subtotal_" + detail.dishId);
-                    if (quantityInput && subtotalSpan) {
-                        quantityInput.value = detail.quantity || 0;
-                        subtotalSpan.innerText = (detail.subtotal || 0).toFixed(2);
-                    }
-                });
-
-                openModal("updateOrderModal");
-            }
-
-            function viewOrderDetail(orderId) {
-                $.ajax({
-                    url: 'ViewOrderDetail',
-                    type: 'GET',
-                    data: {orderId: orderId},
-                    success: function (response) {
-                        try {
-                            let order = JSON.parse(response);
-                            if (order.error) {
-                                alert(order.error);
-                                return;
-                            }
-
-                            document.getElementById('viewOrderId').innerText = order.orderId;
-                            document.getElementById('viewUserId').innerText = order.userId || 'N/A';
-                            document.getElementById('viewCustomerId').innerText = order.customerId || 'N/A';
-                            document.getElementById('viewOrderDate').innerText = order.orderDate;
-                            document.getElementById('viewOrderStatus').innerText = order.orderStatus;
-                            document.getElementById('viewOrderType').innerText = order.orderType;
-                            document.getElementById('viewTableId').innerText = order.tableId || 'N/A';
-                            document.getElementById('viewOrderDescription').innerText = order.orderDescription || 'N/A';
-                            document.getElementById('viewCouponId').innerText = order.couponId || 'N/A';
-
-                            let tbody = document.querySelector('#viewOrderDetailsTable tbody');
-                            tbody.innerHTML = '';
-                            if (order.orderDetails && order.orderDetails.length > 0) {
-                                order.orderDetails.forEach(detail => {
-                                    let row = document.createElement('tr');
-                                    row.innerHTML = `
-                                        <td>${detail.dishName}</td>
-                                        <td>${detail.quantity}</td>
-                                        <td>${detail.subtotal.toFixed(2)}</td>
-                                    `;
-                                    tbody.appendChild(row);
-                                });
-                            } else {
-                                let row = document.createElement('tr');
-                                row.innerHTML = '<td colspan="3">No dishes ordered.</td>';
-                                tbody.appendChild(row);
-                            }
-
-                            openModal('viewOrderDetailModal');
-                        } catch (e) {
-                            console.error("Error parsing response:", e);
-                            alert("Failed to load order details.");
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        alert('Error fetching order details: ' + error);
-                    }
-                });
-            }
-
             function filterTable() {
                 const searchText = document.getElementById('searchInput').value.toLowerCase();
                 const rows = document.querySelectorAll('#orderTableBody tr:not(.no-data-row)');
@@ -528,49 +260,7 @@
                 }
             }
 
-            function addOrder() {
-                $.ajax({
-                    url: 'CreateOrder',
-                    type: 'POST',
-                    data: $('#addOrderForm').serialize(),
-                    success: function (response) {
-                        if (response.trim() === "success") {
-                            alert('Order created successfully!');
-                            closeModal('addOrderModal');
-                            location.reload();
-                        } else {
-                            alert('Failed to create order: ' + response);
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        alert('Error adding order: ' + error + " " + xhr.responseText);
-                    }
-                });
-            }
 
-            function updateOrder() {
-                $.ajax({
-                    url: 'UpdateOrder',
-                    type: 'POST',
-                    data: $('#updateOrderForm').serialize(),
-                    success: function (response) {
-                        if (response.trim() === "success") {
-                            alert('Order updated successfully!');
-                            closeModal('updateOrderModal');
-                            location.reload();
-                        } else {
-                            alert('Failed to update order: ' + response);
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        alert('Error updating order: ' + error + " " + xhr.responseText);
-                    }
-                });
-            }
-
-            $(document).ready(function () {
-                $('#searchInput').on('keyup', filterTable);
-            });
         </script>
     </body>
 </html>
