@@ -2,7 +2,7 @@
 <%@page import="java.util.List"%>
 <%@page import="Model.Customer"%>
 <%@ page contentType="text/html" pageEncoding="UTF-8"%>
-<!DOCTYPE html>
+
 <%
     if (session == null || session.getAttribute("account") == null) {
         response.sendRedirect(request.getContextPath() + "/LoginPage.jsp");
@@ -12,52 +12,144 @@
     Account account = (Account) session.getAttribute("account");
     String UserRole = account.getUserRole();
 %>
+
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Customer - Admin Dashboard</title>
-    <!-- Bootstrap 5.3.0 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
-    <!-- Font Awesome Icons -->
+    <title>Customer Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <style>
-        body { font-family: 'Roboto', sans-serif; background-color: #f8f9fa; }
-        .sidebar { background: linear-gradient(to bottom, #2C3E50, #34495E); color: white; height: 100vh; }
-        .sidebar a { color: white; text-decoration: none; }
-        .sidebar a:hover { background-color: #1A252F; }
-        .main-content-area { padding: 20px; }
-        .content-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .content-header h2 { margin-top: 0; font-size: 24px; }
-        .search-bar input { padding: 8px 12px; border: 1px solid #ccc; border-radius: 3px; width: 250px; }
-        .table-responsive { overflow-x: auto; }
-        .btn-edit, .btn-delete { padding: 5px 10px; border-radius: 5px; color: white; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
-        .btn-edit { background-color: #007bff; }
-        .btn-edit:hover { background-color: #0056b3; }
-        .btn-delete { background-color: #dc3545; margin-left: 5px; }
-        .btn-delete:hover { background-color: #c82333; }
-        .btn-edit i, .btn-delete i { margin-right: 5px; }
-        .header-buttons .btn-info { background-color: #007bff; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
-        .header-buttons .btn-info:hover { background-color: #0056b3; }
-        .no-data { padding: 20px; text-align: center; color: #777; }
-        .sidebar .nav-link { font-size: 0.9rem; }
-        .sidebar h4 { font-size: 1.5rem; }
-        .modal-header { background-color: #f7f7f0; }
-        .table { width: 100%; margin-bottom: 1rem; background-color: #fff; }
-        .table th, .table td { padding: 12px; vertical-align: middle; text-align: left; }
-        .table thead th { background-color: #343a40; color: white; border-color: #454d55; }
-        .table-hover tbody tr:hover { background-color: #f1f1f1; }
-        .table-bordered { border: 1px solid #dee2e6; }
-        .table-bordered th, .table-bordered td { border: 1px solid #dee2e6; }
-        .text-left.mb-4 { background: linear-gradient(to right, #2C3E50, #42A5F5); padding: 1rem; color: white; margin-left: -24px !important; margin-top: -25px !important; margin-right: -25px !important; }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .sidebar {
+            background: linear-gradient(to bottom, #2C3E50, #34495E);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            width: 16.67%;
+        }
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+        }
+        .sidebar a:hover {
+            background-color: #1A252F;
+        }
+        .sidebar .nav-link {
+            font-size: 0.9rem;
+            padding: 10px 15px;
+        }
+        .sidebar h4 {
+            font-size: 1.5rem;
+            padding: 15px 0;
+        }
+        .content-area {
+            margin-left: 16.67%;
+            padding: 20px;
+        }
+        .error { color: red; }
+        .success { color: green; }
+        .table {
+            width: 100%;
+            margin-bottom: 1rem;
+            background-color: #fff;
+        }
+        .table th, .table td {
+            padding: 10px;
+            vertical-align: middle;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+        .table thead th {
+            background-color: #343a40;
+            color: white;
+            border-color: #454d55;
+        }
+        .table-hover tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+        .table-bordered {
+            border: 1px solid #dee2e6;
+        }
+        .table-bordered th, .table-bordered td {
+            border: 1px solid #dee2e6;
+        }
+        .table th.actions-column, .table td.actions-column {
+            width: 200px;
+            white-space: nowrap;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 15px;
+        }
+        .pagination button {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .pagination button:disabled {
+            background: #f0f0f0;
+            cursor: not-allowed;
+        }
+        .pagination button.active {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+        .controls-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .controls-container form {
+            flex: 1;
+            display: flex;
+            gap: 10px;
+        }
+        .btn-edit {
+            background-color: #007bff;
+            color: white;
+            padding: 5px 10px;
+            text-decoration: none;
+            border: none;
+            transition: background-color 0.3s;
+        }
+        .btn-edit:hover {
+            background-color: #0056b3;
+            color: white;
+        }
+        .btn-delete {
+            background-color: #dc3545;
+            color: white;
+            padding: 5px 10px;
+            margin-left: 5px;
+            border: none;
+            transition: background-color 0.3s;
+        }
+        .btn-delete:hover {
+            background-color: #c82333;
+            color: white;
+        }
+        .modal-header {
+            background-color: #f7f7f0;
+        }
     </style>
 </head>
 <body>
+    <!-- Sidebar -->
     <div class="d-flex">
         <div class="sidebar col-md-2 p-3">
             <h4 class="text-center mb-4">Admin</h4>
@@ -68,7 +160,7 @@
                 <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewAccountList" class="nav-link"><i class="fas fa-users me-2"></i>Employee Management</a></li>
                 <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewTableList" class="nav-link"><i class="fas fa-building me-2"></i>Table Management</a></li>
                 <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewOrderList" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>Order Management</a></li>
-                <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCustomerList" class="nav-link"><i class="fas fa-user-friends me-2"></i>Customer Management</a></li>
+                <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCustomerList" class="nav-link active"><i class="fas fa-user-friends me-2"></i>Customer Management</a></li>
                 <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewCouponController" class="nav-link"><i class="fas fa-tag me-2"></i>Coupon Management</a></li>
                 <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewInventoryController" class="nav-link"><i class="fas fa-boxes me-2"></i>Inventory Management</a></li>
                 <li class="nav-item"><a href="${pageContext.request.contextPath}/view-notifications" class="nav-link"><i class="fas fa-bell me-2"></i>View Notifications</a></li>
@@ -79,84 +171,84 @@
             </ul>
         </div>
 
-        <div class="col-md-10 p-4 main-content-area">
-            <section class="main-content">
-                <div class="text-left mb-4">
-                    <h4>Customer Management</h4>
-                </div>
-                <div class="container-fluid">
-                    <main>
-                        <div class="content-header">
-                            <div class="search-filter">
-                                <div class="search-bar">
-                                    <input type="text" id="searchInput" placeholder="Search">
-                                </div>
-                            </div>
-                            <div class="header-buttons">
-                                <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#addCustomerModal"><i class="fas fa-plus"></i> Add New</button>
-                            </div>
-                        </div>
+        <!-- Main Content -->
+        <div class="col-md-10 p-4 content-area">
+            <h3>Customer Management</h3>
+            <% if (request.getSession().getAttribute("message") != null) {%>
+            <div class="alert alert-success" id="successMessage">
+                <%= request.getSession().getAttribute("message")%>
+            </div>
+            <% request.getSession().removeAttribute("message"); %>
+            <% } %>
+            <% if (request.getSession().getAttribute("errorMessage") != null) {%>
+            <div class="alert alert-danger" id="errorMessage">
+                <%= request.getSession().getAttribute("errorMessage")%>
+            </div>
+            <% request.getSession().removeAttribute("errorMessage"); %>
+            <% } %>
 
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>No.</th>
-                                        <th>Customer ID</th>
-                                        <th>Customer Name</th>
-                                        <th>Customer Phone</th>
-                                        <th>Number of Payments</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                    <tr id="noResultsRow" style="display: none;">
-                                        <td colspan="6" style="text-align: center; color: gray">Customer Not Found.</td>
-                                    </tr>
-                                </thead>
-                                <tbody id="customerTableBody">
-                                    <%
-                                        List<Customer> customerList = (List<Customer>) request.getAttribute("customerList");
-                                        if (customerList != null && !customerList.isEmpty()) {
-                                            int displayIndex = 1;
-                                            for (Customer customer : customerList) {
-                                    %>
-                                    <tr id="customerRow<%=customer.getCustomerId()%>">
-                                        <td><%= displayIndex++%></td>
-                                        <td><%= customer.getCustomerId()%></td>
-                                        <td><%= customer.getCustomerName()%></td>
-                                        <td><%= customer.getCustomerPhone()%></td>
-                                        <td><%= customer.getNumberOfPayment()%></td>
-                                        <td>
-                                            <button type="button" class="btn btn-edit btn-update-customer"
-                                                    data-bs-toggle="modal" data-bs-target="#updateCustomerModal"
-                                                    data-customer-id="<%= customer.getCustomerId()%>"
-                                                    data-customer-name="<%= customer.getCustomerName()%>"
-                                                    data-customer-phone="<%= customer.getCustomerPhone()%>"
-                                                    data-number-of-payment="<%= customer.getNumberOfPayment()%>">
-                                                <i class="fas fa-edit"></i> Update
-                                            </button>
-                                            <button type="button" class="btn btn-delete btn-delete-customer"
-                                                    data-bs-toggle="modal" data-bs-target="#deleteCustomerModal"
-                                                    data-customer-id="<%= customer.getCustomerId()%>">
-                                                <i class="fas fa-trash-alt"></i> Delete
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <%
-                                            }
-                                        } else {
-                                    %>
-                                    <tr>
-                                        <td colspan="6"><div class="no-data">Customer Not Found.</div></td>
-                                    </tr>
-                                    <%
-                                        }
-                                    %>
-                                </tbody>
-                            </table>
-                        </div>
-                    </main>
-                </div>
-            </section>
+            <div class="controls-container">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+                    <i class="fas fa-plus me-2"></i>Add New
+                </button>
+                <form id="searchForm" class="row g-3">
+                    <div class="col-auto">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Search by ID, Name, or Phone">
+                    </div>
+                </form>
+            </div>
+
+            <div id="customerListContainer">
+                <%
+                    List<Customer> customerList = (List<Customer>) request.getAttribute("customerList");
+                    if (customerList != null && !customerList.isEmpty()) {
+                %>
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>No.</th>
+                            <th>Customer ID</th>
+                            <th>Customer Name</th>
+                            <th>Customer Phone</th>
+                            <th>Number of Payments</th>
+                            <th class="actions-column">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customerTableBody">
+                        <%
+                            int displayIndex = 1;
+                            for (Customer customer : customerList) {
+                        %>
+                        <tr id="customerRow<%=customer.getCustomerId()%>">
+                            <td><%= displayIndex++%></td>
+                            <td><%= customer.getCustomerId()%></td>
+                            <td><%= customer.getCustomerName()%></td>
+                            <td><%= customer.getCustomerPhone()%></td>
+                            <td><%= customer.getNumberOfPayment()%></td>
+                            <td class="actions-column">
+                                <button type="button" class="btn btn-edit btn-update-customer"
+                                        data-bs-toggle="modal" data-bs-target="#updateCustomerModal"
+                                        data-customer-id="<%= customer.getCustomerId()%>"
+                                        data-customer-name="<%= customer.getCustomerName()%>"
+                                        data-customer-phone="<%= customer.getCustomerPhone()%>"
+                                        data-number-of-payment="<%= customer.getNumberOfPayment()%>">
+                                    <i class="fas fa-edit"></i> Update
+                                </button>
+                                <button type="button" class="btn btn-delete btn-delete-customer"
+                                        data-bs-toggle="modal" data-bs-target="#deleteCustomerModal"
+                                        data-customer-id="<%= customer.getCustomerId()%>">
+                                    <i class="fas fa-trash-alt"></i> Delete
+                                </button>
+                            </td>
+                        </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+                <div class="pagination" id="pagination"></div>
+                <% } else { %>
+                <p class="text-muted">No customers available.</p>
+                <% } %>
+            </div>
         </div>
     </div>
 
@@ -253,16 +345,90 @@
         </div>
     </div>
 
-    <!-- Bootstrap 5.3.0 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
     $(document).ready(function () {
-        // Gắn sự kiện ban đầu
+        const itemsPerPage = 10;
+        let currentPage = 1;
+        const searchInput = document.getElementById('searchInput');
+        const customerTableBody = document.getElementById('customerTableBody');
+        const pagination = document.getElementById('pagination');
+        const rows = Array.from(customerTableBody.querySelectorAll('tr'));
+
         bindEventHandlers();
         reloadViewCustomer();
 
-        // Xử lý thêm khách hàng
+        function filterAndSortTable() {
+            const searchText = searchInput.value.toLowerCase();
+
+            let filteredRows = rows.filter(row => {
+                const customerId = row.cells[1].textContent.toLowerCase();
+                const customerName = row.cells[2].textContent.toLowerCase();
+                const customerPhone = row.cells[3].textContent.toLowerCase();
+
+                return customerId.includes(searchText) || customerName.includes(searchText) || customerPhone.includes(searchText);
+            });
+
+            renderTable(filteredRows);
+        }
+
+        function renderTable(filteredRows) {
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const paginatedRows = filteredRows.slice(start, end);
+
+            customerTableBody.innerHTML = '';
+            paginatedRows.forEach(row => customerTableBody.appendChild(row));
+
+            renderPagination(filteredRows.length);
+        }
+
+        function renderPagination(totalItems) {
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            pagination.innerHTML = '';
+
+            const prevButton = document.createElement('button');
+            prevButton.textContent = 'Previous';
+            prevButton.disabled = currentPage === 1;
+            prevButton.onclick = function () {
+                if (currentPage > 1) {
+                    currentPage--;
+                    filterAndSortTable();
+                }
+            };
+            pagination.appendChild(prevButton);
+
+            for (let i = 1; i <= totalPages; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.textContent = i;
+                pageButton.className = i === currentPage ? 'active' : '';
+                pageButton.onclick = function () {
+                    currentPage = i;
+                    filterAndSortTable();
+                };
+                pagination.appendChild(pageButton);
+            }
+
+            const nextButton = document.createElement('button');
+            nextButton.textContent = 'Next';
+            nextButton.disabled = currentPage === totalPages;
+            nextButton.onclick = function () {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    filterAndSortTable();
+                }
+            };
+            pagination.appendChild(nextButton);
+        }
+
+        searchInput.addEventListener('keyup', filterAndSortTable);
+        filterAndSortTable();
+
+        setTimeout(function() {
+            $('#successMessage').fadeOut('slow');
+            $('#errorMessage').fadeOut('slow');
+        }, 10000);
+
         $('#btnAddCustomer').click(function () {
             var customerName = $('#customerName').val().trim();
             var customerPhone = $('#customerPhone').val().trim();
@@ -299,7 +465,6 @@
             }
         });
 
-        // Xử lý cập nhật khách hàng
         $('#btnUpdateCustomer').click(function () {
             var customerId = $('#customerIdUpdate').val();
             var customerName = $('#customerNameUpdate').val().trim();
@@ -335,7 +500,6 @@
             }
         });
 
-        // Xử lý xóa khách hàng
         $('#btnDeleteCustomerConfirm').click(function () {
             var customerId = $('#customerIdDelete').val();
             $.ajax({
@@ -358,13 +522,11 @@
             });
         });
 
-        // Hàm hiển thị lỗi
         function displayError(fieldId, message) {
             $('#' + fieldId).addClass('is-invalid');
             $('#' + fieldId).after('<div class="error-message" style="color: red;">' + message + '</div>');
         }
 
-        // Gắn sự kiện cho nút Update và Delete
         function bindEventHandlers() {
             $('.btn-update-customer').off('click').on('click', function () {
                 var customerId = $(this).data('customer-id');
@@ -382,7 +544,6 @@
             });
         }
 
-        // Tải lại danh sách khách hàng
         function reloadViewCustomer() {
             $.ajax({
                 url: 'ViewCustomerList',
@@ -391,35 +552,14 @@
                 success: function (data) {
                     var newBody = $(data).find('#customerTableBody').html();
                     $('#customerTableBody').html(newBody);
-                    bindEventHandlers(); // Gắn lại sự kiện sau khi tải lại
+                    bindEventHandlers();
+                    filterAndSortTable(); // Reapply filter after reload
                 },
                 error: function (xhr) {
                     console.error('Error reloading customer list:', xhr.responseText);
                 }
             });
         }
-
-        // Tìm kiếm khách hàng
-        $('#searchInput').on('keyup', function () {
-            var searchText = $(this).val().trim().toLowerCase();
-            var $rows = $('#customerTableBody tr:not(#noResultsRow)');
-            var foundMatch = false;
-
-            $rows.each(function () {
-                var customerId = $(this).find('td:nth-child(2)').text().toLowerCase();
-                var customerName = $(this).find('td:nth-child(3)').text().toLowerCase();
-                var customerPhone = $(this).find('td:nth-child(4)').text().toLowerCase();
-
-                if (customerId.includes(searchText) || customerName.includes(searchText) || customerPhone.includes(searchText)) {
-                    $(this).show();
-                    foundMatch = true;
-                } else {
-                    $(this).hide();
-                }
-            });
-
-            $('#noResultsRow').toggle(!foundMatch && searchText !== '');
-        });
     });
     </script>
 </body>

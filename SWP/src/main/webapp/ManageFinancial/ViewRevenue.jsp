@@ -42,18 +42,17 @@
         .container-fluid {
             display: flex;
             height: 100vh;
+            margin: 0; /* Loại bỏ margin mặc định */
+            padding: 0; /* Loại bỏ padding mặc định */
         }
-        /* Giữ nguyên style của sidebar từ code gốc, chỉ thêm fixed */
         .sidebar {
             background: linear-gradient(to bottom, #2C3E50, #34495E);
             color: white;
-            width: 250px; /* Điều chỉnh từ col-md-2 thành width cố định */
-            position: fixed; /* Cố định sidebar */
-            top: 0;
-            left: 0;
-            height: 100%;
-            padding: 20px;
-            overflow-y: auto; /* Cho phép cuộn trong sidebar nếu dài */
+            height: 100vh;
+            position: fixed;
+            width: 16.67%;
+            left: 0; /* Căn sát mép trái */
+            top: 0; /* Căn sát mép trên */
         }
         .sidebar a {
             color: white;
@@ -64,16 +63,15 @@
         }
         .sidebar .nav-link {
             font-size: 0.9rem;
-            padding: 10px;
+            padding: 10px 15px;
         }
         .sidebar h4 {
             font-size: 1.5rem;
+            padding: 15px 0;
             text-align: center;
-            margin-bottom: 20px;
         }
-        /* Nội dung chính */
-        .main-content {
-            margin-left: 250px; /* Đẩy nội dung sang phải để không bị che */
+        .content-area {
+            margin-left: 16.67%;
             padding: 20px;
             flex-grow: 1;
             display: flex;
@@ -86,12 +84,6 @@
             padding-bottom: 10px;
             border-bottom: 1px solid #e0e0e0;
             margin-bottom: 20px;
-        }
-        .header h3 {
-            font-size: 1.75rem;
-            font-weight: 600;
-            color: #2C3E50;
-            margin: 0;
         }
         .filter-section {
             display: flex;
@@ -164,7 +156,7 @@
 </head>
 <body>
     <div class="container-fluid">
-        <div class="sidebar">
+        <div class="sidebar col-md-2 p-3">
             <h4 class="text-center mb-4">Admin</h4>
             <ul class="nav flex-column">
                 <li class="nav-item"><a href="${pageContext.request.contextPath}/dashboard" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
@@ -182,7 +174,7 @@
             </ul>
         </div>
 
-        <div class="main-content">
+        <div class="content-area">
             <div class="header">
                 <h3>View Revenue</h3>
             </div>

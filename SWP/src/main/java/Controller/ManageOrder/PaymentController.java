@@ -35,11 +35,11 @@ public class PaymentController extends HttpServlet {
     private CustomerDAO customerDAO;
     private CouponDAO couponDAO;
 
-    // Cấu hình VNPay
-    private static final String vnp_TmnCode = "F7363RA1"; // Thay bằng mã TmnCode của bạn
-    private static final String vnp_HashSecret = "VL2ZFM15UPSSC2KGEU3X80VG7O23A3XV"; // Thay bằng HashSecret của bạn
+    // VNPay configuration
+    private static final String vnp_TmnCode = "F7363RA1"; // Replace with your TmnCode
+    private static final String vnp_HashSecret = "VL2ZFM15UPSSC2KGEU3X80VG7O23A3XV"; // Replace with your HashSecret
     private static final String vnp_Url = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-    private static final String vnp_ReturnUrl = "http://localhost:8080/payment/vnpay-return"; // URL gọi lại sau thanh toán
+    private static final String vnp_ReturnUrl = "http://localhost:8080/payment/vnpay-return"; // Callback URL after payment
 
     @Override
     public void init() throws ServletException {
@@ -186,7 +186,7 @@ public class PaymentController extends HttpServlet {
         List<Coupon> coupons = couponDAO.getAvailableCoupons();
         request.setAttribute("order", order);
         request.setAttribute("coupons", coupons);
-        request.setAttribute("message", "Đơn hàng đã thanh toán. Tổng mới: " + order.getFinalPrice() + " VND");
+        request.setAttribute("message", "Order has been paid. New total: " + order.getFinalPrice() + " VND");
         request.getRequestDispatcher("/ManageOrder/paymentDetail.jsp").forward(request, response);
     }
 
@@ -278,7 +278,7 @@ public class PaymentController extends HttpServlet {
             }
         }
 
-        // Lưu thông tin tạm thời vào session để xử lý sau khi VNPay gọi lại
+        // Store temporary info in session for VNPay callback processing
         HttpSession session = request.getSession();
         Map<String, String> orderData = new TreeMap<>();
         orderData.put("orderId", orderId);
@@ -288,15 +288,15 @@ public class PaymentController extends HttpServlet {
         orderData.put("couponId", couponId != null ? couponId : "");
         session.setAttribute("pendingVNPayOrder", orderData);
 
-        // Tạo tham số cho VNPay
+        // Prepare VNPay parameters
         String vnp_Version = "2.1.0";
         String vnp_Command = "pay";
-        String vnp_OrderInfo = "Thanh toán đơn hàng " + orderId + " với tổng tiền " + finalPrice + " VND";
+        String vnp_OrderInfo = "Payment for order " + orderId + " with total " + finalPrice + " VND";
         String orderType = "250000";
-        String vnp_TxnRef = orderId + "_" + System.currentTimeMillis(); // Mã giao dịch duy nhất
+        String vnp_TxnRef = orderId + "_" + System.currentTimeMillis(); // Unique transaction code
         String vnp_IpAddr = request.getRemoteAddr();
         String vnp_CreateDate = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
-        String amount = String.valueOf((int) (finalPrice * 100)); // VNPay yêu cầu số tiền dạng nguyên
+        String amount = String.valueOf((int) (finalPrice * 100)); // VNPay requires integer amount
 
         Map<String, String> vnp_Params = new TreeMap<>();
         vnp_Params.put("vnp_Version", vnp_Version);
@@ -312,7 +312,7 @@ public class PaymentController extends HttpServlet {
         vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
         vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
 
-        // Tạo chuỗi hash data và checksum
+        // Create hash data and checksum
         StringBuilder hashData = new StringBuilder();
         for (Map.Entry<String, String> entry : vnp_Params.entrySet()) {
             hashData.append(entry.getKey()).append("=")
@@ -323,7 +323,7 @@ public class PaymentController extends HttpServlet {
         String vnp_SecureHash = hmacSHA512(vnp_HashSecret, hashData.toString());
         vnp_Params.put("vnp_SecureHash", vnp_SecureHash);
 
-        // Tạo URL thanh toán
+        // Generate payment URL
         StringBuilder paymentUrl = new StringBuilder(vnp_Url).append("?");
         for (Map.Entry<String, String> entry : vnp_Params.entrySet()) {
             paymentUrl.append(URLEncoder.encode(entry.getKey(), "UTF-8"))
@@ -333,7 +333,7 @@ public class PaymentController extends HttpServlet {
         }
         paymentUrl.setLength(paymentUrl.length() - 1);
 
-        // Chuyển hướng đến VNPay
+        // Redirect to VNPay
         response.sendRedirect(paymentUrl.toString());
     }
 

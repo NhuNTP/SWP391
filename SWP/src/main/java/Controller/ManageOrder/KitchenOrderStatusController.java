@@ -82,13 +82,13 @@ public class KitchenOrderStatusController extends HttpServlet {
             }
 
             if ("Pending".equals(order.getOrderStatus()) && "Processing".equals(newStatus)) {
-                orderDAO.updateOrderStatus(orderId, "Processing"); // Kiểm tra và trừ nguyên liệu ở đây
-                request.setAttribute("successMessage", "Đơn hàng " + orderId + " đã chuyển sang Processing.");
+                orderDAO.updateOrderStatus(orderId, "Processing"); // Check and deduct ingredients here
+                request.setAttribute("successMessage", "Order " + orderId + " has been changed to Processing.");
             } else if ("Processing".equals(order.getOrderStatus()) && "Completed".equals(newStatus)) {
                 orderDAO.updateOrderStatus(orderId, "Completed");
-                request.setAttribute("successMessage", "Đơn hàng " + orderId + " đã hoàn tất.");
+                request.setAttribute("successMessage", "Order " + orderId + " has been completed.");
             } else {
-                request.setAttribute("errorMessage", "Không thể chuyển trạng thái từ " + order.getOrderStatus() + " sang " + newStatus);
+                request.setAttribute("errorMessage", "Cannot change status from " + order.getOrderStatus() + " to " + newStatus);
             }
 
             order = orderDAO.getOrderById(orderId);
@@ -96,7 +96,7 @@ public class KitchenOrderStatusController extends HttpServlet {
             request.getRequestDispatcher("/ManageOrder/kitchenod.jsp").forward(request, response);
 
         } catch (SQLException e) {
-            request.setAttribute("errorMessage", "Lỗi khi cập nhật trạng thái: " + e.getMessage());
+            request.setAttribute("errorMessage", "Error updating status: " + e.getMessage());
             try {
                 request.setAttribute("order", orderDAO.getOrderById(orderId));
             } catch (SQLException | ClassNotFoundException ex) {

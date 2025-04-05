@@ -70,39 +70,76 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        body {
+         body {
             font-family: 'Roboto', sans-serif;
             background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
         }
 
+        .container-fluid {
+            padding: 0;
+        }
+
+        /* Sidebar */
         .sidebar {
-            background: linear-gradient(to bottom, #2C3E50, #34495E);
-            color: white;
             height: 100vh;
-            position: sticky;
+            width: 250px;
+            position: fixed;
             top: 0;
-            overflow-y: auto;
-        }
-
-        .sidebar a {
-            color: white;
-            text-decoration: none;
-        }
-
-        .sidebar a:hover {
-            background-color: #1A252F;
+            left: 0;
+            background-color: #343a40;
+            padding-top: 20px;
+            transition: 0.3s;
+            z-index: 1000;
         }
 
         .sidebar .nav-link {
-            font-size: 0.9rem;
+            color: #fff;
+            padding: 15px 25px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            transition: 0.3s;
+            font-size: 16px;
+        }
+
+        .sidebar .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar .nav-link:hover {
+            background-color: #495057;
+            color: #fff;
+        }
+
+        .sidebar .nav-link.active {
+            background-color: #007bff;
+            color: #fff;
         }
 
         .sidebar h4 {
-            font-size: 1.5rem;
+            color: #fff;
+            text-align: center;
+            padding: 20px 0;
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .main-content-area {
+        /* Main Content */
+        .main-content {
+            margin-left: 250px;
             padding: 20px;
+            min-height: 100vh;
+            background-color: #f4f4f4;
+            transition: 0.3s;
         }
 
         .content-header {
@@ -110,27 +147,43 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            flex-wrap: nowrap;
+            flex-wrap: wrap;
         }
 
         .search-filter {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
+            flex-wrap: wrap;
         }
 
         .search-bar input {
             padding: 8px 12px;
             border: 1px solid #ccc;
-            border-radius: 3px;
+            border-radius: 4px;
             width: 250px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .search-bar input:focus {
+            border-color: #007bff;
+            outline: none;
         }
 
         .filter-bar select {
             padding: 8px 12px;
             border: 1px solid #ccc;
-            border-radius: 3px;
+            border-radius: 4px;
             width: 150px;
+            font-size: 14px;
+            background-color: #fff;
+            transition: border-color 0.3s;
+        }
+
+        .filter-bar select:focus {
+            border-color: #007bff;
+            outline: none;
         }
 
         .table-grid {
@@ -256,14 +309,19 @@
             margin-bottom: 15px;
         }
 
-        .text-left.mb-4 {
-            overflow: hidden;
-            background: linear-gradient(to right, #2C3E50, #42A5F5);
-            padding: 1rem;
-            color: white;
-            margin-left: -24px !important;
-            margin-top: -25px !important;
-            margin-right: -25px !important;
+        /* Tiêu đề "Table List" không gradient */
+        .page-title {
+            padding: 15px 20px;
+            background-color: #fff;
+            border-bottom: 1px solid #dee2e6;
+            margin: -20px -20px 20px -20px;
+        }
+
+        .page-title h2 {
+            margin: 0;
+            font-size: 24px;
+            color: #343a40;
+            font-weight: 600;
         }
 
         .pagination {
@@ -308,6 +366,12 @@
         }
 
         @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+            .main-content {
+                margin-left: 200px;
+            }
             .content-header {
                 flex-direction: column;
                 align-items: stretch;
@@ -321,119 +385,144 @@
                 margin-bottom: 10px;
             }
         }
+
+        @media (max-width: 576px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="d-flex">
+    <div class="container-fluid">
         <!-- Sidebar -->
-        <div class="sidebar col-md-2 p-3">
-            <h4 class="text-center mb-4">Waiter</h4>
+        <div class="sidebar">
+            <h4>Waiter Dashboard</h4>
             <ul class="nav flex-column">
-                <li class="nav-item"><a href="${pageContext.request.contextPath}/order?action=listTables" class="nav-link active"><i class="fas fa-building me-2"></i>Table List</a></li>
-                <li class="nav-item"><a href="${pageContext.request.contextPath}/logout" class="nav-link"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
-                <li class="nav-item"><a href="${pageContext.request.contextPath}/view-notifications" class="nav-link"><i class="fas fa-bell me-2"></i>View Notifications</a></li>
-                <li class="nav-item"><a href="${pageContext.request.contextPath}/viewAccountDetail" class="nav-link"><i class="fas fa-bell me-2"></i>View Profile</a></li>
+                <li class="nav-item">
+                    <a href="${pageContext.request.contextPath}/order?action=listTables" class="nav-link active">
+                        <i class="fas fa-building"></i> Table List
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a href="${pageContext.request.contextPath}/view-notifications" class="nav-link">
+                        <i class="fas fa-bell"></i> View Notifications
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="${pageContext.request.contextPath}/viewAccountDetail" class="nav-link">
+                        <i class="fas fa-user"></i> View Profile
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="${pageContext.request.contextPath}/logout" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </li>
             </ul>
-            
         </div>
-        
+
         <!-- Main Content -->
-        <div class="col-md-10 p-4 main-content-area">
-            <div class="text-left mb-4">
-                <h4>Table List</h4>
+        <div class="main-content">
+            <div class="page-title">
+                <h2>Table List</h2>
             </div>
-            <div class="container-fluid">
-                <div class="content-header">
-                    <div class="search-filter">
-                        <div class="search-bar">
-                            <input type="text" id="searchInput" placeholder="Search by ID or Seats">
-                        </div>
-                        <div class="filter-bar">
-                            <select id="statusFilter">
-                                <option value="">All Status</option>
-                                <option value="Available">Available</option>
-                                <option value="Occupied">Occupied</option>
-                                <option value="Reserved">Reserved</option>
-                            </select>
-                        </div>
-                        <div class="filter-bar">
-                            <select id="floorFilter">
-                                <option value="all">All Floors</option>
-                                <% if (floorNumbers != null && !floorNumbers.isEmpty()) {
-                                    for (Integer floor : floorNumbers) { %>
-                                    <option value="<%= floor %>">Floor <%= floor %></option>
-                                <% } } %>
-                            </select>
-                        </div>
+            <div class="content-header">
+                <div class="search-filter">
+                    <div class="search-bar">
+                        <input type="text" id="searchInput" placeholder="Search by ID or Seats">
+                    </div>
+                    <div class="filter-bar">
+                        <select id="statusFilter">
+                            <option value="">All Status</option>
+                            <option value="Available">Available</option>
+                            <option value="Occupied">Occupied</option>
+                            <option value="Reserved">Reserved</option>
+                        </select>
+                    </div>
+                    <div class="filter-bar">
+                        <select id="floorFilter">
+                            <option value="all">All Floors</option>
+                            <% if (floorNumbers != null && !floorNumbers.isEmpty()) {
+                                for (Integer floor : floorNumbers) { %>
+                                <option value="<%= floor %>">Floor <%= floor %></option>
+                            <% } } %>
+                        </select>
                     </div>
                 </div>
+            </div>
 
-                <div class="table-grid" id="tableGrid">
-                    <% if (tables != null && !tables.isEmpty()) {
-                        for (Table table : tables) {
-                            String tableClass = "table-item";
-                            String statusText = table.getTableStatus();
-                            if ("Available".equalsIgnoreCase(statusText)) {
-                                tableClass += " available";
-                            } else if ("Occupied".equalsIgnoreCase(statusText)) {
-                                tableClass += " occupied";
-                            } else if ("Reserved".equalsIgnoreCase(statusText)) {
-                                tableClass += " reserved";
-                            } %>
-                    <div class="<%= tableClass %>" id="tableItem-<%= table.getTableId() %>">
-                        <div class="table-info">
-                            <div class="table-id">ID: <%= table.getTableId() %></div>
-                            <div class="table-floor">Floor: <%= table.getFloorNumber() %></div>
-                            <div class="table-seats">Seats: <%= table.getNumberOfSeats() %></div>
-                            <div class="table-status">Status: <span><%= statusText %></span></div>
-                            <div>Order: <%= table.isHasOrder() ? "Pending" : "None" %></div>
-                        </div>
-                        <div class="table-buttons">
-                            <a href="#" class="btn-action" onclick="handleTableClick('<%= table.getTableId() %>'); return false;">
-                                <i class="fas <%= "Available".equals(table.getTableStatus()) ? "fa-plus" : "fa-eye" %>"></i>
-                            </a>
-                        </div>
+            <div class="table-grid" id="tableGrid">
+                <% if (tables != null && !tables.isEmpty()) {
+                    for (Table table : tables) {
+                        String tableClass = "table-item";
+                        String statusText = table.getTableStatus();
+                        if ("Available".equalsIgnoreCase(statusText)) {
+                            tableClass += " available";
+                        } else if ("Occupied".equalsIgnoreCase(statusText)) {
+                            tableClass += " occupied";
+                        } else if ("Reserved".equalsIgnoreCase(statusText)) {
+                            tableClass += " reserved";
+                        } %>
+                <div class="<%= tableClass %>" id="tableItem-<%= table.getTableId() %>">
+                    <div class="table-info">
+                        <div class="table-id">ID: <%= table.getTableId() %></div>
+                        <div class="table-floor">Floor: <%= table.getFloorNumber() %></div>
+                        <div class="table-seats">Seats: <%= table.getNumberOfSeats() %></div>
+                        <div class="table-status">Status: <span><%= statusText %></span></div>
+                        <div>Order: <%= table.isHasOrder() ? "Pending" : "None" %></div>
                     </div>
-                    <% } } else { %>
-                    <div class="no-data">
-                        <i class="fas fa-chair"></i>
-                        <span>NO TABLES AVAILABLE.</span>
+                    <div class="table-buttons">
+                        <a href="#" class="btn-action" onclick="handleTableClick('<%= table.getTableId() %>'); return false;">
+                            <i class="fas <%= "Available".equals(table.getTableStatus()) ? "fa-plus" : "fa-eye" %>"></i>
+                        </a>
                     </div>
+                </div>
+                <% } } else { %>
+                <div class="no-data">
+                    <i class="fas fa-chair"></i>
+                    <span>NO TABLES AVAILABLE.</span>
+                </div>
+                <% } %>
+            </div>
+
+            <!-- Pagination -->
+            <nav aria-label="Table navigation">
+                <ul class="pagination">
+                    <% if (totalPages > 1) { %>
+                    <li class="page-item <%= currentPage <= 1 ? "disabled" : "" %>">
+                        <a class="page-link" href="?page=<%= currentPage - 1 %>" aria-label="Previous">«</a>
+                    </li>
+                    <% int startPage = Math.max(1, currentPage - 2);
+                       int endPage = Math.min(totalPages, currentPage + 2);
+                       if (startPage > 1) { %>
+                    <li class="page-item"><a class="page-link" href="?page=1">1</a></li>
+                    <% if (startPage > 2) { %>
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                    <% } } %>
+                    <% for (int i = startPage; i <= endPage; i++) { %>
+                    <li class="page-item <%= currentPage == i ? "active" : "" %>">
+                        <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                    </li>
                     <% } %>
-                </div>
-
-                <!-- Pagination -->
-                <nav aria-label="Table navigation">
-                    <ul class="pagination justify-content-center">
-                        <% if (totalPages > 1) { %>
-                        <li class="page-item <%= currentPage <= 1 ? "disabled" : "" %>">
-                            <a class="page-link" href="?page=<%= currentPage - 1 %>" aria-label="Previous">«</a>
-                        </li>
-                        <% int startPage = Math.max(1, currentPage - 2);
-                           int endPage = Math.min(totalPages, currentPage + 2);
-                           if (startPage > 1) { %>
-                        <li class="page-item"><a class="page-link" href="?page=1">1</a></li>
-                        <% if (startPage > 2) { %>
-                        <li class="page-item disabled"><span class="page-link">...</span></li>
-                        <% } } %>
-                        <% for (int i = startPage; i <= endPage; i++) { %>
-                        <li class="page-item <%= currentPage == i ? "active" : "" %>">
-                            <a class="page-link" href="?page=<%= i %>"><%= i %></a>
-                        </li>
-                        <% } %>
-                        <% if (endPage < totalPages) { %>
-                        <% if (endPage < totalPages - 1) { %>
-                        <li class="page-item disabled"><span class="page-link">...</span></li>
-                        <% } %>
-                        <li class="page-item"><a class="page-link" href="?page=<%= totalPages %>"><%= totalPages %></a></li>
-                        <% } %>
-                        <li class="page-item <%= currentPage >= totalPages ? "disabled" : "" %>">
-                            <a class="page-link" href="?page=<%= currentPage + 1 %>" aria-label="Next">»</a>
-                        </li>
-                        <% } %>
-                    </ul>
-                </nav>
-            </div>
+                    <% if (endPage < totalPages) { %>
+                    <% if (endPage < totalPages - 1) { %>
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                    <% } %>
+                    <li class="page-item"><a class="page-link" href="?page=<%= totalPages %>"><%= totalPages %></a></li>
+                    <% } %>
+                    <li class="page-item <%= currentPage >= totalPages ? "disabled" : "" %>">
+                        <a class="page-link" href="?page=<%= currentPage + 1 %>" aria-label="Next">»</a>
+                    </li>
+                    <% } %>
+                </ul>
+            </nav>
         </div>
     </div>
 

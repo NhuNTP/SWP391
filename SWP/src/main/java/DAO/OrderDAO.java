@@ -359,7 +359,7 @@ public class OrderDAO {
 
                                 double totalQuantityNeeded = quantityUsedPerDish * quantityOrdered;
                                 if (currentQuantity < totalQuantityNeeded) {
-                                    throw new SQLException("Out of stock: Nguyên liệu " + itemId + " không đủ cho món " + dishId + ". Cần: " + totalQuantityNeeded + ", Còn: " + currentQuantity);
+                                    throw new SQLException("Out of stock: Ingredient " + itemId + " is insufficient for dish " + dishId + ". Needed: " + totalQuantityNeeded + ", Available: " + currentQuantity);
                                 }
                             }
                         }
@@ -580,7 +580,7 @@ public class OrderDAO {
             conn = DBContext.getConnection();
             
             if (details == null || details.isEmpty()) {
-                throw new SQLException("Không có món nào trong đơn hàng.");
+                throw new SQLException("No dishes in the order.");
             }
 
             for (OrderDetail detail : details) {
@@ -601,7 +601,7 @@ public class OrderDAO {
 
                             double totalQuantityNeeded = quantityUsedPerDish * quantityOrdered;
                             if (currentQuantity < totalQuantityNeeded) {
-                                throw new SQLException("Out of stock: Nguyên liệu " + itemId + " không đủ cho món " + dishId + ". Cần: " + totalQuantityNeeded + ", Còn: " + currentQuantity);
+                                throw new SQLException("Out of stock: Ingredient " + itemId + " is insufficient for dish " + dishId + ". Needed: " + totalQuantityNeeded + ", Available: " + currentQuantity);
                             }
                         }
                     }
