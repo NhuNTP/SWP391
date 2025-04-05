@@ -26,14 +26,14 @@ public class Order {
     private String customerPhone;
     private String customerName;
     private double total;
-    
+    private double finalPrice;
 
     // Constructors (Optional, but good practice)
 
     public Order() {
     }
 
-    public Order(String orderId, String userId, String customerId, Date orderDate, String orderStatus, String orderType, String orderDescription, String couponId, String tableId, List<OrderDetail> orderDetails, String customerPhone,String customerName, double total) {
+    public Order(String orderId, String userId, String customerId, Date orderDate, String orderStatus, String orderType, String orderDescription, String couponId, String tableId, List<OrderDetail> orderDetails, String customerPhone, String customerName, double total, double finalPrice) {
         this.orderId = orderId;
         this.userId = userId;
         this.customerId = customerId;
@@ -47,6 +47,7 @@ public class Order {
         this.customerPhone = customerPhone;
         this.customerName = customerName;
         this.total = total;
+        this.finalPrice = finalPrice;
     }
 
     public String getOrderId() {
@@ -137,6 +138,14 @@ public class Order {
         this.customerPhone = customerPhone;
     }
 
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
+    }
+
     public double getTotal() {
         return total;
     }
@@ -145,12 +154,13 @@ public class Order {
         this.total = total;
     }
 
-    public String getCustomerName() {
-        return customerName;
+    public double getFinalPrice() {
+        return finalPrice;
     }
 
-    public void setCustomerName(String customerName) {
-        this.customerName = customerName;
+    public void setFinalPrice(double finalPrice) {
+        this.finalPrice = finalPrice;
     }
+
     
 }

@@ -298,12 +298,12 @@
                                 </div>
                                 <!-- ... Phần đầu giữ nguyên ... -->
                                 <div class="form-group">
-    <label for="dishImage">Image</label>
-    <input type="file" id="dishImage" name="dishImage" onchange="previewImage(event)">
-    <input type="hidden" name="oldDishImage" value="<%= dish.getDishImage() != null ? dish.getDishImage() : "" %>">
-    <img id="imagePreview" src="<%= dish != null && dish.getDishImage() != null ? request.getContextPath() + dish.getDishImage() : "" %>" alt="Image Preview">
-    <span id="dishImageError" class="error"></span>
-</div>
+                                    <label for="dishImage">Image</label>
+                                    <input type="file" id="dishImage" name="dishImage" onchange="previewImage(event)">
+                                    <input type="hidden" name="oldDishImage" value="<%= dish.getDishImage() != null ? dish.getDishImage() : ""%>">
+                                    <img id="imagePreview" src="<%= dish != null && dish.getDishImage() != null ? request.getContextPath() + dish.getDishImage() : ""%>" alt="Image Preview">
+                                    <span id="dishImageError" class="error"></span>
+                                </div>
                                 <!-- ... Phần còn lại giữ nguyên ... -->
                             </div>
                         </div>

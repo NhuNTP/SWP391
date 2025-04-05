@@ -68,6 +68,30 @@
             color: white;
             border: none;
             border-radius: 25px 0 0 25px;
+            padding: 12px 15px;
+        }
+        .input-group {
+            position: relative;
+        }
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #e67e22;
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 0;
+            z-index: 10;
+        }
+        .toggle-password:hover {
+            color: #d35400;
+        }
+        .form-control.password-field {
+            padding-right: 40px; /* Để chừa chỗ cho biểu tượng mắt */
+            border-radius: 25px; /* Giữ bo tròn đều */
         }
     </style>
 </head>
@@ -86,17 +110,20 @@
 
         <form action="${pageContext.request.contextPath}/login" method="post">
             <div class="mb-3">
-    <label for="email" class="form-label fw-bold text-dark">Email</label>
-    <div class="input-group">
-        <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-        <input type="email" class="form-control" id="email" name="email" placeholder="Enter email" required>
-    </div>
-</div>
+                <label for="email" class="form-label fw-bold text-dark">Email</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                    <input type="email" class="form-control" id="email" name="email" placeholder="Enter email" required>
+                </div>
+            </div>
             <div class="mb-4">
                 <label for="password" class="form-label fw-bold text-dark">Password</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                    <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" required>
+                    <input type="password" class="form-control password-field" id="password" name="password" placeholder="Enter password" required>
+                    <button type="button" class="toggle-password" onclick="togglePassword()">
+                        <i class="fas fa-eye" id="toggleIcon"></i>
+                    </button>
                 </div>
             </div>
             <button type="submit" class="btn btn-login">Login</button>
@@ -105,5 +132,20 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        function togglePassword() {
+            const passwordInput = document.getElementById("password");
+            const toggleIcon = document.getElementById("toggleIcon");
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                toggleIcon.classList.remove("fa-eye");
+                toggleIcon.classList.add("fa-eye-slash");
+            } else {
+                passwordInput.type = "password";
+                toggleIcon.classList.remove("fa-eye-slash");
+                toggleIcon.classList.add("fa-eye");
+            }
+        }
+    </script>
 </body>
 </html>
