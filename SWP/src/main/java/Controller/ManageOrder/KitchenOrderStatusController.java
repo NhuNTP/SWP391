@@ -82,8 +82,8 @@ public class KitchenOrderStatusController extends HttpServlet {
             }
 
             if ("Pending".equals(order.getOrderStatus()) && "Processing".equals(newStatus)) {
-                orderDAO.updateOrderStatus(orderId, "Processing"); // Trừ nguyên liệu ở đây
-                request.setAttribute("successMessage", "Đơn hàng " + orderId + " đã chuyển sang Processing và nguyên liệu đã được trừ.");
+                orderDAO.updateOrderStatus(orderId, "Processing"); // Kiểm tra và trừ nguyên liệu ở đây
+                request.setAttribute("successMessage", "Đơn hàng " + orderId + " đã chuyển sang Processing.");
             } else if ("Processing".equals(order.getOrderStatus()) && "Completed".equals(newStatus)) {
                 orderDAO.updateOrderStatus(orderId, "Completed");
                 request.setAttribute("successMessage", "Đơn hàng " + orderId + " đã hoàn tất.");
@@ -99,9 +99,7 @@ public class KitchenOrderStatusController extends HttpServlet {
             request.setAttribute("errorMessage", "Lỗi khi cập nhật trạng thái: " + e.getMessage());
             try {
                 request.setAttribute("order", orderDAO.getOrderById(orderId));
-            } catch (SQLException ex) {
-                Logger.getLogger(KitchenOrderStatusController.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (ClassNotFoundException ex) {
+            } catch (SQLException | ClassNotFoundException ex) {
                 Logger.getLogger(KitchenOrderStatusController.class.getName()).log(Level.SEVERE, null, ex);
             }
             request.getRequestDispatcher("/ManageOrder/kitchenod.jsp").forward(request, response);
