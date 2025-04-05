@@ -2,8 +2,6 @@ package Controller.ManagerAccount;
 
 import DAO.AccountDAO;
 import Model.Account;
-import java.io.IOException;
-import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -12,7 +10,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -20,35 +20,11 @@ import java.util.UUID;
 
 @WebServlet("/UpdateAccount")
 @MultipartConfig(
-        fileSizeThreshold = 1024 * 1024, // 1MB
-        maxFileSize = 1024 * 1024 * 50, // 50MB
-        maxRequestSize = 1024 * 1024 * 100 // 100MB
+        fileSizeThreshold = 1024 * 1024,
+        maxFileSize = 1024 * 1024 * 50,
+        maxRequestSize = 1024 * 1024 * 100
 )
 public class UpdateAccountController extends HttpServlet {
-
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        String tableId = request.getParameter("id");
-        if (tableId == null || tableId.isEmpty()) {
-            response.sendRedirect("ViewAccountList");
-            return;
-        }
-
-        try {
-            AccountDAO dao = new AccountDAO();
-            // Use fullDetails = true to fetch all details
-            Account account = dao.getAccountById(tableId, true);
-            if (account == null) {
-                response.sendRedirect("ViewAccountList");
-                return;
-            }
-            request.setAttribute("account", account);
-            request.setAttribute("showEditModal", true);
-            response.sendRedirect("ViewAccountList");
-        } catch (Exception e) {
-            response.sendRedirect("ViewAccountList");
-        }
-    }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -64,7 +40,7 @@ public class UpdateAccountController extends HttpServlet {
             String UserRole = request.getParameter("UserRole");
             String IdentityCard = request.getParameter("IdentityCard");
             String UserAddress = request.getParameter("UserAddress");
-            String UserPhone = request.getParameter("UserPhone"); // Get UserPhone from request
+            String UserPhone = request.getParameter("UserPhone");
             String oldImagePath = request.getParameter("oldImagePath");
 
             Part filePart = request.getPart("UserImage");
@@ -74,13 +50,7 @@ public class UpdateAccountController extends HttpServlet {
                 String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
                 String uniqueFileName = UUID.randomUUID().toString() + "_" + fileName;
 
-                String webAppRoot = getServletContext().getRealPath("/");
-                File webAppRootDir = new File(webAppRoot);
-                File targetDir = webAppRootDir.getParentFile();
-                File projectRootDir = targetDir.getParentFile();
-                String srcWebAppPath = new File(projectRootDir, "src/main/webapp").getAbsolutePath();
-                String uploadPath = srcWebAppPath + File.separator + "ManageAccount/account_img";
-
+                String uploadPath = getServletContext().getRealPath("/") + "ManageAccount/account_img";
                 File uploadDir = new File(uploadPath);
                 if (!uploadDir.exists()) {
                     uploadDir.mkdirs();
@@ -94,45 +64,41 @@ public class UpdateAccountController extends HttpServlet {
                 }
 
                 if (oldImagePath != null && !oldImagePath.isEmpty()) {
-                    String oldFilePath = srcWebAppPath + File.separator + oldImagePath;
+                    String oldFilePath = getServletContext().getRealPath("/") + oldImagePath;
                     File oldFile = new File(oldFilePath);
                     if (oldFile.exists() && !oldFile.isDirectory()) {
                         oldFile.delete();
                     }
                 }
             } else {
-                UserImage = oldImagePath;
+                UserImage = oldImagePath; // Giữ nguyên ảnh cũ
             }
 
             AccountDAO dao = new AccountDAO();
-            Account account = new Account(UserId, UserEmail, UserPassword, UserName, UserRole, IdentityCard, UserAddress, UserPhone, UserImage, false); // Include UserPhone in constructor
+            Account account = new Account(UserId, UserEmail, UserPassword, UserName, UserRole, IdentityCard, UserAddress, UserPhone, UserImage, false);
 
-            // Use fullDetails = false since only basic info is needed
             Account existingAccount = dao.getAccountById(UserId, false);
-
-            // Check for email and identity card uniqueness, excluding the current account
+            // Kiểm tra email: chỉ báo lỗi nếu email thay đổi và trùng với tài khoản khác
             if (!UserEmail.equals(existingAccount.getUserEmail()) && dao.isEmailExists(UserEmail, UserId)) {
-                jsonResponse.append("{\"success\":false,\"message\":\"Email already exists for another account. Please enter a different email.\"}");
-                out.print(jsonResponse.toString());
-                return;
-            }
-            if (IdentityCard != null && !IdentityCard.isEmpty() && !IdentityCard.equals(existingAccount.getIdentityCard()) && dao.isIdentityCardExists(IdentityCard, UserId)) {
-                jsonResponse.append("{\"success\":false,\"message\":\"Identity card/CCCD already exists for another account. Please enter a different number.\"}");
-                out.print(jsonResponse.toString());
-                return;
+                jsonResponse.append("{\"success\":false,\"field\":\"DetailUserEmail\",\"message\":\"Email already exists for another account.\"}");
+            } 
+            // Kiểm tra identity card: chỉ báo lỗi nếu identity card thay đổi và trùng với tài khoản khác
+            else if (IdentityCard != null && !IdentityCard.isEmpty() && !IdentityCard.equals(existingAccount.getIdentityCard()) && dao.isIdentityCardExists(IdentityCard, UserId)) {
+                jsonResponse.append("{\"success\":false,\"field\":\"DetailIdentityCard\",\"message\":\"Identity card/CCCD already exists for another account.\"}");
+            } 
+//            else if (UserPhone != null && !UserPhone.isEmpty() && dao.isPhoneExists(UserPhone, null)) {
+//jsonResponse.append("{\"success\":false,\"field\":\"DetailUserPhone\",\"message\":\"This phone number already exists.\"}");
+//                 }
+            else {
+                int count = dao.updateAccount(UserId, account);
+                if (count > 0) {
+                    jsonResponse.append("{\"success\":true,\"message\":\"Account updated successfully.\"}");
+                } else {
+                    jsonResponse.append("{\"success\":false,\"message\":\"An error occurred while updating the account.\"}");
+                }
             }
 
-            int count = dao.updateAccount(UserId, account);
-
-            if (count > 0) {
-                // On success, return a response to close the modal and reload the page
-                jsonResponse.append("{\"success\":true,\"action\":\"closeAndReload\"}");
-                out.print(jsonResponse.toString());
-            } else {
-                jsonResponse.append("{\"success\":false,\"message\":\"An error occurred while updating the account.\"}");
-                out.print(jsonResponse.toString());
-            }
-             
+            out.print(jsonResponse.toString());
         } catch (Exception e) {
             jsonResponse.append("{\"success\":false,\"message\":\"Unknown error: ").append(escapeJson(e.getMessage())).append("\"}");
             out.print(jsonResponse.toString());
@@ -142,18 +108,7 @@ public class UpdateAccountController extends HttpServlet {
     }
 
     private String escapeJson(String str) {
-        if (str == null) {
-            return "";
-        }
-        return str.replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\t", "\\t");
-    }
-
-    @Override
-    public String getServletInfo() {
-        return "Servlet to update an account";
+        if (str == null) return "";
+        return str.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t");
     }
 }

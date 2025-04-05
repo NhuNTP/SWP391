@@ -9,8 +9,8 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-@WebServlet("/DeleteAccount")
-public class DeleteAccountController extends HttpServlet {
+@WebServlet("/RestoreAccount")
+public class RestoreAccountController extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -28,20 +28,20 @@ public class DeleteAccountController extends HttpServlet {
         } else {
             try {
                 AccountDAO dao = new AccountDAO();
-                int count = dao.deleteAccount(userId); // Assuming this marks account as inactive
+                int count = dao.restoreAccount(userId); // Assuming this restores the account
                 if (count > 0) {
-                    out.print("{\"success\": true, \"message\": \"Account marked as inactive.\"}");
-                    System.out.println("Account with ID " + userId + " deleted successfully.");
+                    out.print("{\"success\": true, \"message\": \"Account restored successfully.\"}");
+                    System.out.println("Account with ID " + userId + " restored successfully.");
                 } else {
-                    out.print("{\"success\": false, \"message\": \"Failed to delete account or account not found.\"}");
+                    out.print("{\"success\": false, \"message\": \"Failed to restore account or account not found.\"}");
                     response.setStatus(HttpServletResponse.SC_NOT_FOUND); // 404
-                    System.out.println("Failed to delete account with ID " + userId + " or account not found.");
+                    System.out.println("Failed to restore account with ID " + userId + " or account not found.");
                 }
             } catch (Exception e) {
                 String errorMessage = "{\"success\": false, \"message\": \"Server error: " + escapeJson(e.getMessage()) + "\"}";
                 out.print(errorMessage);
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR); // 500
-                System.err.println("Error deleting account: " + e.getMessage());
+                System.err.println("Error restoring account: " + e.getMessage());
                 e.printStackTrace();
             }
         }
@@ -59,7 +59,7 @@ public class DeleteAccountController extends HttpServlet {
 
     @Override
     public String getServletInfo() {
-        return "Servlet to delete an account via AJAX";
+        return "Servlet to restore an account via AJAX";
     }
 
     // Helper method to escape special characters in JSON strings

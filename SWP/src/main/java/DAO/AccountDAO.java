@@ -22,21 +22,20 @@ public class AccountDAO {
     private String sql;
     private static final Logger LOGGER = Logger.getLogger(AccountDAO.class.getName());
 
-    // Thông tin email gửi
     private static final String FROM_EMAIL = "tastyrestaurantg3@gmail.com"; // Thay bằng email của bạn
-    private static final String PASSWORD = "lgls lrzk auqq uzde"; // Thay bằng App Password nếu dùng Gmail
+    private static final String PASSWORD = "xdwa hgtj frfs cnng"; // Thay bằng App Password nếu dùng Gmail
 
     public AccountDAO() throws ClassNotFoundException, SQLException {
         conn = DBContext.getConnection();
     }
 
-    private String generateConfirmationCode() {
+    public String generateConfirmationCode() {
         Random random = new Random();
         int code = 100000 + random.nextInt(900000);
         return String.valueOf(code);
     }
 
-    public boolean sendConfirmationCodeEmail(String toEmail, String code) {
+    public void sendConfirmationCodeEmail(String toEmail, String code) throws MessagingException {
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.starttls.enable", "true");
@@ -55,19 +54,21 @@ public class AccountDAO {
             message.setFrom(new InternetAddress(FROM_EMAIL));
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail));
             message.setSubject("Mã xác nhận đăng ký tài khoản");
-
-            String emailContent = "Chào bạn,\n\n"
-                    + "Mã xác nhận của bạn là: " + code + "\n"
-                    + "Mã này có hiệu lực trong 3 phút. Vui lòng nhập mã này trên trang web để hoàn tất đăng ký.\n\n"
-                    + "Trân trọng,\nĐội ngũ YourApp";
-
-            message.setText(emailContent);
+            message.setText("Mã xác nhận của bạn là: " + code + "\nMã này có hiệu lực trong 3 phút.");
             Transport.send(message);
-            LOGGER.info("Email mã xác nhận đã được gửi tới: " + toEmail);
-            return true; // Gửi email thành công
+            LOGGER.info("Confirmation email sent successfully to: " + toEmail);
         } catch (MessagingException e) {
-            LOGGER.log(Level.SEVERE, "Lỗi khi gửi email mã xác nhận tới: " + toEmail, e);
-            return false; // Gửi email thất bại
+            LOGGER.log(Level.SEVERE, "Failed to send confirmation email to: " + toEmail, e);
+            // Kiểm tra lỗi cụ thể từ Gmail
+            String errorMessage = e.getMessage();
+            if (errorMessage != null && (errorMessage.contains("Invalid Addresses") || errorMessage.contains("550"))) {
+                throw new MessagingException("Invalid email address"); // Ném lỗi khi không tìm thấy địa chỉ
+            } else if (errorMessage != null && (errorMessage.contains("Authentication failed") || errorMessage.contains("535"))) {
+                throw new MessagingException("SMTP authentication failed");
+            } else if (errorMessage != null && (errorMessage.contains("Connection refused") || errorMessage.contains("timeout"))) {
+                throw new MessagingException("Unable to connect to SMTP server");
+            }
+            throw new MessagingException("Lỗi không xác định: " + e.getMessage());
         }
     }
 
@@ -81,6 +82,19 @@ public class AccountDAO {
             return rs.next();
         }
     }
+public boolean isPhoneExists(String phone, String excludeUserId) throws SQLException, ClassNotFoundException {
+    String sql = "SELECT UserPhone FROM Account WHERE UserPhone = ? AND (UserId != ? OR ? IS NULL)";
+    try (Connection con = DBContext.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+        ps.setString(1, phone);
+        ps.setString(2, excludeUserId);
+        ps.setString(3, excludeUserId);
+        ResultSet rs = ps.executeQuery();
+        return rs.next();
+    } catch (SQLException e) {
+        LOGGER.log(Level.SEVERE, "Error checking phone existence for: " + phone, e);
+        throw e;
+    }
+}
 
     public boolean isIdentityCardExists(String identityCard, String excludeUserId) throws SQLException, ClassNotFoundException {
         String sql = "SELECT IdentityCard FROM Account WHERE IdentityCard = ? AND (UserId != ? OR ? IS NULL)";
@@ -112,7 +126,7 @@ public class AccountDAO {
                 prefix = "KS";
                 break;
             default:
-                throw new IllegalArgumentException("Invalid user role: " + userRole);
+                throw new IllegalArgumentException("Vai trò người dùng không hợp lệ: " + userRole);
         }
 
         String sql = "SELECT MAX(UserId) AS MaxId FROM Account WHERE UserId LIKE ?";
@@ -131,22 +145,19 @@ public class AccountDAO {
         }
     }
 
-    public int createAccount(Account account) throws ClassNotFoundException, SQLException {
+    public int createAccount(Account account, String confirmationToken) throws ClassNotFoundException, SQLException {
         if (isEmailExists(account.getUserEmail(), null)) {
-            LOGGER.warning("createAccount - Email already exists: " + account.getUserEmail());
+            LOGGER.warning("createAccount - Email đã tồn tại: " + account.getUserEmail());
             return -1;
         }
         if (account.getIdentityCard() != null && !account.getIdentityCard().isEmpty() && isIdentityCardExists(account.getIdentityCard(), null)) {
-            LOGGER.warning("createAccount - IdentityCard already exists: " + account.getIdentityCard());
+            LOGGER.warning("createAccount - Số CCCD đã tồn tại: " + account.getIdentityCard());
             return -2;
         }
 
-        String sql = "INSERT INTO Account (UserId, UserEmail, UserPassword, UserName, UserRole, IdentityCard, UserAddress, UserImage, UserPhone, IsDeleted, ConfirmationCode, CodeExpiration) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Account (UserId, UserEmail, UserPassword, UserName, UserRole, IdentityCard, UserAddress, UserImage, UserPhone, IsDeleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection con = DBContext.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
             String userId = generateUniqueUserId(account.getUserRole());
-            String confirmationCode = generateConfirmationCode();
-            // Đảm bảo expirationTime không bao giờ là NULL
-            Timestamp expirationTime = new Timestamp(System.currentTimeMillis() + 3 * 60 * 1000); // 3 phút
             account.setUserId(userId);
 
             ps.setString(1, userId);
@@ -159,23 +170,9 @@ public class AccountDAO {
             ps.setString(8, account.getUserImage());
             ps.setString(9, account.getUserPhone());
             ps.setBoolean(10, false);
-            ps.setString(11, confirmationCode);
-            ps.setTimestamp(12, expirationTime); // Bây giờ cột CodeExpiration là DATETIME, nên giá trị này sẽ được chèn đúng
 
             int count = ps.executeUpdate();
-            LOGGER.info("createAccount - Temporary account created: " + userId);
-
-            if (count > 0) {
-                boolean emailSent = sendConfirmationCodeEmail(account.getUserEmail(), confirmationCode);
-                if (!emailSent) {
-                    String deleteSql = "DELETE FROM Account WHERE UserId = ?";
-                    try (PreparedStatement deletePs = con.prepareStatement(deleteSql)) {
-                        deletePs.setString(1, userId);
-                        deletePs.executeUpdate();
-                    }
-                    return -3; // Gửi email thất bại
-                }
-            }
+            LOGGER.info("createAccount - Tài khoản đã được tạo: " + userId);
             return count;
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "createAccount - SQLException: ", e);
@@ -183,34 +180,7 @@ public class AccountDAO {
         }
     }
 
-    public int confirmAndCreateAccount(Account account, String inputCode) throws ClassNotFoundException, SQLException {
-        String sqlCheck = "SELECT ConfirmationCode, CodeExpiration FROM Account WHERE UserEmail = ? AND ConfirmationCode = ?";
-        try (Connection con = DBContext.getConnection(); PreparedStatement psCheck = con.prepareStatement(sqlCheck)) {
-            psCheck.setString(1, account.getUserEmail());
-            psCheck.setString(2, inputCode);
-            ResultSet rs = psCheck.executeQuery();
-
-            if (rs.next()) {
-                Timestamp expirationTime = rs.getTimestamp("CodeExpiration");
-                if (expirationTime != null && expirationTime.after(new Timestamp(System.currentTimeMillis()))) {
-                    String sqlInsert = "UPDATE Account SET ConfirmationCode = NULL, CodeExpiration = NULL WHERE UserEmail = ?";
-                    try (PreparedStatement psInsert = con.prepareStatement(sqlInsert)) {
-                        psInsert.setString(1, account.getUserEmail());
-                        int count = psInsert.executeUpdate();
-                        if (count > 0) {
-                            sendAccountInfoEmail(account.getUserEmail(), account.getUserName(), account.getUserPassword());
-                            return 1;
-                        }
-                    }
-                } else {
-                    return -4; // Mã đã hết hạn
-                }
-            }
-            return 0; // Mã xác nhận sai hoặc không tìm thấy
-        }
-    }
-
-    private void sendAccountInfoEmail(String toEmail, String username, String password) {
+    public void sendAccountInfoEmail(String toEmail, String username, String password) {
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.starttls.enable", "true");
@@ -236,8 +206,7 @@ public class AccountDAO {
                     + "Tên đăng nhập: " + username + "\n"
                     + "Mật khẩu: " + password + "\n\n"
                     + "Vui lòng đăng nhập để sử dụng dịch vụ.\n\n"
-                    + "Trân trọng,\nĐội ngũ YourApp";
-
+                    + "Trân trọng,\nĐội ngũ Nhà hàng Tasty";
             message.setText(emailContent);
             Transport.send(message);
             LOGGER.info("Email thông tin tài khoản đã được gửi tới: " + toEmail);
@@ -246,11 +215,12 @@ public class AccountDAO {
         }
     }
 
-    public Account login(String email, String password) throws ClassNotFoundException, SQLException {  // Thay tham số username thành email
+    // Các phương thức khác giữ nguyên (login, getAllAccount, getAccountById, updateAccount, deleteAccount, getAllRoles, getUserIdsByRole)
+    public Account login(String email, String password) throws ClassNotFoundException, SQLException {
         String sql = "SELECT UserId, UserEmail, UserPassword, UserName, UserRole, IdentityCard, UserAddress, UserImage, IsDeleted "
-                + "FROM Account WHERE UserEmail = ? AND UserPassword = ? AND IsDeleted = 0";  // Thay UserName thành UserEmail trong truy vấn
+                + "FROM Account WHERE UserEmail = ? AND UserPassword = ? AND IsDeleted = 0";
         try (Connection conn = DBContext.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, email);  // Thay username thành email
+            pstmt.setString(1, email);
             pstmt.setString(2, password);
             ResultSet rs = pstmt.executeQuery();
 
@@ -265,25 +235,22 @@ public class AccountDAO {
                 account.setUserAddress(rs.getString("UserAddress"));
                 account.setUserImage(rs.getString("UserImage"));
                 account.setIsDeleted(rs.getBoolean("IsDeleted"));
-                LOGGER.info("Login successful for user: " + email);  // Thay username thành email trong log
+                LOGGER.info("Đăng nhập thành công cho người dùng: " + email);
                 return account;
             } else {
-                LOGGER.info("Login failed for user: " + email + " - Account not found or deleted.");  // Thay username thành email trong log
+                LOGGER.info("Đăng nhập thất bại cho người dùng: " + email + " - Tài khoản không tồn tại hoặc đã bị xóa.");
                 return null;
             }
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error during login for user: " + email, e);  // Thay username thành email trong log
-            throw e;
-        } catch (ClassNotFoundException e) {
-            LOGGER.log(Level.SEVERE, "Database driver not found", e);
+            LOGGER.log(Level.SEVERE, "Lỗi trong quá trình đăng nhập cho người dùng: " + email, e);
             throw e;
         }
     }
 
     public List<Account> getAllAccount() throws SQLException, ClassNotFoundException {
         List<Account> accounts = new ArrayList<>();
-        String sql = "SELECT UserId, UserEmail, UserPassword, UserName, UserRole, IdentityCard, UserAddress, UserPhone, UserImage "
-                + "FROM Account WHERE IsDeleted = 0";
+        String sql = "SELECT UserId, UserEmail, UserPassword, UserName, UserRole, IdentityCard, UserAddress, UserPhone, UserImage, IsDeleted "
+                + "FROM Account"; // Bỏ điều kiện WHERE IsDeleted = 0
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 Account account = new Account();
@@ -296,10 +263,11 @@ public class AccountDAO {
                 account.setUserAddress(rs.getString("UserAddress"));
                 account.setUserPhone(rs.getString("UserPhone"));
                 account.setUserImage(rs.getString("UserImage"));
+                account.setIsDeleted(rs.getBoolean("IsDeleted")); // Thêm trạng thái IsDeleted
                 accounts.add(account);
             }
         } catch (SQLException ex) {
-            LOGGER.log(Level.SEVERE, "Error fetching all accounts with full details", ex);
+            LOGGER.log(Level.SEVERE, "Lỗi khi lấy tất cả tài khoản", ex);
             throw ex;
         }
         return accounts;
@@ -348,7 +316,6 @@ public class AccountDAO {
         }
     }
 
-    // Cập nhật phương thức updateAccount
     public int updateAccount(String oldId, Account newInfo) throws SQLException, ClassNotFoundException {
         int count = 0;
         Connection con = null;
@@ -358,7 +325,7 @@ public class AccountDAO {
             con = DBContext.getConnection();
             con.setAutoCommit(false);
 
-            Account existingAccount = getAccountById(oldId, false); // Chỉ lấy thông tin cơ bản
+            Account existingAccount = getAccountById(oldId, false);
 
             if (!existingAccount.getUserRole().equals(newInfo.getUserRole())) {
                 String newUserId = generateUniqueUserId(newInfo.getUserRole());
@@ -368,14 +335,14 @@ public class AccountDAO {
             }
 
             if (!newInfo.getUserEmail().equals(existingAccount.getUserEmail()) && isEmailExists(newInfo.getUserEmail(), oldId)) {
-                LOGGER.warning("updateAccount - Email already exists: " + newInfo.getUserEmail());
+                LOGGER.warning("updateAccount - Email đã tồn tại: " + newInfo.getUserEmail());
                 return -1;
             }
 
             if (newInfo.getIdentityCard() != null && !newInfo.getIdentityCard().isEmpty()
                     && !newInfo.getIdentityCard().equals(existingAccount.getIdentityCard())
                     && isIdentityCardExists(newInfo.getIdentityCard(), oldId)) {
-                LOGGER.warning("updateAccount - IdentityCard already exists: " + newInfo.getIdentityCard());
+                LOGGER.warning("updateAccount - Số CCCD đã tồn tại: " + newInfo.getIdentityCard());
                 return -2;
             }
 
@@ -395,7 +362,7 @@ public class AccountDAO {
 
             count = pstAccount.executeUpdate();
             con.commit();
-            LOGGER.info("updateAccount - Account updated successfully, affected rows: " + count);
+            LOGGER.info("updateAccount - Tài khoản đã được cập nhật thành công, số dòng ảnh hưởng: " + count);
         } catch (SQLException ex) {
             if (con != null) {
                 con.rollback();
@@ -422,7 +389,21 @@ public class AccountDAO {
             pst.setString(1, id);
             count = pst.executeUpdate();
         } catch (SQLException ex) {
-            LOGGER.log(Level.SEVERE, "Error deleting account", ex);
+            LOGGER.log(Level.SEVERE, "Lỗi khi xóa tài khoản", ex);
+        }
+        return count;
+    }
+
+    public int restoreAccount(String id) {
+        int count = 0;
+        try {
+            sql = "UPDATE Account SET IsDeleted = 0 WHERE UserId = ?";
+            PreparedStatement pst = conn.prepareStatement(sql);
+            pst.setString(1, id);
+            count = pst.executeUpdate();
+            LOGGER.info("restoreAccount - Tài khoản " + id + " đã được khôi phục thành công, số dòng ảnh hưởng: " + count);
+        } catch (SQLException ex) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi khôi phục tài khoản", ex);
         }
         return count;
     }
@@ -435,7 +416,7 @@ public class AccountDAO {
                 roles.add(rs.getString("UserRole"));
             }
         } catch (SQLException | ClassNotFoundException e) {
-            LOGGER.log(Level.SEVERE, "Error getting all roles", e);
+            LOGGER.log(Level.SEVERE, "Lỗi khi lấy tất cả vai trò", e);
             return null;
         }
         return roles;
@@ -452,9 +433,63 @@ public class AccountDAO {
                 }
             }
         } catch (SQLException | ClassNotFoundException e) {
-            LOGGER.log(Level.SEVERE, "Error getting user IDs by role", e);
+            LOGGER.log(Level.SEVERE, "Lỗi khi lấy ID người dùng theo vai trò", e);
             return null;
         }
         return userIds;
+    }
+
+    // Lấy danh sách tài khoản đang hoạt động (IsDeleted = 0)
+    public List<Account> getActiveAccounts() throws SQLException, ClassNotFoundException {
+        List<Account> accounts = new ArrayList<>();
+        String sql = "SELECT UserId, UserEmail, UserPassword, UserName, UserRole, IdentityCard, UserAddress, UserPhone, UserImage, IsDeleted "
+                + "FROM Account WHERE IsDeleted = 0";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Account account = new Account();
+                account.setUserId(rs.getString("UserId"));
+                account.setUserEmail(rs.getString("UserEmail"));
+                account.setUserPassword(rs.getString("UserPassword"));
+                account.setUserName(rs.getString("UserName"));
+                account.setUserRole(rs.getString("UserRole"));
+                account.setIdentityCard(rs.getString("IdentityCard"));
+                account.setUserAddress(rs.getString("UserAddress"));
+                account.setUserPhone(rs.getString("UserPhone"));
+                account.setUserImage(rs.getString("UserImage"));
+                account.setIsDeleted(rs.getBoolean("IsDeleted"));
+                accounts.add(account);
+            }
+        } catch (SQLException ex) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi lấy danh sách tài khoản đang hoạt động", ex);
+            throw ex;
+        }
+        return accounts;
+    }
+
+    // Lấy danh sách tài khoản ngưng hoạt động (IsDeleted = 1)
+    public List<Account> getInactiveAccounts() throws SQLException, ClassNotFoundException {
+        List<Account> accounts = new ArrayList<>();
+        String sql = "SELECT UserId, UserEmail, UserPassword, UserName, UserRole, IdentityCard, UserAddress, UserPhone, UserImage, IsDeleted "
+                + "FROM Account WHERE IsDeleted = 1";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Account account = new Account();
+                account.setUserId(rs.getString("UserId"));
+                account.setUserEmail(rs.getString("UserEmail"));
+                account.setUserPassword(rs.getString("UserPassword"));
+                account.setUserName(rs.getString("UserName"));
+                account.setUserRole(rs.getString("UserRole"));
+                account.setIdentityCard(rs.getString("IdentityCard"));
+                account.setUserAddress(rs.getString("UserAddress"));
+                account.setUserPhone(rs.getString("UserPhone"));
+                account.setUserImage(rs.getString("UserImage"));
+                account.setIsDeleted(rs.getBoolean("IsDeleted"));
+                accounts.add(account);
+            }
+        } catch (SQLException ex) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi lấy danh sách tài khoản ngưng hoạt động", ex);
+            throw ex;
+        }
+        return accounts;
     }
 }
