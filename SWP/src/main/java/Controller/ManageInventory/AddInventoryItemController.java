@@ -15,17 +15,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.Part;
-import java.io.File;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
-import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 /**
  *
  * @author DELL-Laptop
@@ -93,7 +83,6 @@ public class AddInventoryItemController extends HttpServlet {
             String itemName = request.getParameter("itemName");
             String itemType = request.getParameter("itemType");
             double itemPrice = Double.parseDouble(request.getParameter("itemPrice"));
-
             String itemUnit = request.getParameter("itemUnit");
             String itemDescription = request.getParameter("itemDescription");
 
@@ -106,11 +95,11 @@ public class AddInventoryItemController extends HttpServlet {
             double itemQuantity = Double.parseDouble(quantityStr);
             // 5. Thêm vào database
             InventoryDAO inventoryDAO = new InventoryDAO();
-           // String isItemExist = inventoryDAO.isInventoryItemExist(itemName);
+           //String isItemExist = inventoryDAO.isInventoryItemExist(itemName);
             try {
             // Check for duplicate phone number
-            System.out.println(inventoryDAO.isInventoryItemExist(itemName));
-            if (inventoryDAO.isInventoryItemExist(itemName)){
+            System.out.println(inventoryDAO.isInventoryItemExistForAdd(itemName));
+            if (inventoryDAO.isInventoryItemExistForAdd(itemName)){
                 System.out.println("ooooooooooooooooooooooooooo");
              //   System.out.println(customerDAO.isPhoneExists(customerPhone, null));
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -125,6 +114,7 @@ public class AddInventoryItemController extends HttpServlet {
             InventoryItem newItem = new InventoryItem(itemId, itemName, itemType, itemPrice, itemQuantity, itemUnit, itemDescription, 0);
             inventoryDAO.addNewInventoryItem(newItem);
             session.setAttribute("message", "Inventory added successfully!");
+            
         } catch (SQLException | ClassNotFoundException ex) {
             session.setAttribute("errorMessage", "Database error: " + ex.getMessage());
         }

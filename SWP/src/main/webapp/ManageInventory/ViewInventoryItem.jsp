@@ -604,53 +604,44 @@
 
                     if (isValid) {
                         // Nếu tất cả các trường hợp lệ, gửi AJAX request
-        $.ajax({
-                            url: 'UpdateInventoryItemController', // URL controller của bạn
+                    $.ajax({
+                            url: 'AddInventoryItemController', // URL của controller xử lý thêm InventoryItem
                             type: 'POST',
                             data: {
-                                itemId: itemId,
-                                itemName: itemNameUpdate,
-                                itemType: itemTypeUpdate,
-                                itemPrice: itemPriceUpdate,
-                                itemQuantity: itemQuantityUpdate,
-                                itemUnit: itemUnitUpdate,
-                                itemDescription: itemDescriptionUpdate
+                                itemName: itemName,
+                                itemType: itemType,
+                                itemPrice: itemPrice,
+                                itemQuantity: itemQuantity,
+                                itemUnit: itemUnit,
+                                itemDescription: itemDescription
                             },
-                            success: function (response) { // Callback khi thành công - Xử lý thành công thực tế
-                                var updateInventoryModal = bootstrap.Modal.getInstance(document.getElementById('updateInventoryModal'));
-                                updateInventoryModal.hide();
-                                reloadViewInventory();
+                            success: function (response) { // Callback khi thành công
+                                var addInventoryModal = bootstrap.Modal.getInstance(document.getElementById('addInventoryModal'));
+                                addInventoryModal.hide();
+                                reloadViewInventory(); // Hàm reload lại bảng dữ liệu InventoryItems
                                 Swal.fire({
                                     icon: 'success',
                                     title: 'Success!',
-                                    text: 'Inventory item updated successfully.',
+                                    text: 'Inventory item added successfully.',
                                     timer: 2000,
                                     showConfirmButton: false
                                 });
+                                $('#addInventoryForm')[0].reset(); // Reset form sau khi thành công
                             },
-                            error: function (xhr, status, error) { // Callback khi lỗi - Xử lý tất cả các trường hợp lỗi
-                                if (xhr.status === 400) { // Kiểm tra lỗi 400 Bad Request (Ví dụ: Tên item bị trùng)
+                            error: function (xhr, status, error) { // Callback khi lỗi
+                                if (xhr.status === 400) { // Kiểm tra mã lỗi 400 Bad Request (có thể do validation lỗi ở server)
                                     Swal.fire({
                                         icon: 'error',
                                         title: 'Sorry!',
-                                        text: 'Item name already exists or invalid input. Please check your information.', // Thông báo lỗi cụ thể hơn
+                                        text: 'Invalid input. Please check your data and try again.', // Thông báo lỗi chung cho dữ liệu không hợp lệ
                                         confirmButtonText: 'OK',
                                         confirmButtonColor: '#dc3545'
                                     });
-                                } else if (xhr.status === 500) { // Kiểm tra lỗi 500 Internal Server Error (Lỗi server, database)
+                                } else { // Xử lý các lỗi khác (lỗi server, lỗi database,...)
                                     Swal.fire({
                                         icon: 'error',
                                         title: 'Sorry!',
-                                        text: 'Server error.  Update failed. Please try again later.', // Thông báo lỗi server
-                                        confirmButtonText: 'OK',
-                                        confirmButtonColor: '#dc3545'
-                                    });
-                                }
-                                else { // Xử lý các lỗi khác (lỗi mạng, lỗi không xác định...)
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Sorry!',
-                                        text: 'Update error. Your transaction has failed. Please go back and try again.', // Thông báo lỗi chung
+                                        text: 'Your transaction has failed. Please go back and try again.', // Thông báo lỗi chung khi giao dịch thất bại
                                         confirmButtonText: 'OK',
                                         confirmButtonColor: '#dc3545'
                                     });

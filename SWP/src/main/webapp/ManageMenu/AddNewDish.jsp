@@ -18,7 +18,8 @@
         <title>Add New Dish</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <!-- Thêm SweetAlert2 -->
+        <!-- SweetAlert2 for enhanced alerts -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <style>
             body {
                 font-family: 'Roboto', sans-serif;
@@ -33,7 +34,7 @@
                 position: fixed;
                 width: 16.67%;
             }
-            .sidebar a {
+            .sidebar a { 
                 color: white;
                 text-decoration: none;
             }
@@ -451,309 +452,311 @@
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
         <script>
-                                                   let allIngredients = [];
-                                                   let ingredientStates = {};
+                                                           let allIngredients = [];
+                                                           let ingredientStates = {};
 
-                                                   function showQuantityInput(itemId) {
-                                                       var quantityInput = document.getElementById("quantityUsed" + itemId);
-                                                       if (document.getElementById("itemId" + itemId).checked) {
-                                                           quantityInput.style.display = "inline";
-                                                       } else {
-                                                           quantityInput.style.display = "none";
-                                                           quantityInput.value = "";
-                                                       }
-                                                   }
-
-                                                   function updateIngredientState(itemId) {
-                                                       const checkbox = document.getElementById("itemId" + itemId);
-                                                       const quantityInput = document.getElementById("quantityUsed" + itemId);
-                                                       ingredientStates[itemId] = {
-                                                           checked: checkbox.checked,
-                                                           quantity: quantityInput.value
-                                                       };
-                                                       renderIngredients(); // Sắp xếp lại danh sách ngay khi checkbox thay đổi
-                                                   }
-
-                                                   function updateQuantityState(itemId) {
-                                                       const checkbox = document.getElementById("itemId" + itemId);
-                                                       const quantityInput = document.getElementById("quantityUsed" + itemId);
-                                                       if (checkbox.checked) {
-                                                           ingredientStates[itemId] = {
-                                                               checked: true,
-                                                               quantity: quantityInput.value
-                                                           };
-                                                       }
-                                                   }
-
-                                                   function validateForm() {
-                                                       var dishName = document.getElementById("dishName").value.trim();
-                                                       var dishPrice = document.getElementById("dishPrice").value;
-                                                       var checkboxes = document.getElementsByName("itemId");
-                                                       var isValid = true;
-
-                                                       // Xóa các thông báo lỗi cũ
-                                                       document.querySelectorAll('.error').forEach(e => e.innerHTML = '');
-
-                                                       // Kiểm tra dishName
-                                                       if (!dishName) {
-                                                           document.getElementById("dishNameError").innerHTML = "Dish name is required.";
-                                                           isValid = false;
-                                                       } else if (dishName.length > 100) { // Kiểm tra độ dài vượt quá 100 ký tự
-                                                           document.getElementById("dishNameError").innerHTML = "Dish name cannot exceed 100 characters.";
-                                                           isValid = false;
-                                                       }
-
-                                                       // Kiểm tra dishPrice
-                                                       if (!dishPrice || isNaN(dishPrice) || parseFloat(dishPrice) <= 0) {
-                                                           document.getElementById("dishPriceError").innerHTML = "Price must be a number greater than 0.";
-                                                           isValid = false;
-                                                       }
-
-                                                       // Kiểm tra ingredients
-                                                       var isChecked = false;
-                                                       for (var i = 0; i < checkboxes.length; i++) {
-                                                           if (checkboxes[i].checked) {
-                                                               isChecked = true;
-                                                               var itemId = checkboxes[i].value;
+                                                           function showQuantityInput(itemId) {
                                                                var quantityInput = document.getElementById("quantityUsed" + itemId);
-                                                               if (!quantityInput.value.trim() || quantityInput.value <= 0) {
-                                                                   document.getElementById("ingredientsError").innerHTML = "Please enter a valid quantity for all selected ingredients.";
-                                                                   isValid = false;
-                                                                   break;
+                                                               if (document.getElementById("itemId" + itemId).checked) {
+                                                                   quantityInput.style.display = "inline";
+                                                               } else {
+                                                                   quantityInput.style.display = "none";
+                                                                   quantityInput.value = "";
                                                                }
                                                            }
-                                                       }
-                                                       if (!isChecked) {
-                                                           document.getElementById("ingredientsError").innerHTML = "Please select at least one ingredient.";
-                                                           isValid = false;
-                                                       }
 
-                                                       return isValid;
-                                                   }
+                                                           function updateIngredientState(itemId) {
+                                                               const checkbox = document.getElementById("itemId" + itemId);
+                                                               const quantityInput = document.getElementById("quantityUsed" + itemId);
+                                                               ingredientStates[itemId] = {
+                                                                   checked: checkbox.checked,
+                                                                   quantity: quantityInput.value
+                                                               };
+                                                               renderIngredients();
+                                                           }
 
-                                                   function previewImage(event) {
-                                                       var reader = new FileReader();
-                                                       reader.onload = function () {
-                                                           var output = document.getElementById('imagePreview');
-                                                           output.src = reader.result;
-                                                           output.style.display = 'block';
-                                                       };
-                                                       reader.readAsDataURL(event.target.files[0]);
-                                                   }
+                                                           function updateQuantityState(itemId) {
+                                                               const checkbox = document.getElementById("itemId" + itemId);
+                                                               const quantityInput = document.getElementById("quantityUsed" + itemId);
+                                                               if (checkbox.checked) {
+                                                                   ingredientStates[itemId] = {
+                                                                       checked: true,
+                                                                       quantity: quantityInput.value
+                                                                   };
+                                                               }
+                                                           }
 
-                                                   function showPopupAndRedirect(message) {
-                                                       var popup = document.getElementById("successPopup");
-                                                       popup.innerText = message;
-                                                       popup.style.display = "block";
-                                                       setTimeout(function () {
-                                                           popup.style.display = "none";
-                                                           window.location.href = "${pageContext.request.contextPath}/viewalldish";
-                                                       }, 3000);
-                                                   }
+                                                           function validateForm() {
+                                                               var dishName = document.getElementById("dishName").value.trim();
+                                                               var dishPrice = document.getElementById("dishPrice").value;
+                                                               var checkboxes = document.getElementsByName("itemId");
+                                                               var isValid = true;
 
-                                                   function renderIngredients() {
-                                                       var searchValue = document.getElementById("ingredientSearch").value.toLowerCase();
-                                                       var filterValue = document.getElementById("ingredientFilter").value;
+                                                               document.querySelectorAll('.error').forEach(e => e.innerHTML = '');
 
-                                                       var filteredItems = allIngredients.filter(item => {
-                                                           var matchesSearch = item.querySelector('label').textContent.toLowerCase().includes(searchValue);
-                                                           var matchesFilter = filterValue === "all" ||
-                                                                   (filterValue === "available" && parseInt(item.dataset.quantity) > 0) ||
-                                                                   (filterValue === "unavailable" && parseInt(item.dataset.quantity) <= 0);
-                                                           return matchesSearch && matchesFilter;
-                                                       });
+                                                               if (!dishName) {
+                                                                   document.getElementById("dishNameError").innerHTML = "Dish name is required.";
+                                                                   isValid = false;
+                                                               } else if (dishName.length > 100) {
+                                                                   document.getElementById("dishNameError").innerHTML = "Dish name cannot exceed 100 characters.";
+                                                                   isValid = false;
+                                                               }
 
-                                                       // Sắp xếp: Đưa các mục đã chọn lên đầu
-                                                       filteredItems.sort((a, b) => {
-                                                           const aChecked = ingredientStates[a.querySelector('input[type="checkbox"]').value]?.checked || false;
-                                                           const bChecked = ingredientStates[b.querySelector('input[type="checkbox"]').value]?.checked || false;
-                                                           return bChecked - aChecked; // true (1) lên đầu, false (0) xuống dưới
-                                                       });
+                                                               if (!dishPrice || isNaN(dishPrice) || parseFloat(dishPrice) <= 0) {
+                                                                   document.getElementById("dishPriceError").innerHTML = "Price must be a number greater than 0.";
+                                                                   isValid = false;
+                                                               }
 
-                                                       var container = document.getElementById("ingredientList");
-                                                       container.innerHTML = "";
+                                                               var isChecked = false;
+                                                               for (var i = 0; i < checkboxes.length; i++) {
+                                                                   if (checkboxes[i].checked) {
+                                                                       isChecked = true;
+                                                                       var itemId = checkboxes[i].value;
+                                                                       var quantityInput = document.getElementById("quantityUsed" + itemId);
+                                                                       if (!quantityInput.value.trim() || quantityInput.value <= 0) {
+                                                                           document.getElementById("ingredientsError").innerHTML = "Please enter a valid quantity for all selected ingredients.";
+                                                                           isValid = false;
+                                                                           break;
+                                                                       }
+                                                                   }
+                                                               }
+                                                               if (!isChecked) {
+                                                                   document.getElementById("ingredientsError").innerHTML = "Please select at least one ingredient.";
+                                                                   isValid = false;
+                                                               }
 
-                                                       if (filteredItems.length === 0) {
-                                                           container.innerHTML = `
+                                                               return isValid;
+                                                           }
+
+                                                           function previewImage(event) {
+                                                               var reader = new FileReader();
+                                                               reader.onload = function () {
+                                                                   var output = document.getElementById('imagePreview');
+                                                                   output.src = reader.result;
+                                                                   output.style.display = 'block';
+                                                               };
+                                                               reader.readAsDataURL(event.target.files[0]);
+                                                           }
+
+                                                           function showSuccessAlert(message) {
+                                                               Swal.fire({
+                                                                   icon: 'success',
+                                                                   title: 'Success!',
+                                                                   text: message,
+                                                                   timer: 2000,
+                                                                   showConfirmButton: false
+                                                               }).then(() => {
+                                                                   window.location.href = "${pageContext.request.contextPath}/viewalldish";
+                                                               });
+                                                           }
+
+                                                           function renderIngredients() {
+                                                               var searchValue = document.getElementById("ingredientSearch").value.toLowerCase();
+                                                               var filterValue = document.getElementById("ingredientFilter").value;
+
+                                                               var filteredItems = allIngredients.filter(item => {
+                                                                   var matchesSearch = item.querySelector('label').textContent.toLowerCase().includes(searchValue);
+                                                                   var matchesFilter = filterValue === "all" ||
+                                                                           (filterValue === "available" && parseInt(item.dataset.quantity) > 0) ||
+                                                                           (filterValue === "unavailable" && parseInt(item.dataset.quantity) <= 0);
+                                                                   return matchesSearch && matchesFilter;
+                                                               });
+
+                                                               filteredItems.sort((a, b) => {
+                                                                   const aChecked = ingredientStates[a.querySelector('input[type="checkbox"]').value]?.checked || false;
+                                                                   const bChecked = ingredientStates[b.querySelector('input[type="checkbox"]').value]?.checked || false;
+                                                                   return bChecked - aChecked;
+                                                               });
+
+                                                               var container = document.getElementById("ingredientList");
+                                                               container.innerHTML = "";
+
+                                                               if (filteredItems.length === 0) {
+                                                                   container.innerHTML = `
                         <p class="no-ingredient-message">No ingredients found. Do you want to go to the page to add ingredients to the system?</p>
                         <a href="${pageContext.request.contextPath}/ViewInventoryController" class="add-ingredient-btn">Add Ingredients</a>
                     `;
-                                                       } else {
-                                                           filteredItems.forEach(item => {
-                                                               const clonedItem = item.cloneNode(true);
-                                                               const itemId = clonedItem.querySelector('input[type="checkbox"]').value;
-                                                               const checkbox = clonedItem.querySelector('input[type="checkbox"]');
-                                                               const quantityInput = clonedItem.querySelector('input[type="number"]');
+                                                               } else {
+                                                                   filteredItems.forEach(item => {
+                                                                       const clonedItem = item.cloneNode(true);
+                                                                       const itemId = clonedItem.querySelector('input[type="checkbox"]').value;
+                                                                       const checkbox = clonedItem.querySelector('input[type="checkbox"]');
+                                                                       const quantityInput = clonedItem.querySelector('input[type="number"]');
 
-                                                               // Áp dụng trạng thái đã lưu
-                                                               if (ingredientStates[itemId]) {
-                                                                   checkbox.checked = ingredientStates[itemId].checked;
-                                                                   quantityInput.value = ingredientStates[itemId].quantity || "";
-                                                                   quantityInput.style.display = checkbox.checked ? "inline" : "none";
-                                                               }
-
-                                                               // Gắn lại sự kiện
-                                                               checkbox.onclick = function () {
-                                                                   showQuantityInput(itemId);
-                                                                   updateIngredientState(itemId);
-                                                               };
-                                                               quantityInput.oninput = function () {
-                                                                   updateQuantityState(itemId);
-                                                               };
-                                                               quantityInput.onblur = function () {
-                                                                   renderIngredients(); // Sắp xếp lại khi click ra ngoài
-                                                               };
-
-                                                               container.appendChild(clonedItem);
-                                                           });
-                                                       }
-                                                   }
-
-                                                   window.onload = function () {
-                                                       allIngredients = Array.from(document.querySelectorAll(".ingredient-item"));
-                                                       allIngredients.forEach(item => {
-                                                           item.dataset.quantity = item.querySelector('label').textContent.match(/Quantity: (\d+)/)?.[1] || 0;
-                                                       });
-
-                                                       // Khởi tạo trạng thái ban đầu
-                                                       allIngredients.forEach(item => {
-                                                           const itemId = item.querySelector('input[type="checkbox"]').value;
-                                                           if (item.querySelector('input[type="checkbox"]').checked) {
-                                                               ingredientStates[itemId] = {
-                                                                   checked: true,
-                                                                   quantity: document.getElementById("quantityUsed" + itemId).value
-                                                               };
-                                                               document.getElementById("quantityUsed" + itemId).style.display = "inline";
-                                                           }
-                                                       });
-
-                                                       renderIngredients();
-
-                                                       document.getElementById("ingredientSearch").addEventListener("input", renderIngredients);
-                                                       document.getElementById("ingredientFilter").addEventListener("change", renderIngredients);
-
-            <% if (request.getAttribute("message") != null) {%>
-                                                       showPopupAndRedirect("<%= request.getAttribute("message")%>");
-            <% }%>
-                                                   };
-                                                   $(document).ready(function () {
-                                                       bindEventHandlers();
-                                                       reloadViewInventory();
-                                                       setupSearchFilter();
-
-
-                                                       // **Xử lý Thêm Inventory Item**
-                                                       $('#btnAddInventory').click(function () {
-                                                           // Xóa các thông báo lỗi cũ (nếu có)
-                                                           $('.error-message').remove();
-                                                           $('.is-invalid').removeClass('is-invalid');
-
-                                                           var itemNameInput = $('#itemName');
-                                                           var itemTypeInput = $('#itemType');
-                                                           var itemPriceInput = $('#itemPrice');
-                                                           var itemQuantityInput = $('#itemQuantity');
-                                                           var itemUnitInput = $('#itemUnit');
-                                                           var itemDescriptionInput = $('#itemDescription');
-
-
-                                                           var itemName = itemNameInput.val().trim(); // trim() để loại bỏ khoảng trắng đầu cuối
-                                                           var itemType = itemTypeInput.val();
-                                                           var itemPrice = itemPriceInput.val();
-                                                           var itemQuantity = itemQuantityInput.val();
-                                                           var itemUnit = itemUnitInput.val();
-                                                           var itemDescription = itemDescriptionInput.val();
-
-                                                           var isValid = true; // Biến cờ để theo dõi trạng thái hợp lệ của form
-
-                                                           // Kiểm tra trường Name
-                                                           if (itemName === '') {
-                                                               isValid = false;
-                                                               displayError('itemName', 'Please input this field.');
-                                                           }
-
-                                                           // Kiểm tra trường Type
-                                                           if (itemType === '') {
-                                                               isValid = false;
-                                                               displayError('itemType', 'Please select item type.');
-                                                           }
-
-                                                           // Kiểm tra trường Price
-                                                           if (itemPrice === '' || isNaN(itemPrice) || parseFloat(itemPrice) <= 0) {
-                                                               isValid = false;
-                                                               displayError('itemPrice', 'Price must be a valid non-negative number and greater than 0.');
-                                                           }
-
-                                                           // Kiểm tra trường Quantity
-                                                           if (itemQuantity === '' || isNaN(itemQuantity) || parseFloat(itemQuantity) <= 0) {
-                                                               isValid = false;
-                                                               displayError('itemQuantity', 'Quantity must be a non-negative number.');
-                                                           }
-                                                           // Kiểm tra trường Unit
-                                                           if (itemUnit === '') {
-                                                               isValid = false;
-                                                               displayError('itemUnit', 'Please select item unit.');
-                                                           }
-
-                                                           if (isValid) {
-                                                               // Nếu tất cả các trường hợp lệ, gửi AJAX request
-                                                               $.ajax({
-                                                                   url: 'AddInventoryItemController', // URL của controller xử lý thêm InventoryItem
-                                                                   type: 'POST',
-                                                                   data: {
-                                                                       itemName: itemName,
-                                                                       itemType: itemType,
-                                                                       itemPrice: itemPrice,
-                                                                       itemQuantity: itemQuantity,
-                                                                       itemUnit: itemUnit,
-                                                                       itemDescription: itemDescription
-                                                                   },
-                                                                   success: function (response) { // Callback khi thành công
-                                                                       var addInventoryModal = bootstrap.Modal.getInstance(document.getElementById('addInventoryModal'));
-                                                                       addInventoryModal.hide();
-                                                                       reloadViewInventory(); // Hàm reload lại bảng dữ liệu InventoryItems
-                                                                       Swal.fire({
-                                                                           icon: 'success',
-                                                                           title: 'Success!',
-                                                                           text: 'Inventory item added successfully.',
-                                                                           timer: 2000,
-                                                                           showConfirmButton: false
-                                                                       });
-                                                                       $('#addInventoryForm')[0].reset(); // Reset form sau khi thành công
-                                                                   },
-                                                                   error: function (xhr, status, error) { // Callback khi lỗi
-                                                                       if (xhr.status === 400) { // Kiểm tra mã lỗi 400 Bad Request (có thể do validation lỗi ở server)
-                                                                           Swal.fire({
-                                                                               icon: 'error',
-                                                                               title: 'Sorry!',
-                                                                               text: 'Invalid input. Please check your data and try again.', // Thông báo lỗi chung cho dữ liệu không hợp lệ
-                                                                               confirmButtonText: 'OK',
-                                                                               confirmButtonColor: '#dc3545'
-                                                                           });
-                                                                       } else { // Xử lý các lỗi khác (lỗi server, lỗi database,...)
-                                                                           Swal.fire({
-                                                                               icon: 'error',
-                                                                               title: 'Sorry!',
-                                                                               text: 'Your transaction has failed. Please go back and try again.', // Thông báo lỗi chung khi giao dịch thất bại
-                                                                               confirmButtonText: 'OK',
-                                                                               confirmButtonColor: '#dc3545'
-                                                                           });
+                                                                       if (ingredientStates[itemId]) {
+                                                                           checkbox.checked = ingredientStates[itemId].checked;
+                                                                           quantityInput.value = ingredientStates[itemId].quantity || "";
+                                                                           quantityInput.style.display = checkbox.checked ? "inline" : "none";
                                                                        }
+
+                                                                       checkbox.onclick = function () {
+                                                                           showQuantityInput(itemId);
+                                                                           updateIngredientState(itemId);
+                                                                       };
+                                                                       quantityInput.oninput = function () {
+                                                                           updateQuantityState(itemId);
+                                                                       };
+                                                                       quantityInput.onblur = function () {
+                                                                           renderIngredients();
+                                                                       };
+
+                                                                       container.appendChild(clonedItem);
+                                                                   });
+                                                               }
+                                                           }
+
+                                                           // Hàm làm mới danh sách nguyên liệu từ server (nếu cần)
+                                                           function refreshIngredients() {
+                                                               $.ajax({
+                                                                   url: '${pageContext.request.contextPath}/addnewdish', // URL để lấy danh sách nguyên liệu mới
+                                                                   type: 'GET',
+                                                                   success: function (response) {
+                                                                       // Giả sử server trả về HTML mới cho ingredientList
+                                                                       $('#ingredientList').html($(response).find('#ingredientList').html());
+                                                                       allIngredients = Array.from(document.querySelectorAll(".ingredient-item"));
+                                                                       allIngredients.forEach(item => {
+                                                                           item.dataset.quantity = item.querySelector('label').textContent.match(/Quantity: (\d+)/)?.[1] || 0;
+                                                                       });
+                                                                       renderIngredients();
+                                                                   },
+                                                                   error: function () {
+                                                                       console.log("Error refreshing ingredients.");
+                                                                   }
+                                                               });
+                                                           }
+
+                                                           window.onload = function () {
+                                                               allIngredients = Array.from(document.querySelectorAll(".ingredient-item"));
+                                                               allIngredients.forEach(item => {
+                                                                   item.dataset.quantity = item.querySelector('label').textContent.match(/Quantity: (\d+)/)?.[1] || 0;
+                                                               });
+
+                                                               allIngredients.forEach(item => {
+                                                                   const itemId = item.querySelector('input[type="checkbox"]').value;
+                                                                   if (item.querySelector('input[type="checkbox"]').checked) {
+                                                                       ingredientStates[itemId] = {
+                                                                           checked: true,
+                                                                           quantity: document.getElementById("quantityUsed" + itemId).value
+                                                                       };
+                                                                       document.getElementById("quantityUsed" + itemId).style.display = "inline";
                                                                    }
                                                                });
 
-                                                           }
-                                                       });
+                                                               renderIngredients();
 
-                                                       // Hàm hiển thị thông báo lỗi bên dưới trường nhập liệu
-                                                       function displayError(fieldId, message) {
-                                                           $('#' + fieldId).addClass('is-invalid'); // Thêm class 'is-invalid' để hiển thị lỗi CSS nếu cần
-                                                           $('#' + fieldId).after('<div class="error-message" style="color: red;">' + message + '</div>'); // Thêm thông báo lỗi
-                                                       }
-                                                   });
+                                                               document.getElementById("ingredientSearch").addEventListener("input", renderIngredients);
+                                                               document.getElementById("ingredientFilter").addEventListener("change", renderIngredients);
 
+            <% if (request.getAttribute("message") != null) {%>
+                                                               showSuccessAlert("<%= request.getAttribute("message")%>");
+            <% }%>
+                                                           };
 
+                                                           $(document).ready(function () {
+                                                               $('#btnAddInventory').click(function () {
+                                                                   $('.error-message').remove();
+                                                                   $('.is-invalid').removeClass('is-invalid');
 
+                                                                   var itemNameInput = $('#itemName');
+                                                                   var itemTypeInput = $('#itemType');
+                                                                   var itemPriceInput = $('#itemPrice');
+                                                                   var itemQuantityInput = $('#itemQuantity');
+                                                                   var itemUnitInput = $('#itemUnit');
+                                                                   var itemDescriptionInput = $('#itemDescription');
 
+                                                                   var itemName = itemNameInput.val().trim();
+                                                                   var itemType = itemTypeInput.val();
+                                                                   var itemPrice = itemPriceInput.val();
+                                                                   var itemQuantity = itemQuantityInput.val();
+                                                                   var itemUnit = itemUnitInput.val();
+                                                                   var itemDescription = itemDescriptionInput.val();
+
+                                                                   var isValid = true;
+
+                                                                   if (itemName === '') {
+                                                                       isValid = false;
+                                                                       displayError('itemName', 'Please input this field.');
+                                                                   }
+
+                                                                   if (itemType === '') {
+                                                                       isValid = false;
+                                                                       displayError('itemType', 'Please select item type.');
+                                                                   }
+
+                                                                   if (itemPrice === '' || isNaN(itemPrice) || parseFloat(itemPrice) <= 0) {
+                                                                       isValid = false;
+                                                                       displayError('itemPrice', 'Price must be a valid non-negative number and greater than 0.');
+                                                                   }
+
+                                                                   if (itemQuantity === '' || isNaN(itemQuantity) || parseFloat(itemQuantity) <= 0) {
+                                                                       isValid = false;
+                                                                       displayError('itemQuantity', 'Quantity must be a non-negative number.');
+                                                                   }
+
+                                                                   if (itemUnit === '') {
+                                                                       isValid = false;
+                                                                       displayError('itemUnit', 'Please select item unit.');
+                                                                   }
+
+                                                                   if (isValid) {
+                                                                       $.ajax({
+                                                                           url: 'AddInventoryItemController',
+                                                                           type: 'POST',
+                                                                           data: {
+                                                                               itemName: itemName,
+                                                                               itemType: itemType,
+                                                                               itemPrice: itemPrice,
+                                                                               itemQuantity: itemQuantity,
+                                                                               itemUnit: itemUnit,
+                                                                               itemDescription: itemDescription
+                                                                           },
+                                                                           success: function (response) {
+                                                                               // Đóng modal hoàn toàn
+                                                                               var addInventoryModal = bootstrap.Modal.getInstance(document.getElementById('addInventoryModal'));
+                                                                               addInventoryModal.hide();
+                                                                               document.body.classList.remove('modal-open'); // Xóa lớp phủ tối
+                                                                               $('.modal-backdrop').remove(); // Xóa backdrop còn sót lại
+
+                                                                               // Hiển thị thông báo thành công và làm mới danh sách nguyên liệu
+                                                                               Swal.fire({
+                                                                                   icon: 'success',
+                                                                                   title: 'Success!',
+                                                                                   text: 'Inventory item added successfully.',
+                                                                                   timer: 2000,
+                                                                                   showConfirmButton: false
+                                                                               }).then(() => {
+                                                                                   $('#addInventoryForm')[0].reset(); // Reset form
+                                                                                   refreshIngredients(); // Làm mới danh sách nguyên liệu
+                                                                               });
+                                                                           },
+                                                                           error: function (xhr, status, error) {
+                                                                               if (xhr.status === 400) {
+                                                                                   Swal.fire({
+                                                                                       icon: 'error',
+                                                                                       title: 'Sorry!',
+                                                                                       text: 'Invalid input. Please check your data and try again.',
+                                                                                       confirmButtonText: 'OK',
+                                                                                       confirmButtonColor: '#dc3545'
+                                                                                   });
+                                                                               } else {
+                                                                                   Swal.fire({
+                                                                                       icon: 'error',
+                                                                                       title: 'Sorry!',
+                                                                                       text: 'Your transaction has failed. Please go back and try again.',
+                                                                                       confirmButtonText: 'OK',
+                                                                                       confirmButtonColor: '#dc3545'
+                                                                                   });
+                                                                               }
+                                                                           }
+                                                                       });
+                                                                   }
+                                                               });
+
+                                                               function displayError(fieldId, message) {
+                                                                   $('#' + fieldId).addClass('is-invalid');
+                                                                   $('#' + fieldId).after('<div class="error-message" style="color: red;">' + message + '</div>');
+                                                               }
+                                                           });
         </script>
     </body>
 </html>
