@@ -8,12 +8,18 @@ import Model.Order;
 import Model.Coupon;
 import Model.Table;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.sql.SQLException;
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -28,6 +34,12 @@ public class PaymentController extends HttpServlet {
     private TableDAO tableDAO;
     private CustomerDAO customerDAO;
     private CouponDAO couponDAO;
+
+    // Cấu hình VNPay
+    private static final String vnp_TmnCode = "F7363RA1"; // Thay bằng mã TmnCode của bạn
+    private static final String vnp_HashSecret = "VL2ZFM15UPSSC2KGEU3X80VG7O23A3XV"; // Thay bằng HashSecret của bạn
+    private static final String vnp_Url = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
+    private static final String vnp_ReturnUrl = "http://localhost:8080/payment/vnpay-return"; // URL gọi lại sau thanh toán
 
     @Override
     public void init() throws ServletException {
@@ -140,7 +152,7 @@ public class PaymentController extends HttpServlet {
         }
 
         double totalBeforeDiscount = order.getTotal();
-        double finalPrice = totalBeforeDiscount; // Khởi tạo FinalPrice
+        double finalPrice = totalBeforeDiscount;
 
         if (couponId != null && !couponId.trim().isEmpty()) {
             Coupon coupon = couponDAO.getCouponById(couponId);
@@ -153,7 +165,7 @@ public class PaymentController extends HttpServlet {
                         BigDecimal discount = coupon.getDiscountAmount();
                         BigDecimal currentTotal = BigDecimal.valueOf(totalBeforeDiscount);
                         BigDecimal newTotal = currentTotal.subtract(discount).max(BigDecimal.ZERO);
-                        finalPrice = newTotal.doubleValue(); // Gán FinalPrice
+                        finalPrice = newTotal.doubleValue();
                         order.setCouponId(couponId);
                         couponDAO.incrementTimesUsed(couponId);
                         System.out.println("Applied coupon " + couponId + " with discount " + discount + ", FinalPrice: " + finalPrice);
@@ -164,8 +176,8 @@ public class PaymentController extends HttpServlet {
             }
         }
 
-        order.setTotal(totalBeforeDiscount); // Giữ Total là giá gốc
-        order.setFinalPrice(finalPrice);     // Lưu FinalPrice
+        order.setTotal(totalBeforeDiscount);
+        order.setFinalPrice(finalPrice);
         order.setOrderStatus("Completed");
         orderDAO.updateOrder(order);
         customerDAO.incrementNumberOfPayment(order.getCustomerId());
@@ -174,7 +186,7 @@ public class PaymentController extends HttpServlet {
         List<Coupon> coupons = couponDAO.getAvailableCoupons();
         request.setAttribute("order", order);
         request.setAttribute("coupons", coupons);
-        request.setAttribute("message", "Đơn hàng đã thanh toán. Tổng mới: " + order.getFinalPrice() + " VND"); // Hiển thị FinalPrice
+        request.setAttribute("message", "Đơn hàng đã thanh toán. Tổng mới: " + order.getFinalPrice() + " VND");
         request.getRequestDispatcher("/ManageOrder/paymentDetail.jsp").forward(request, response);
     }
 
@@ -198,7 +210,7 @@ public class PaymentController extends HttpServlet {
         }
 
         double totalBeforeDiscount = order.getTotal();
-        double finalPrice = totalBeforeDiscount; // Khởi tạo FinalPrice
+        double finalPrice = totalBeforeDiscount;
 
         if (couponId != null && !couponId.trim().isEmpty()) {
             Coupon coupon = couponDAO.getCouponById(couponId);
@@ -208,7 +220,7 @@ public class PaymentController extends HttpServlet {
                     BigDecimal discount = coupon.getDiscountAmount();
                     BigDecimal currentTotal = BigDecimal.valueOf(totalBeforeDiscount);
                     BigDecimal newTotal = currentTotal.subtract(discount).max(BigDecimal.ZERO);
-                    finalPrice = newTotal.doubleValue(); // Gán FinalPrice
+                    finalPrice = newTotal.doubleValue();
                     order.setCouponId(couponId);
                     couponDAO.incrementTimesUsed(couponId);
                     System.out.println("Applied coupon " + couponId + " with discount " + discount + ", FinalPrice: " + finalPrice);
@@ -220,8 +232,8 @@ public class PaymentController extends HttpServlet {
             }
         }
 
-        order.setTotal(totalBeforeDiscount); // Giữ Total là giá gốc
-        order.setFinalPrice(finalPrice);     // Lưu FinalPrice
+        order.setTotal(totalBeforeDiscount);
+        order.setFinalPrice(finalPrice);
         order.setOrderStatus("Completed");
         orderDAO.updateOrder(order);
         customerDAO.incrementNumberOfPayment(order.getCustomerId());
@@ -248,41 +260,95 @@ public class PaymentController extends HttpServlet {
         }
 
         double totalBeforeDiscount = order.getTotal();
-        double finalPrice = totalBeforeDiscount; // Khởi tạo FinalPrice
+        double finalPrice = totalBeforeDiscount;
 
         if (couponId != null && !couponId.trim().isEmpty()) {
             Coupon coupon = couponDAO.getCouponById(couponId);
             if (coupon != null && coupon.getIsDeleted() == 0) {
-                String query = "SELECT CASE WHEN ? > GETDATE() THEN 1 ELSE 0 END AS isValid";
-                try (Connection conn = couponDAO.getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {
-                    ps.setDate(1, new java.sql.Date(coupon.getExpirationDate().getTime()));
-                    ResultSet rs = ps.executeQuery();
-                    if (rs.next() && rs.getInt("isValid") == 1) {
-                        BigDecimal discount = coupon.getDiscountAmount();
-                        BigDecimal currentTotal = BigDecimal.valueOf(totalBeforeDiscount);
-                        BigDecimal newTotal = currentTotal.subtract(discount).max(BigDecimal.ZERO);
-                        finalPrice = newTotal.doubleValue(); // Gán FinalPrice
-                        order.setCouponId(couponId);
-                        couponDAO.incrementTimesUsed(couponId);
-                        System.out.println("Applied coupon " + couponId + " with discount " + discount + ", FinalPrice: " + finalPrice);
-                    } else {
-                        System.out.println("Coupon " + couponId + " is expired");
-                    }
+                boolean isValid = coupon.getExpirationDate() == null || coupon.getExpirationDate().after(new java.util.Date());
+                if (isValid) {
+                    BigDecimal discount = coupon.getDiscountAmount();
+                    BigDecimal currentTotal = BigDecimal.valueOf(totalBeforeDiscount);
+                    BigDecimal newTotal = currentTotal.subtract(discount).max(BigDecimal.ZERO);
+                    finalPrice = newTotal.doubleValue();
+                    order.setCouponId(couponId);
+                    couponDAO.incrementTimesUsed(couponId);
+                    System.out.println("Applied coupon " + couponId + " with discount " + discount + ", FinalPrice: " + finalPrice);
                 }
             }
         }
 
-        order.setTotal(totalBeforeDiscount); // Giữ Total là giá gốc
-        order.setFinalPrice(finalPrice);     // Lưu FinalPrice
-        order.setOrderStatus("Completed");
-        orderDAO.updateOrder(order);
-        customerDAO.incrementNumberOfPayment(order.getCustomerId());
-        tableDAO.updateTableStatus(tableId, "Available");
+        // Lưu thông tin tạm thời vào session để xử lý sau khi VNPay gọi lại
+        HttpSession session = request.getSession();
+        Map<String, String> orderData = new TreeMap<>();
+        orderData.put("orderId", orderId);
+        orderData.put("tableId", tableId);
+        orderData.put("totalBeforeDiscount", String.valueOf(totalBeforeDiscount));
+        orderData.put("finalPrice", String.valueOf(finalPrice));
+        orderData.put("couponId", couponId != null ? couponId : "");
+        session.setAttribute("pendingVNPayOrder", orderData);
 
-        List<Coupon> coupons = couponDAO.getAvailableCoupons();
-        request.setAttribute("order", order);
-        request.setAttribute("coupons", coupons);
-        request.setAttribute("message", "Thanh toán online thành công. Tổng mới: " + order.getFinalPrice() + " VNĐ"); // Hiển thị FinalPrice
-        request.getRequestDispatcher("/ManageOrder/paymentDetail.jsp").forward(request, response);
+        // Tạo tham số cho VNPay
+        String vnp_Version = "2.1.0";
+        String vnp_Command = "pay";
+        String vnp_OrderInfo = "Thanh toán đơn hàng " + orderId + " với tổng tiền " + finalPrice + " VND";
+        String orderType = "250000";
+        String vnp_TxnRef = orderId + "_" + System.currentTimeMillis(); // Mã giao dịch duy nhất
+        String vnp_IpAddr = request.getRemoteAddr();
+        String vnp_CreateDate = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
+        String amount = String.valueOf((int) (finalPrice * 100)); // VNPay yêu cầu số tiền dạng nguyên
+
+        Map<String, String> vnp_Params = new TreeMap<>();
+        vnp_Params.put("vnp_Version", vnp_Version);
+        vnp_Params.put("vnp_Command", vnp_Command);
+        vnp_Params.put("vnp_TmnCode", vnp_TmnCode);
+        vnp_Params.put("vnp_Amount", amount);
+        vnp_Params.put("vnp_CurrCode", "VND");
+        vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
+        vnp_Params.put("vnp_OrderInfo", vnp_OrderInfo);
+        vnp_Params.put("vnp_OrderType", orderType);
+        vnp_Params.put("vnp_Locale", "vn");
+        vnp_Params.put("vnp_ReturnUrl", vnp_ReturnUrl);
+        vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
+        vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
+
+        // Tạo chuỗi hash data và checksum
+        StringBuilder hashData = new StringBuilder();
+        for (Map.Entry<String, String> entry : vnp_Params.entrySet()) {
+            hashData.append(entry.getKey()).append("=")
+                    .append(URLEncoder.encode(entry.getValue(), "UTF-8")).append("&");
+        }
+        hashData.setLength(hashData.length() - 1);
+
+        String vnp_SecureHash = hmacSHA512(vnp_HashSecret, hashData.toString());
+        vnp_Params.put("vnp_SecureHash", vnp_SecureHash);
+
+        // Tạo URL thanh toán
+        StringBuilder paymentUrl = new StringBuilder(vnp_Url).append("?");
+        for (Map.Entry<String, String> entry : vnp_Params.entrySet()) {
+            paymentUrl.append(URLEncoder.encode(entry.getKey(), "UTF-8"))
+                      .append("=")
+                      .append(URLEncoder.encode(entry.getValue(), "UTF-8"))
+                      .append("&");
+        }
+        paymentUrl.setLength(paymentUrl.length() - 1);
+
+        // Chuyển hướng đến VNPay
+        response.sendRedirect(paymentUrl.toString());
+    }
+
+    private String hmacSHA512(String key, String data) {
+        try {
+            javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA512");
+            mac.init(new javax.crypto.spec.SecretKeySpec(key.getBytes("UTF-8"), "HmacSHA512"));
+            byte[] hmac = mac.doFinal(data.getBytes("UTF-8"));
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hmac) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to calculate hmac-sha512", e);
+        }
     }
 }
