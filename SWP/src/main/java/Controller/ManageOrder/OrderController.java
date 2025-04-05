@@ -428,51 +428,51 @@ public class OrderController extends HttpServlet {
         response.sendRedirect("order?action=tableOverview&tableId=" + tableId);
     }
 
-    private void completeOrder(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException, SQLException, ClassNotFoundException {
-        String tableId = request.getParameter("tableId");
-        String orderDescription = request.getParameter("orderDescription"); // Lấy orderDescription từ form
-        HttpSession session = request.getSession();
-        Order tempOrder = (Order) session.getAttribute("tempOrder");
-        String orderId = orderDAO.getOrderIdByTableId(tableId);
-        Order order = orderId != null ? orderDAO.getOrderById(orderId) : tempOrder;
+   private void completeOrder(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException, SQLException, ClassNotFoundException {
+    String tableId = request.getParameter("tableId");
+    String orderDescription = request.getParameter("orderDescription"); // Lấy orderDescription từ form
+    HttpSession session = request.getSession();
+    Order tempOrder = (Order) session.getAttribute("tempOrder");
+    String orderId = orderDAO.getOrderIdByTableId(tableId);
+    Order order = orderId != null ? orderDAO.getOrderById(orderId) : tempOrder;
 
-        if (order == null || order.getOrderDetails() == null || order.getOrderDetails().isEmpty()) {
-            request.setAttribute("error", "Không có đơn hàng hoặc đơn hàng trống.");
-            showTableOverview(request, response);
-            return;
-        }
-
-        // Cập nhật orderDescription vào đơn hàng
-        if (orderDescription != null && !orderDescription.trim().isEmpty()) {
-            order.setOrderDescription(orderDescription);
-        }
-
-        order.setTotal(order.getOrderDetails().stream().mapToDouble(OrderDetail::getSubtotal).sum());
-
-        // Kiểm tra nguyên liệu trước khi hoàn tất
-        try {
-            orderDAO.checkInventoryForOrder(order);
-        } catch (SQLException e) {
-            request.setAttribute("error", e.getMessage()); // Hiển thị lỗi không đủ nguyên liệu
-            showTableOverview(request, response);
-            return;
-        }
-
-        // Nếu đủ nguyên liệu, trừ nguyên liệu và lưu đơn hàng
-        if (orderId == null) {
-            orderDAO.createOrder(order); // Tạo đơn hàng mới
-            orderDAO.deductInventoryForOrder(order); // Trừ nguyên liệu
-            tableDAO.updateTableStatus(tableId, "Occupied");
-        } else {
-            orderDAO.updateOrder(order); // Cập nhật đơn hàng
-            orderDAO.deductInventoryForOrder(order); // Trừ nguyên liệu
-            updateOrderDetail(order);
-        }
-
-        session.removeAttribute("tempOrder");
-        response.sendRedirect("order?action=listTables");
+    if (order == null || order.getOrderDetails() == null || order.getOrderDetails().isEmpty()) {
+        request.setAttribute("error", "Không có đơn hàng hoặc đơn hàng trống.");
+        showTableOverview(request, response);
+        return;
     }
+
+    // Cập nhật orderDescription vào đơn hàng
+    if (orderDescription != null && !orderDescription.trim().isEmpty()) {
+        order.setOrderDescription(orderDescription);
+    }
+
+    order.setTotal(order.getOrderDetails().stream().mapToDouble(OrderDetail::getSubtotal).sum());
+
+    // Kiểm tra nguyên liệu trước khi hoàn tất
+    try {
+        orderDAO.checkInventoryForOrder(order);
+    } catch (SQLException e) {
+        request.setAttribute("error", e.getMessage()); // Hiển thị lỗi không đủ nguyên liệu
+        showTableOverview(request, response);
+        return;
+    }
+
+    // Nếu đủ nguyên liệu, trừ nguyên liệu và lưu đơn hàng
+    if (orderId == null) {
+        orderDAO.createOrder(order); // Tạo đơn hàng mới
+        orderDAO.deductInventoryForOrder(order); // Trừ nguyên liệu
+        tableDAO.updateTableStatus(tableId, "Occupied");
+    } else {
+        orderDAO.updateOrder(order); // Cập nhật đơn hàng
+        orderDAO.deductInventoryForOrder(order); // Trừ nguyên liệu
+        updateOrderDetail(order);
+    }
+
+    session.removeAttribute("tempOrder");
+    response.sendRedirect("order?action=listTables");
+}
 
     private void payOrder(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException, SQLException, ClassNotFoundException {
