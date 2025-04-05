@@ -23,7 +23,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- SweetAlert2 for enhanced alerts -->
+    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
@@ -48,14 +48,13 @@
         .sidebar .nav-link { font-size: 0.9rem; }
         .sidebar h4 { font-size: 1.5rem; }
         .modal-header { background-color: #f7f7f0; }
-        .highlight { background-color: yellow !important; }
         .table { width: 100%; margin-bottom: 1rem; background-color: #fff; }
         .table th, .table td { padding: 12px; vertical-align: middle; text-align: left; }
         .table thead th { background-color: #343a40; color: white; border-color: #454d55; }
         .table-hover tbody tr:hover { background-color: #f1f1f1; }
         .table-bordered { border: 1px solid #dee2e6; }
         .table-bordered th, .table-bordered td { border: 1px solid #dee2e6; }
-        .text-left.mb-4 { overflow: hidden; background: linear-gradient(to right, #2C3E50, #42A5F5); padding: 1rem; color: white; margin-left: -24px !important; margin-top: -25px !important; margin-right: -25px !important; }
+        .text-left.mb-4 { background: linear-gradient(to right, #2C3E50, #42A5F5); padding: 1rem; color: white; margin-left: -24px !important; margin-top: -25px !important; margin-right: -25px !important; }
     </style>
 </head>
 <body>
@@ -99,7 +98,7 @@
                         </div>
 
                         <div class="table-responsive">
-                            <table class="table table-bordered">
+                            <table class="table table-bordered table-hover">
                                 <thead>
                                     <tr>
                                         <th>No.</th>
@@ -205,9 +204,8 @@
                 </div>
                 <div class="modal-body">
                     <form id="updateCustomerForm">
-                        <input type="hidden" id="customerIdUpdate" name="customerId">
                         <div class="mb-3 row">
-                            <label for="customerIdUpdateDisplay" class="col-sm-4 col-form-label">Customer ID (Just View):</label>
+                            <label for="customerIdUpdateDisplay" class="col-sm-4 col-form-label">Customer ID:</label>
                             <div class="col-sm-8">
                                 <input type="text" class="form-control" id="customerIdUpdateDisplay" readonly>
                                 <input type="hidden" id="customerIdUpdate" name="customerId">
@@ -217,21 +215,19 @@
                             <label for="customerNameUpdate" class="col-sm-4 col-form-label">Customer Name:</label>
                             <div class="col-sm-8">
                                 <input type="text" class="form-control" id="customerNameUpdate" name="CustomerName" required>
-                                <small class="text-muted">Enter customer name.</small>
                             </div>
                         </div>
                         <div class="mb-3 row">
                             <label for="customerPhoneUpdate" class="col-sm-4 col-form-label">Customer Phone:</label>
                             <div class="col-sm-8">
                                 <input type="text" class="form-control" id="customerPhoneUpdate" name="CustomerPhone" required>
-                                <small class="text-muted">Enter customer phone number.</small>
                             </div>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="btnUpdateCustomer">Save change</button>
+                    <button type="button" class="btn btn-primary" id="btnUpdateCustomer">Save Changes</button>
                 </div>
             </div>
         </div>
@@ -246,7 +242,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Are you sure you want to DELETE this customer?</p>
+                    <p>Are you sure you want to mark this customer as deleted?</p>
                     <input type="hidden" id="customerIdDelete">
                 </div>
                 <div class="modal-footer">
@@ -262,175 +258,102 @@
 
     <script>
     $(document).ready(function () {
+        // Gắn sự kiện ban đầu
         bindEventHandlers();
         reloadViewCustomer();
 
-        // Xử lý Thêm Customer
+        // Xử lý thêm khách hàng
         $('#btnAddCustomer').click(function () {
-            $('.error-message').remove();
-            $('.is-invalid').removeClass('is-invalid');
-
             var customerName = $('#customerName').val().trim();
             var customerPhone = $('#customerPhone').val().trim();
             var numberOfPayment = $('#numberOfPayment').val();
 
             var isValid = true;
+            $('.error-message').remove();
+            $('.is-invalid').removeClass('is-invalid');
 
-            // Validation cho Customer Name
-            if (customerName === '') {
+            if (!customerName) {
                 isValid = false;
-                displayError('customerName', 'Please input this field');
+                displayError('customerName', 'Please enter customer name');
             }
-
-            // Validation cho Customer Phone
-            if (customerPhone === '') {
+            if (!customerPhone || !/^\d{10}$/.test(customerPhone) || !customerPhone.startsWith('0')) {
                 isValid = false;
-                displayError('customerPhone', 'Please input this field');
-            } else if (!customerPhone.startsWith('0')) {
-                isValid = false;
-                displayError('customerPhone', 'Phone number must start with 0');
-            } else if (!/^\d{10}$/.test(customerPhone)) {
-                isValid = false;
-                displayError('customerPhone', 'Phone number must be exactly 10 digits, no special characters');
+                displayError('customerPhone', 'Phone must be 10 digits and start with 0');
             }
 
             if (isValid) {
                 $.ajax({
                     url: 'AddCustomer',
                     type: 'POST',
-                    data: {
-                        CustomerName: customerName,
-                        CustomerPhone: customerPhone,
-                        NumberOfPayment: numberOfPayment
-                    },
-                    success: function (response) {
+                    data: { CustomerName: customerName, CustomerPhone: customerPhone, NumberOfPayment: numberOfPayment },
+                    success: function () {
                         $('#addCustomerModal').modal('hide');
                         reloadViewCustomer();
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success!',
-                            text: 'Customer added successfully.',
-                            timer: 2000,
-                            showConfirmButton: false
-                        });
+                        Swal.fire('Success', 'Customer added successfully', 'success');
                         $('#addCustomerForm')[0].reset();
                     },
                     error: function (xhr) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error!',
-                            text: xhr.responseText || 'Error adding customer.',
-                            confirmButtonColor: '#dc3545'
-                        });
+                        Swal.fire('Error', xhr.responseText || 'Failed to add customer', 'error');
                     }
                 });
             }
         });
 
-        // Xử lý Cập nhật Customer (giữ nguyên validation cũ, có thể thêm validation tương tự nếu cần)
+        // Xử lý cập nhật khách hàng
         $('#btnUpdateCustomer').click(function () {
-            $('.error-message').remove();
-            $('.is-invalid').removeClass('is-invalid');
-
             var customerId = $('#customerIdUpdate').val();
             var customerName = $('#customerNameUpdate').val().trim();
             var customerPhone = $('#customerPhoneUpdate').val().trim();
 
             var isValid = true;
-            if (customerName === '') {
+            $('.error-message').remove();
+            $('.is-invalid').removeClass('is-invalid');
+
+            if (!customerName) {
                 isValid = false;
-                displayError('customerNameUpdate', 'Please input this field');
+                displayError('customerNameUpdate', 'Please enter customer name');
             }
-            if (customerPhone === '') {
+            if (!customerPhone || !/^\d{10}$/.test(customerPhone) || !customerPhone.startsWith('0')) {
                 isValid = false;
-                displayError('customerPhoneUpdate', 'Please input this field');
-            } else if (!customerPhone.startsWith('0')) {
-                isValid = false;
-                displayError('customerPhoneUpdate', 'Phone number must start with 0');
-            } else if (!/^\d{10}$/.test(customerPhone)) {
-                isValid = false;
-                displayError('customerPhoneUpdate', 'Phone number must be exactly 10 digits, no special characters');
+                displayError('customerPhoneUpdate', 'Phone must be 10 digits and start with 0');
             }
 
             if (isValid) {
                 $.ajax({
                     url: 'UpdateCustomer',
                     type: 'POST',
-                    data: {
-                        customerId: customerId,
-                        CustomerName: customerName,
-                        CustomerPhone: customerPhone
-                    },
-                    success: function (response) {
+                    data: { customerId: customerId, CustomerName: customerName, CustomerPhone: customerPhone },
+                    success: function () {
                         $('#updateCustomerModal').modal('hide');
                         reloadViewCustomer();
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success!',
-                            text: 'Customer updated successfully.',
-                            timer: 2000,
-                            showConfirmButton: false
-                        });
+                        Swal.fire('Success', 'Customer updated successfully', 'success');
                     },
                     error: function (xhr) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error!',
-                            text: xhr.responseText || 'Error updating customer.',
-                            confirmButtonColor: '#dc3545'
-                        });
+                        Swal.fire('Error', xhr.responseText || 'Failed to update customer', 'error');
                     }
                 });
             }
         });
 
-        // Xử lý Xóa Customer (giữ nguyên)
-        $('#btnDeleteCustomerConfirm').on('click', function () {
+        // Xử lý xóa khách hàng
+        $('#btnDeleteCustomerConfirm').click(function () {
             var customerId = $('#customerIdDelete').val();
             $.ajax({
                 url: 'DeleteCustomer',
                 type: 'GET',
                 data: { customerId: customerId },
-                success: function (response) {
+                success: function () {
                     $('#deleteCustomerModal').modal('hide');
                     $('#customerRow' + customerId).remove();
                     if ($('#customerTableBody tr').length === 0) {
-                        $('#customerTableBody').html('<tr><td colspan="6"><div class="no-data">No Customer.</div></td></tr>');
+                        $('#customerTableBody').html('<tr><td colspan="6"><div class="no-data">Customer Not Found.</div></td></tr>');
                     }
                     reloadViewCustomer();
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success!',
-                        text: 'Customer deleted successfully.',
-                        timer: 2000,
-                        showConfirmButton: false
-                    });
+                    Swal.fire('Success', 'Customer marked as deleted', 'success');
                 },
                 error: function (xhr) {
                     $('#deleteCustomerModal').modal('hide');
-                    var errorMessage = xhr.responseText || 'An unknown error occurred.';
-                    if (xhr.status === 409) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Cannot Delete!',
-                            text: 'This customer has associated orders and cannot be deleted.',
-                            confirmButtonColor: '#dc3545'
-                        });
-                    } else if (xhr.status === 404) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Not Found!',
-                            text: 'Customer not found.',
-                            confirmButtonColor: '#dc3545'
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error!',
-                            text: 'Error deleting customer: ' + errorMessage,
-                            confirmButtonColor: '#dc3545'
-                        });
-                    }
+                    Swal.fire('Error', xhr.responseText || 'Failed to delete customer', 'error');
                 }
             });
         });
@@ -441,14 +364,12 @@
             $('#' + fieldId).after('<div class="error-message" style="color: red;">' + message + '</div>');
         }
 
-        // Gắn sự kiện cho các nút Update và Delete
+        // Gắn sự kiện cho nút Update và Delete
         function bindEventHandlers() {
             $('.btn-update-customer').off('click').on('click', function () {
                 var customerId = $(this).data('customer-id');
                 var customerName = $(this).data('customer-name');
                 var customerPhone = $(this).data('customer-phone');
-                var numberOfPayment = $(this).data('number-of-payment');
-
                 $('#customerIdUpdate').val(customerId);
                 $('#customerIdUpdateDisplay').val(customerId);
                 $('#customerNameUpdate').val(customerName);
@@ -470,7 +391,7 @@
                 success: function (data) {
                     var newBody = $(data).find('#customerTableBody').html();
                     $('#customerTableBody').html(newBody);
-                    bindEventHandlers();
+                    bindEventHandlers(); // Gắn lại sự kiện sau khi tải lại
                 },
                 error: function (xhr) {
                     console.error('Error reloading customer list:', xhr.responseText);
@@ -500,6 +421,6 @@
             $('#noResultsRow').toggle(!foundMatch && searchText !== '');
         });
     });
-</script>
+    </script>
 </body>
 </html>

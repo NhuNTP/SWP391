@@ -27,7 +27,6 @@ public class AddCustomerController extends HttpServlet {
         String customerPhone = request.getParameter("CustomerPhone");
         int numberOfPayment = 0; // Mặc định là 0
 
-        // Validation cho số điện thoại
         if (customerPhone == null || customerPhone.trim().isEmpty()) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.getWriter().write("Phone number is required.");
@@ -46,16 +45,14 @@ public class AddCustomerController extends HttpServlet {
 
         CustomerDAO customerDAO = new CustomerDAO();
         try {
-            // Kiểm tra số điện thoại trùng lặp
             if (customerDAO.isPhoneExists(customerPhone, null)) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 response.getWriter().write("Customer phone already exists. Please check again.");
                 return;
             }
 
-            // Tạo khách hàng mới với NumberOfPayment mặc định là 0
             String customerId = customerDAO.generateNextCustomerId();
-            Customer customer = new Customer(customerId, customerName, customerPhone, numberOfPayment);
+            Customer customer = new Customer(customerId, customerName, customerPhone, numberOfPayment, false); // IsDeleted = false
             customerDAO.createCustomer(customer);
             session.setAttribute("message", "Customer added successfully!");
         } catch (SQLException | ClassNotFoundException ex) {

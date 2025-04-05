@@ -10,15 +10,17 @@ public class Customer {
     private String customerName;
     private String customerPhone;
     private int numberOfPayment;
+    private boolean IsDeleted;
 
     public Customer() {
     }
 
-    public Customer(String customerId, String customerName, String customerPhone, int numberOfPayment) { // Changed to String
+    public Customer(String customerId, String customerName, String customerPhone, int numberOfPayment, boolean IsDeleted) { // Changed to String
         this.customerId = customerId;
         this.customerName = customerName;
         this.customerPhone = customerPhone;
         this.numberOfPayment = numberOfPayment;
+        this.IsDeleted = IsDeleted;
     }
 
     public String getCustomerId() { // Changed to String
@@ -52,4 +54,13 @@ public class Customer {
     public void setNumberOfPayment(int numberOfPayment) {
         this.numberOfPayment = numberOfPayment;
     }
+
+    public boolean isIsDeleted() {
+        return IsDeleted;
+    }
+
+    public void setIsDeleted(boolean IsDeleted) {
+        this.IsDeleted = IsDeleted;
+    }
+    
 }

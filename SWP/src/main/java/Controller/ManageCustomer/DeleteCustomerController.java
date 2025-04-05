@@ -32,19 +32,18 @@ public class DeleteCustomerController extends HttpServlet {
         }
 
         try {
-            // Xóa khách hàng
             boolean deleted = customerDAO.deleteCustomer(customerId);
             if (deleted) {
                 response.setStatus(HttpServletResponse.SC_OK);
-                response.getWriter().write("Customer deleted successfully");
+                response.getWriter().write("Customer marked as deleted successfully");
             } else {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                response.getWriter().write("Customer not found.");
+                response.getWriter().write("Customer not found or already deleted.");
             }
         } catch (SQLException | ClassNotFoundException ex) {
             Logger.getLogger(DeleteCustomerController.class.getName()).log(Level.SEVERE, null, ex);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write("Error deleting customer: " + ex.getMessage());
+            response.getWriter().write("Error marking customer as deleted: " + ex.getMessage());
         }
     }
 }
