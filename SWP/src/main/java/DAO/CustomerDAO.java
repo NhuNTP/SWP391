@@ -14,38 +14,39 @@ public class CustomerDAO {
 
     // Thêm khách hàng mới và trả về CustomerId
     public String createCustomer(Customer customer) throws SQLException, ClassNotFoundException {
-        String customerId = "CU001"; // Giá trị mặc định
-        String sqlMaxId = "SELECT MAX(CustomerId) as MaxId FROM Customer WITH (UPDLOCK, ROWLOCK)";
-        String sqlInsert = "INSERT INTO Customer (CustomerId, CustomerName, CustomerPhone, NumberOfPayment) VALUES (?, ?, ?, ?)";
+    String customerId = "CU001"; // Giá trị mặc định
+    String sqlMaxId = "SELECT MAX(CustomerId) as MaxId FROM Customer WITH (UPDLOCK, ROWLOCK)";
+    String sqlInsert = "INSERT INTO Customer (CustomerId, CustomerName, CustomerPhone, NumberOfPayment, IsDeleted) VALUES (?, ?, ?, ?, ?)";
 
-        try (Connection conn = DBContext.getConnection()) {
-            conn.setAutoCommit(false);
+    try (Connection conn = DBContext.getConnection()) {
+        conn.setAutoCommit(false);
 
-            try (PreparedStatement stmtMaxId = conn.prepareStatement(sqlMaxId);
-                 ResultSet rs = stmtMaxId.executeQuery()) {
-                if (rs.next() && rs.getString("MaxId") != null) {
-                    String maxId = rs.getString("MaxId");
-                    int numericPart = Integer.parseInt(maxId.substring(2)) + 1;
-                    customerId = "CU" + String.format("%03d", numericPart);
-                }
+        try (PreparedStatement stmtMaxId = conn.prepareStatement(sqlMaxId);
+             ResultSet rs = stmtMaxId.executeQuery()) {
+            if (rs.next() && rs.getString("MaxId") != null) {
+                String maxId = rs.getString("MaxId");
+                int numericPart = Integer.parseInt(maxId.substring(2)) + 1;
+                customerId = "CU" + String.format("%03d", numericPart);
             }
-
-            try (PreparedStatement stmtInsert = conn.prepareStatement(sqlInsert)) {
-                stmtInsert.setString(1, customerId);
-                stmtInsert.setString(2, customer.getCustomerName());
-                stmtInsert.setString(3, customer.getCustomerPhone());
-                stmtInsert.setInt(4, customer.getNumberOfPayment());
-                stmtInsert.executeUpdate();
-            }
-
-            conn.commit();
-            LOGGER.log(Level.INFO, "Created customer with ID: {0}", customerId);
-            return customerId;
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error adding customer: {0}", e.getMessage());
-            throw e;
         }
+
+        try (PreparedStatement stmtInsert = conn.prepareStatement(sqlInsert)) {
+            stmtInsert.setString(1, customerId);
+            stmtInsert.setString(2, customer.getCustomerName());
+            stmtInsert.setString(3, customer.getCustomerPhone());
+            stmtInsert.setInt(4, customer.getNumberOfPayment());
+            stmtInsert.setBoolean(5, false); // IsDeleted = 0
+            stmtInsert.executeUpdate();
+        }
+
+        conn.commit();
+        LOGGER.log(Level.INFO, "Created customer with ID: {0}", customerId);
+        return customerId;
+    } catch (SQLException e) {
+        LOGGER.log(Level.SEVERE, "Error adding customer: {0}", e.getMessage());
+        throw e;
     }
+}
 
     // Giữ nguyên generateNextCustomerId nếu cần dùng riêng ở nơi khác
     public String generateNextCustomerId() throws SQLException, ClassNotFoundException {
@@ -67,88 +68,90 @@ public class CustomerDAO {
     }
 
     public List<Customer> getAllCustomers() throws SQLException, ClassNotFoundException {
-        List<Customer> customers = new ArrayList<>();
-        String sql = "SELECT CustomerId, CustomerName, CustomerPhone, NumberOfPayment FROM Customer";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                Customer customer = new Customer();
-                customer.setCustomerId(rs.getString("CustomerId"));
-                customer.setCustomerName(rs.getString("CustomerName"));
-                customer.setCustomerPhone(rs.getString("CustomerPhone"));
-                customer.setNumberOfPayment(rs.getInt("NumberOfPayment"));
-                customers.add(customer);
-            }
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error retrieving all customers: {0}", e.getMessage());
-            throw e;
+    List<Customer> customers = new ArrayList<>();
+    String sql = "SELECT CustomerId, CustomerName, CustomerPhone, NumberOfPayment, IsDeleted FROM Customer WHERE IsDeleted = 0";
+    try (Connection conn = DBContext.getConnection();
+         PreparedStatement stmt = conn.prepareStatement(sql);
+         ResultSet rs = stmt.executeQuery()) {
+        while (rs.next()) {
+            Customer customer = new Customer();
+            customer.setCustomerId(rs.getString("CustomerId"));
+            customer.setCustomerName(rs.getString("CustomerName"));
+            customer.setCustomerPhone(rs.getString("CustomerPhone"));
+            customer.setNumberOfPayment(rs.getInt("NumberOfPayment"));
+            customer.setIsDeleted(rs.getBoolean("IsDeleted"));
+            customers.add(customer);
         }
-        return customers;
+    } catch (SQLException e) {
+        LOGGER.log(Level.SEVERE, "Error retrieving all customers: {0}", e.getMessage());
+        throw e;
     }
+    return customers;
+}
 
     public Customer getCustomerById(String customerId) throws SQLException, ClassNotFoundException {
-        String query = "SELECT CustomerId, CustomerName, CustomerPhone, NumberOfPayment FROM Customer WHERE CustomerId = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
-            ps.setString(1, customerId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return new Customer(
-                            rs.getString("CustomerId"),
-                            rs.getString("CustomerName"),
-                            rs.getString("CustomerPhone"),
-                            rs.getInt("NumberOfPayment")
-                    );
-                }
+    String query = "SELECT CustomerId, CustomerName, CustomerPhone, NumberOfPayment, IsDeleted FROM Customer WHERE CustomerId = ? AND IsDeleted = 0";
+    try (Connection conn = DBContext.getConnection();
+         PreparedStatement ps = conn.prepareStatement(query)) {
+        ps.setString(1, customerId);
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return new Customer(
+                        rs.getString("CustomerId"),
+                        rs.getString("CustomerName"),
+                        rs.getString("CustomerPhone"),
+                        rs.getInt("NumberOfPayment"),
+                        rs.getBoolean("IsDeleted")
+                );
             }
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error retrieving customer by ID: {0}", e.getMessage());
-            throw e;
         }
-        return null;
+    } catch (SQLException e) {
+        LOGGER.log(Level.SEVERE, "Error retrieving customer by ID: {0}", e.getMessage());
+        throw e;
     }
+    return null;
+}
 
     public boolean updateCustomer(Customer customer) throws SQLException, ClassNotFoundException {
-        String query = "UPDATE Customer SET CustomerName = ?, CustomerPhone = ?, NumberOfPayment = ? WHERE CustomerId = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
-            ps.setString(1, customer.getCustomerName());
-            ps.setString(2, customer.getCustomerPhone());
-            ps.setInt(3, customer.getNumberOfPayment());
-            ps.setString(4, customer.getCustomerId());
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error updating customer: {0}", e.getMessage());
-            throw e;
-        }
+    String query = "UPDATE Customer SET CustomerName = ?, CustomerPhone = ?, NumberOfPayment = ? WHERE CustomerId = ? AND IsDeleted = 0";
+    try (Connection conn = DBContext.getConnection();
+         PreparedStatement ps = conn.prepareStatement(query)) {
+        ps.setString(1, customer.getCustomerName());
+        ps.setString(2, customer.getCustomerPhone());
+        ps.setInt(3, customer.getNumberOfPayment());
+        ps.setString(4, customer.getCustomerId());
+        return ps.executeUpdate() > 0;
+    } catch (SQLException e) {
+        LOGGER.log(Level.SEVERE, "Error updating customer: {0}", e.getMessage());
+        throw e;
     }
+}
 
     // Cập nhật deleteCustomer để đặt CustomerId trong Order thành NULL trước khi xóa
-    public boolean deleteCustomer(String customerId) throws SQLException, ClassNotFoundException {
-        try (Connection conn = DBContext.getConnection()) {
-            conn.setAutoCommit(false); // Bắt đầu transaction
+   public boolean deleteCustomer(String customerId) throws SQLException, ClassNotFoundException {
+    try (Connection conn = DBContext.getConnection()) {
+        conn.setAutoCommit(false); // Bắt đầu transaction
 
-            // Đặt CustomerId thành NULL trong bảng Order
-            String updateOrderSql = "UPDATE [Order] SET CustomerId = NULL WHERE CustomerId = ?";
-            try (PreparedStatement updateStmt = conn.prepareStatement(updateOrderSql)) {
-                updateStmt.setString(1, customerId);
-                updateStmt.executeUpdate();
-            }
-
-            // Xóa khách hàng
-            String deleteCustomerSql = "DELETE FROM Customer WHERE CustomerId = ?";
-            try (PreparedStatement deleteStmt = conn.prepareStatement(deleteCustomerSql)) {
-                deleteStmt.setString(1, customerId);
-                int rowsAffected = deleteStmt.executeUpdate();
-                conn.commit();
-                return rowsAffected > 0;
-            }
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error deleting customer: {0}", e.getMessage());
-            throw e;
+        // Đặt CustomerId thành NULL trong bảng Order
+        String updateOrderSql = "UPDATE [Order] SET CustomerId = NULL WHERE CustomerId = ?";
+        try (PreparedStatement updateStmt = conn.prepareStatement(updateOrderSql)) {
+            updateStmt.setString(1, customerId);
+            updateStmt.executeUpdate();
         }
+
+        // Đánh dấu khách hàng là đã xóa
+        String updateCustomerSql = "UPDATE Customer SET IsDeleted = 1 WHERE CustomerId = ?";
+        try (PreparedStatement updateStmt = conn.prepareStatement(updateCustomerSql)) {
+            updateStmt.setString(1, customerId);
+            int rowsAffected = updateStmt.executeUpdate();
+            conn.commit();
+            return rowsAffected > 0;
+        }
+    } catch (SQLException e) {
+        LOGGER.log(Level.SEVERE, "Error deleting customer: {0}", e.getMessage());
+        throw e;
     }
+}
 
     // Cũ: incrementNumberOfPayment không kiểm tra trạng thái đơn hàng
     public void incrementNumberOfPayment(String customerId) throws SQLException, ClassNotFoundException {

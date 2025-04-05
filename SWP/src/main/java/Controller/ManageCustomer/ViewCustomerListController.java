@@ -23,7 +23,6 @@ import java.util.logging.Logger;
  */
 @WebServlet("/ViewCustomerList")
 public class ViewCustomerListController extends HttpServlet {
-    private static final long serialVersionUID = 1L;
     private CustomerDAO customerDAO;
 
     @Override
@@ -36,9 +35,7 @@ public class ViewCustomerListController extends HttpServlet {
         List<Customer> customerList = null;
         try {
             customerList = customerDAO.getAllCustomers();
-        } catch (SQLException ex) {
-            Logger.getLogger(ViewCustomerListController.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ClassNotFoundException ex) {
+        } catch (SQLException | ClassNotFoundException ex) {
             Logger.getLogger(ViewCustomerListController.class.getName()).log(Level.SEVERE, null, ex);
         }
         request.setAttribute("customerList", customerList);
