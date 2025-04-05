@@ -54,8 +54,14 @@ public class UpdateCustomerProfileController extends HttpServlet {
                 return;
             }
 
-            // Giữ nguyên NumberOfPayment hiện tại
-            Customer customer = new Customer(customerId, customerName, customerPhone, existingCustomer.getNumberOfPayment());
+            // Sửa constructor: truyền đầy đủ tham số, giữ nguyên IsDeleted của existingCustomer
+            Customer customer = new Customer(
+                customerId, 
+                customerName, 
+                customerPhone, 
+                existingCustomer.getNumberOfPayment(), 
+                existingCustomer.isIsDeleted() // Lấy giá trị IsDeleted từ existingCustomer
+            );
             customerDAO.updateCustomer(customer);
             request.getSession().setAttribute("message", "Customer updated successfully!");
         } catch (SQLException | ClassNotFoundException ex) {
