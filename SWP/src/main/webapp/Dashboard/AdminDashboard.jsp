@@ -22,7 +22,7 @@
     }
 
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-    DecimalFormat currencyFormat = new DecimalFormat("#,# VNĐ");
+    DecimalFormat currencyFormat = new DecimalFormat("#,###VNĐ");
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -42,6 +42,8 @@
             background: linear-gradient(to bottom, #2C3E50, #34495E);
             color: white;
             height: 100vh;
+            position: fixed;
+            width: 16.67%;
         }
         .sidebar a {
             color: white;
@@ -49,6 +51,18 @@
         }
         .sidebar a:hover {
             background-color: #1A252F;
+        }
+        .sidebar .nav-link {
+            font-size: 0.9rem;
+            padding: 10px 15px;
+        }
+        .sidebar h4 {
+            font-size: 1.5rem;
+            padding: 15px 0;
+        }
+        .content-area {
+            margin-left: 16.67%;
+            padding: 20px;
         }
         .card-stats {
             background: linear-gradient(to right, #4CAF50, #81C784);
@@ -61,12 +75,6 @@
             position: relative;
             height: 300px;
         }
-        .sidebar .nav-link {
-            font-size: 0.9rem;
-        }
-        .sidebar h4 {
-            font-size: 1.5rem;
-        }
     </style>
 </head>
 <body>
@@ -74,8 +82,8 @@
         <div class="sidebar col-md-2 p-3">
             <h4 class="text-center mb-4"><%= userRole %></h4>
             <ul class="nav flex-column">
-               <li class="nav-item"><a href="${pageContext.request.contextPath}/dashboard" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
-               <li class="nav-item"><a href="${pageContext.request.contextPath}/view-revenue" class="nav-link"><i class="fas fa-chart-line me-2"></i>View Revenue</a></li>
+                <li class="nav-item"><a href="${pageContext.request.contextPath}/dashboard" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
+                <li class="nav-item"><a href="${pageContext.request.contextPath}/view-revenue" class="nav-link"><i class="fas fa-chart-line me-2"></i>View Revenue</a></li>
                 <li class="nav-item"><a href="${pageContext.request.contextPath}/viewalldish" class="nav-link"><i class="fas fa-list-alt me-2"></i>Menu Management</a></li>
                 <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewAccountList" class="nav-link"><i class="fas fa-users me-2"></i>Employee Management</a></li>
                 <li class="nav-item"><a href="${pageContext.request.contextPath}/ViewTableList" class="nav-link"><i class="fas fa-building me-2"></i>Table Management</a></li>
@@ -91,16 +99,15 @@
             </ul>
         </div>
 
-        <div class="col-md-10 p-4">
+        <div class="col-md-10 p-4 content-area">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h3>Dashboard</h3>
                 <div class="d-flex align-items-center">
                     <span class="me-2">Hello, <%= userName %></span>
                     <%
                         String userImage = account.getUserImage();
-                            String imagePath = request.getContextPath() + "/ManageAccount/account_img/" + userImage;
-                            out.println("<img src='" + imagePath + "' alt='User Image' class='rounded-circle me-2' style='width: 40px; height: 40px;'>");
-  
+                        String imagePath = request.getContextPath() + "/ManageAccount/account_img/" + userImage;
+                        out.println("<img src='" + imagePath + "' alt='User Image' class='rounded-circle me-2' style='width: 40px; height: 40px;'>");
                     %>
                     <a href="${pageContext.request.contextPath}/viewAccountDetail" class="btn btn-sm btn-primary">View Profile</a>
                 </div>
@@ -112,7 +119,7 @@
                     <div class="card card-stats p-3 text-center">
                         <i class="fas fa-dollar-sign"></i>
                         <h5 class="mt-2">Today's Revenue</h5>
-                        <p class="mb-0"><%= currencyFormat.format(request.getAttribute("todayRevenue") != null ? (Double) request.getAttribute("todayRevenue") : 0.0) %></p>
+                        <p class="mb-0"><%= currencyFormat.format(request.getAttribute("todayRevenue") != null ? (Double) request.getAttribute("todayRevenue") : 000.0) %></p>
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -231,7 +238,7 @@
         }
     });
 
-    // Top Items Chart (giữ nguyên)
+    // Top Items Chart
     const topItemsCtx = document.getElementById('topItemsChart').getContext('2d');
     const topItemsData = {
         labels: [<% Map<String, Integer> topDishes = (Map<String, Integer>) request.getAttribute("topDishes");
@@ -257,6 +264,6 @@
             }
         }
     });
-</script>
+    </script>
 </body>
 </html>

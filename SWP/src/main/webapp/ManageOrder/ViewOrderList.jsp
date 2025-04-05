@@ -31,56 +31,110 @@
     }
     request.setAttribute("dishList", dishList);
 
-    System.out.println("Dish list size: " + (dishList != null ? dishList.size() : "null"));
-    if (dishList != null) {
-        for (Dish dish : dishList) {
-            System.out.println("Dish ID: " + dish.getDishId() + ", Name: " + dish.getDishName());
-        }
-    }
-
     AccountDAO accountDAO = new AccountDAO();
     CustomerDAO customerDAO = new CustomerDAO();
-    SimpleDateFormat timeFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm"); // Định dạng giờ:phút
+    SimpleDateFormat timeFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
 %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Management - Admin Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <title>Order Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { font-family: 'Roboto', sans-serif; background-color: #f8f9fa; }
-        .sidebar { background: linear-gradient(to bottom, #2C3E50, #34495E); color: white; height: 100vh; }
-        .sidebar a { color: white; text-decoration: none; }
-        .sidebar a:hover { background-color: #1A252F; }
-        .main-content-area { padding: 20px; }
-        .content-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .content-header h2 { margin-top: 0; font-size: 24px; }
-        .search-bar input { padding: 8px 12px; border: 1px solid #ccc; border-radius: 3px; width: 250px; }
-        .table-responsive { overflow-x: auto; }
-        .btn-edit, .btn-delete { padding: 5px 10px; border-radius: 5px; color: white; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
-        .btn-edit { background-color: #007bff; }
-        .btn-edit:hover { background-color: #0056b3; }
-        .btn-delete { background-color: #dc3545; margin-left: 5px; }
-        .btn-delete:hover { background-color: #c82333; }
-        .btn-edit i, .btn-delete i { margin-right: 5px; }
-        .header-buttons .btn-info { background-color: #007bff; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
-        .header-buttons .btn-info:hover { background-color: #0056b3; }
-        .no-data { padding: 20px; text-align: center; color: #777; }
-        .sidebar .nav-link { font-size: 0.9rem; }
-        .sidebar h4 { font-size: 1.5rem; }
-        .modal-header { background-color: #f7f7f0; }
-        .table { width: 100%; margin-bottom: 1rem; background-color: #fff; }
-        .table th, .table td { padding: 12px; vertical-align: middle; text-align: left; }
-        .table thead th { background-color: #343a40; color: white; border-color: #454d55; }
-        .table-hover tbody tr:hover { background-color: #f1f1f1; }
-        .table-bordered { border: 1px solid #dee2e6; }
-        .table-bordered th, .table-bordered td { border: 1px solid #dee2e6; }
-        .text-left.mb-4 { background: linear-gradient(to right, #2C3E50, #42A5F5); padding: 1rem; color: white; margin-left: -24px !important; margin-top: -25px !important; margin-right: -25px !important; }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .sidebar {
+            background: linear-gradient(to bottom, #2C3E50, #34495E);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            width: 16.67%;
+        }
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+        }
+        .sidebar a:hover {
+            background-color: #1A252F;
+        }
+        .sidebar .nav-link {
+            font-size: 0.9rem;
+            padding: 10px 15px;
+        }
+        .sidebar h4 {
+            font-size: 1.5rem;
+            padding: 15px 0;
+        }
+        .content-area {
+            margin-left: 16.67%;
+            padding: 20px;
+        }
+        .error { color: red; }
+        .success { color: green; }
+        .table {
+            width: 100%;
+            margin-bottom: 1rem;
+            background-color: #fff;
+        }
+        .table th, .table td {
+            padding: 10px;
+            vertical-align: middle;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+        .table thead th {
+            background-color: #343a40;
+            color: white;
+            border-color: #454d55;
+        }
+        .table-hover tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+        .table-bordered {
+            border: 1px solid #dee2e6;
+        }
+        .table-bordered th, .table-bordered td {
+            border: 1px solid #dee2e6;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 15px;
+        }
+        .pagination button {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .pagination button:disabled {
+            background: #f0f0f0;
+            cursor: not-allowed;
+        }
+        .pagination button.active {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+        .controls-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .controls-container form {
+            flex: 1;
+            display: flex;
+            gap: 10px;
+        }
     </style>
 </head>
 <body>
@@ -104,112 +158,204 @@
                 <li class="nav-item"><a href="${pageContext.request.contextPath}/logout" class="nav-link"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
             </ul>
         </div>
+        <div class="col-md-10 p-4 content-area">
+            <h3>Order Management</h3>
+            <% if (request.getSession().getAttribute("message") != null) {%>
+            <div class="alert alert-success" id="successMessage">
+                <%= request.getSession().getAttribute("message")%>
+            </div>
+            <% request.getSession().removeAttribute("message"); %>
+            <% } %>
+            <% if (request.getSession().getAttribute("errorMessage") != null) {%>
+            <div class="alert alert-danger" id="errorMessage">
+                <%= request.getSession().getAttribute("errorMessage")%>
+            </div>
+            <% request.getSession().removeAttribute("errorMessage"); %>
+            <% } %>
 
-        <div class="col-md-10 p-4 main-content-area">
-            <section class="main-content">
-                <div class="text-left mb-4">
-                    <h4>Order Management</h4>
-                </div>
-                <div class="container-fluid">
-                    <main>
-                        <div class="content-header">
-                            <div class="search-filter">
-                                <div class="search-bar">
-                                    <input type="text" id="searchInput" placeholder="Search">
-                                </div>
-                            </div>
-                        </div>
+            <div class="controls-container">
+                <form id="searchForm" class="row g-3">
+                    <div class="col-auto">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Enter order ID, username, customer name, or status">
+                    </div>
+                    <div class="col-auto">
+                        <select class="form-select" id="filterStatus" name="filterStatus">
+                            <option value="">All Status</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <select class="form-select" id="sortOption" name="sortOption">
+                            <option value="">Sort</option>
+                            <option value="date-asc">Order Date: Oldest to Newest</option>
+                            <option value="date-desc">Order Date: Newest to Oldest</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
 
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>No.</th>
-                                        <th>Order ID</th>
-                                        <th>Username</th>
-                                        <th>Customer Name</th>
-                                        <th>Order Time</th>
-                                        <th>Order Status</th>
-                                        <th>Dishes</th>
-                                    </tr>
-                                    <tr id="noResultsRow" style="display: none;">
-                                        <td colspan="7" style="text-align: center; color: gray">Order Not Found.</td>
-                                    </tr>
-                                </thead>
-                                <tbody id="orderTableBody">
-                                    <%
-                                        List<Order> orderList = (List<Order>) request.getAttribute("orderList");
-                                        if (orderList != null && !orderList.isEmpty()) {
-                                            int displayIndex = 1;
-                                            for (Order order : orderList) {
-                                                String userName = order.getUserId() != null ? accountDAO.getAccountById(order.getUserId()).getUserName() : "N/A";
-                                                String customerName = order.getCustomerId() != null ? customerDAO.getCustomerById(order.getCustomerId()).getCustomerName() : "N/A";
-                                    %>
-                                    <tr id="orderRow<%=order.getOrderId()%>">
-                                        <td><%= displayIndex++%></td>
-                                        <td><%= order.getOrderId()%></td>
-                                        <td><%= userName%></td>
-                                        <td><%= customerName%></td>
-                                        <td><%= timeFormat.format(order.getOrderDate())%></td>
-                                        <td><%= order.getOrderStatus()%></td>
-                                        <td>
-                                            <%
-                                                List<OrderDetail> details = order.getOrderDetails();
-                                                if (details != null && !details.isEmpty()) {
-                                                    StringBuilder dishSummary = new StringBuilder();
-                                                    for (OrderDetail detail : details) {
-                                                        dishSummary.append(detail.getDishName()).append(" (").append(detail.getQuantity()).append("), ");
-                                                    }
-                                                    out.print(dishSummary.substring(0, dishSummary.length() - 2));
-                                                } else {
-                                                    out.print("No dishes");
-                                                }
-                                            %>
-                                        </td>
-                                    </tr>
-                                    <%
-                                            }
-                                        } else {
-                                    %>
-                                    <tr>
-                                        <td colspan="7"><div class="no-data">No Orders Found.</div></td>
-                                    </tr>
-                                    <% } %>
-                                </tbody>
-                            </table>
-                        </div>
-                    </main>
-                </div>
-            </section>
+            <div id="orderListContainer">
+                <%
+                    List<Order> orderList = (List<Order>) request.getAttribute("orderList");
+                    if (orderList != null && !orderList.isEmpty()) {
+                %>
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>No.</th>
+                            <th>Order ID</th>
+                            <th>Username</th>
+                            <th>Customer Name</th>
+                            <th>Order Time</th>
+                            <th>Order Status</th>
+                            <th>Dishes</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orderTableBody">
+                        <%
+                            int displayIndex = 1;
+                            for (Order order : orderList) {
+                                String userName = order.getUserId() != null ? accountDAO.getAccountById(order.getUserId()).getUserName() : "N/A";
+                                String customerName = order.getCustomerId() != null ? customerDAO.getCustomerById(order.getCustomerId()).getCustomerName() : "N/A";
+                        %>
+                        <tr>
+                            <td><%= displayIndex++ %></td>
+                            <td><%= order.getOrderId() %></td>
+                            <td><%= userName %></td>
+                            <td><%= customerName %></td>
+                            <td><%= timeFormat.format(order.getOrderDate()) %></td>
+                            <td><%= order.getOrderStatus() %></td>
+                            <td>
+                                <%
+                                    List<OrderDetail> details = order.getOrderDetails();
+                                    if (details != null && !details.isEmpty()) {
+                                        StringBuilder dishSummary = new StringBuilder();
+                                        for (OrderDetail detail : details) {
+                                            dishSummary.append(detail.getDishName()).append(" (").append(detail.getQuantity()).append("), ");
+                                        }
+                                        out.print(dishSummary.substring(0, dishSummary.length() - 2));
+                                    } else {
+                                        out.print("No dishes");
+                                    }
+                                %>
+                            </td>
+                        </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+                <div class="pagination" id="pagination"></div>
+                <% } else { %>
+                <p class="text-muted">No orders available.</p>
+                <% } %>
+            </div>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         $(document).ready(function () {
-            // Gắn sự kiện tìm kiếm
-            $('#searchInput').on('keyup', function () {
-                var searchText = $(this).val().trim().toLowerCase();
-                var $rows = $('#orderTableBody tr:not(#noResultsRow)');
-                var foundMatch = false;
+            const itemsPerPage = 10;
+            let currentPage = 1;
+            const searchInput = document.getElementById('searchInput');
+            const filterStatus = document.getElementById('filterStatus');
+            const sortOption = document.getElementById('sortOption');
+            const orderTableBody = document.getElementById('orderTableBody');
+            const pagination = document.getElementById('pagination');
+            const rows = Array.from(orderTableBody.querySelectorAll('tr'));
 
-                $rows.each(function () {
-                    var orderId = $(this).find('td:nth-child(2)').text().toLowerCase();
-                    var userName = $(this).find('td:nth-child(3)').text().toLowerCase();
-                    var customerName = $(this).find('td:nth-child(4)').text().toLowerCase();
-                    var orderStatus = $(this).find('td:nth-child(6)').text().toLowerCase();
+            function filterAndSortTable() {
+                const searchText = searchInput.value.toLowerCase();
+                const selectedStatus = filterStatus.value;
+                const sortValue = sortOption.value;
 
-                    if (orderId.includes(searchText) || userName.includes(searchText) || 
-                        customerName.includes(searchText) || orderStatus.includes(searchText)) {
-                        $(this).show();
-                        foundMatch = true;
-                    } else {
-                        $(this).hide();
-                    }
+                let filteredRows = rows.filter(row => {
+                    const orderId = row.cells[1].textContent.toLowerCase();
+                    const userName = row.cells[2].textContent.toLowerCase();
+                    const customerName = row.cells[3].textContent.toLowerCase();
+                    const orderStatus = row.cells[5].textContent;
+
+                    const matchesSearch = orderId.includes(searchText) || userName.includes(searchText) || 
+                                        customerName.includes(searchText) || orderStatus.toLowerCase().includes(searchText);
+                    const matchesStatus = selectedStatus === '' || orderStatus === selectedStatus;
+
+                    return matchesSearch && matchesStatus;
                 });
 
-                $('#noResultsRow').toggle(!foundMatch && searchText !== '');
-            });
+                if (sortValue) {
+                    const [sortField, sortDirection] = sortValue.split('-');
+                    if (sortField === 'date') {
+                        filteredRows.sort((a, b) => {
+                            const dateA = new Date(a.cells[4].textContent.split(' ').reverse().join(' '));
+                            const dateB = new Date(b.cells[4].textContent.split(' ').reverse().join(' '));
+                            return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
+                        });
+                    }
+                }
+
+                renderTable(filteredRows);
+            }
+
+            function renderTable(filteredRows) {
+                const start = (currentPage - 1) * itemsPerPage;
+                const end = start + itemsPerPage;
+                const paginatedRows = filteredRows.slice(start, end);
+
+                orderTableBody.innerHTML = '';
+                paginatedRows.forEach(row => orderTableBody.appendChild(row));
+
+                renderPagination(filteredRows.length);
+            }
+
+            function renderPagination(totalItems) {
+                const totalPages = Math.ceil(totalItems / itemsPerPage);
+                pagination.innerHTML = '';
+
+                const prevButton = document.createElement('button');
+                prevButton.textContent = 'Previous';
+                prevButton.disabled = currentPage === 1;
+                prevButton.onclick = function () {
+                    if (currentPage > 1) {
+                        currentPage--;
+                        filterAndSortTable();
+                    }
+                };
+                pagination.appendChild(prevButton);
+
+                for (let i = 1; i <= totalPages; i++) {
+                    const pageButton = document.createElement('button');
+                    pageButton.textContent = i;
+                    pageButton.className = i === currentPage ? 'active' : '';
+                    pageButton.onclick = function () {
+                        currentPage = i;
+                        filterAndSortTable();
+                    };
+                    pagination.appendChild(pageButton);
+                }
+
+                const nextButton = document.createElement('button');
+                nextButton.textContent = 'Next';
+                nextButton.disabled = currentPage === totalPages;
+                nextButton.onclick = function () {
+                    if (currentPage < totalPages) {
+                        currentPage++;
+                        filterAndSortTable();
+                    }
+                };
+                pagination.appendChild(nextButton);
+            }
+
+            filterAndSortTable();
+
+            searchInput.addEventListener('keyup', filterAndSortTable);
+            filterStatus.addEventListener('change', filterAndSortTable);
+            sortOption.addEventListener('change', filterAndSortTable);
+
+            setTimeout(function() {
+                $('#successMessage').fadeOut('slow');
+                $('#errorMessage').fadeOut('slow');
+            }, 10000);
         });
     </script>
 </body>

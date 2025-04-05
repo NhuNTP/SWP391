@@ -221,7 +221,7 @@ public class OrderController extends HttpServlet {
         String tableId = request.getParameter("tableId");
         String returnTo = request.getParameter("returnTo");
         if (tableId == null) {
-            request.setAttribute("error", "Thiếu mã bàn.");
+            request.setAttribute("error", "Missing table ID.");
             request.getRequestDispatcher("ManageOrder/selectDish.jsp").forward(request, response);
             return;
         }
@@ -441,7 +441,7 @@ public class OrderController extends HttpServlet {
         Order order = orderId != null ? orderDAO.getOrderById(orderId) : tempOrder;
 
         if (order == null || order.getOrderDetails() == null || order.getOrderDetails().isEmpty()) {
-            request.setAttribute("error", "Không có đơn hàng hoặc đơn hàng trống.");
+            request.setAttribute("error", "No order exists or the order is empty.");
             showTableOverview(request, response);
             return;
         }
@@ -452,7 +452,7 @@ public class OrderController extends HttpServlet {
 
         order.setTotal(order.getOrderDetails().stream().mapToDouble(OrderDetail::getSubtotal).sum());
 
-        // Kiểm tra nguyên liệu trước khi tạo đơn hàng
+        // Check inventory before creating order
         try {
             orderDAO.checkInventoryForOrder(order.getOrderDetails());
         } catch (SQLException e) {
