@@ -11,9 +11,11 @@
     }
 
     Account account = (Account) session.getAttribute("account");
-    String UserRole = account.getUserRole();
-    if (!"Waiter".equals(UserRole)) {
-        response.sendRedirect(request.getContextPath() + "/dashboard");
+    String userRole = account.getUserRole();
+    String userName = account.getUserName();
+
+    if (!"Waiter".equals(userRole)) {
+        response.sendRedirect(request.getContextPath() + "/LoginPage.jsp");
         return;
     }
 
@@ -329,9 +331,12 @@
             <ul class="nav flex-column">
                 <li class="nav-item"><a href="${pageContext.request.contextPath}/order?action=listTables" class="nav-link active"><i class="fas fa-building me-2"></i>Table List</a></li>
                 <li class="nav-item"><a href="${pageContext.request.contextPath}/logout" class="nav-link"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                <li class="nav-item"><a href="${pageContext.request.contextPath}/view-notifications" class="nav-link"><i class="fas fa-bell me-2"></i>View Notifications</a></li>
+                <li class="nav-item"><a href="${pageContext.request.contextPath}/viewAccountDetail" class="nav-link"><i class="fas fa-bell me-2"></i>View Profile</a></li>
             </ul>
+            
         </div>
-
+        
         <!-- Main Content -->
         <div class="col-md-10 p-4 main-content-area">
             <div class="text-left mb-4">

@@ -22,7 +22,7 @@
     }
 
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-    DecimalFormat currencyFormat = new DecimalFormat("#,### VNĐ");
+    DecimalFormat currencyFormat = new DecimalFormat("#,# VNĐ");
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -96,7 +96,13 @@
                 <h3>Dashboard</h3>
                 <div class="d-flex align-items-center">
                     <span class="me-2">Hello, <%= userName %></span>
-                    <img src="https://via.placeholder.com/40" alt="Avatar" class="rounded-circle">
+                    <%
+                        String userImage = account.getUserImage();
+                            String imagePath = request.getContextPath() + "/ManageAccount/account_img/" + userImage;
+                            out.println("<img src='" + imagePath + "' alt='User Image' class='rounded-circle me-2' style='width: 40px; height: 40px;'>");
+  
+                    %>
+                    <a href="${pageContext.request.contextPath}/viewAccountDetail" class="btn btn-sm btn-primary">View Profile</a>
                 </div>
             </div>
 
@@ -193,8 +199,7 @@
     </div>
 
     <!-- Chart.js Scripts -->
-    <!-- Chỉ cập nhật phần Chart.js Scripts liên quan đến Revenue Chart -->
-<script>
+    <script>
     // Revenue Chart
     const revenueCtx = document.getElementById('revenueChart').getContext('2d');
     const revenueData = {
