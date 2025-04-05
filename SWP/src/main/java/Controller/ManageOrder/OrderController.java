@@ -67,7 +67,7 @@ public class OrderController extends HttpServlet {
                 Order order = orderDAO.getOrderById(orderId);
                 if (order != null) {
                     request.setAttribute("order", order);
-                    request.getRequestDispatcher("/ManagerOrder/kitchenod.jsp").forward(request, response);
+                    request.getRequestDispatcher("/ManageOrder/kitchenod.jsp").forward(request, response);
                 } else {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND, "Order not found");
                 }
@@ -205,7 +205,6 @@ public class OrderController extends HttpServlet {
         Customer currentCustomer = order.getCustomerId() != null ? customerDAO.getCustomerById(order.getCustomerId()) : null;
         List<Dish> dishes = menuDAO.getAvailableDishes();
 
-        // Thêm thuộc tính hasOrder để JSP kiểm tra
         boolean hasOrder = orderId != null && orderDAO.getOrderById(orderId) != null;
         request.setAttribute("hasOrder", hasOrder);
 
@@ -255,6 +254,7 @@ public class OrderController extends HttpServlet {
             order.setOrderDetails(new ArrayList<>());
         }
 
+        List<OrderDetail> newDetails = new ArrayList<>();
         Enumeration<String> paramNames = request.getParameterNames();
         while (paramNames.hasMoreElements()) {
             String paramName = paramNames.nextElement();
@@ -264,23 +264,27 @@ public class OrderController extends HttpServlet {
                 if (quantity > 0) {
                     Dish dish = menuDAO.getDishById(dishId);
                     if (dish != null) {
-                        OrderDetail existingDetail = order.getOrderDetails().stream()
-                                .filter(d -> d.getDishId().equals(dishId))
-                                .findFirst().orElse(null);
-                        if (existingDetail != null) {
-                            existingDetail.setQuantity(existingDetail.getQuantity() + quantity);
-                            existingDetail.setSubtotal(existingDetail.getQuantity() * dish.getDishPrice());
-                        } else {
-                            OrderDetail detail = new OrderDetail();
-                            detail.setOrderId(order.getOrderId());
-                            detail.setDishId(dishId);
-                            detail.setQuantity(quantity);
-                            detail.setSubtotal(dish.getDishPrice() * quantity);
-                            detail.setDishName(dish.getDishName());
-                            order.getOrderDetails().add(detail);
-                        }
+                        OrderDetail detail = new OrderDetail();
+                        detail.setOrderId(order.getOrderId());
+                        detail.setDishId(dishId);
+                        detail.setQuantity(quantity);
+                        detail.setSubtotal(dish.getDishPrice() * quantity);
+                        detail.setDishName(dish.getDishName());
+                        newDetails.add(detail);
                     }
                 }
+            }
+        }
+
+        for (OrderDetail newDetail : newDetails) {
+            OrderDetail existingDetail = order.getOrderDetails().stream()
+                    .filter(d -> d.getDishId().equals(newDetail.getDishId()))
+                    .findFirst().orElse(null);
+            if (existingDetail != null) {
+                existingDetail.setQuantity(existingDetail.getQuantity() + newDetail.getQuantity());
+                existingDetail.setSubtotal(existingDetail.getQuantity() * (existingDetail.getSubtotal() / existingDetail.getQuantity()));
+            } else {
+                order.getOrderDetails().add(newDetail);
             }
         }
 
@@ -345,7 +349,6 @@ public class OrderController extends HttpServlet {
 
     private void editDishQuantity(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException, SQLException, ClassNotFoundException {
-        String orderDetailId = request.getParameter("orderDetailId");
         String dishId = request.getParameter("dishId");
         int newQuantity = Integer.parseInt(request.getParameter("newQuantity"));
         String tableId = request.getParameter("tableId");
@@ -428,51 +431,47 @@ public class OrderController extends HttpServlet {
         response.sendRedirect("order?action=tableOverview&tableId=" + tableId);
     }
 
-   private void completeOrder(HttpServletRequest request, HttpServletResponse response)
-        throws ServletException, IOException, SQLException, ClassNotFoundException {
-    String tableId = request.getParameter("tableId");
-    String orderDescription = request.getParameter("orderDescription"); // Lấy orderDescription từ form
-    HttpSession session = request.getSession();
-    Order tempOrder = (Order) session.getAttribute("tempOrder");
-    String orderId = orderDAO.getOrderIdByTableId(tableId);
-    Order order = orderId != null ? orderDAO.getOrderById(orderId) : tempOrder;
+    private void completeOrder(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException, SQLException, ClassNotFoundException {
+        String tableId = request.getParameter("tableId");
+        String orderDescription = request.getParameter("orderDescription");
+        HttpSession session = request.getSession();
+        Order tempOrder = (Order) session.getAttribute("tempOrder");
+        String orderId = orderDAO.getOrderIdByTableId(tableId);
+        Order order = orderId != null ? orderDAO.getOrderById(orderId) : tempOrder;
 
-    if (order == null || order.getOrderDetails() == null || order.getOrderDetails().isEmpty()) {
-        request.setAttribute("error", "Không có đơn hàng hoặc đơn hàng trống.");
-        showTableOverview(request, response);
-        return;
+        if (order == null || order.getOrderDetails() == null || order.getOrderDetails().isEmpty()) {
+            request.setAttribute("error", "Không có đơn hàng hoặc đơn hàng trống.");
+            showTableOverview(request, response);
+            return;
+        }
+
+        if (orderDescription != null && !orderDescription.trim().isEmpty()) {
+            order.setOrderDescription(orderDescription);
+        }
+
+        order.setTotal(order.getOrderDetails().stream().mapToDouble(OrderDetail::getSubtotal).sum());
+
+        // Kiểm tra nguyên liệu trước khi tạo đơn hàng
+        try {
+            orderDAO.checkInventoryForOrder(order.getOrderDetails());
+        } catch (SQLException e) {
+            request.setAttribute("error", e.getMessage());
+            showTableOverview(request, response);
+            return;
+        }
+
+        if (orderId == null) {
+            orderDAO.createOrder(order);
+            tableDAO.updateTableStatus(tableId, "Occupied");
+        } else {
+            orderDAO.updateOrder(order);
+            updateOrderDetail(order);
+        }
+
+        session.removeAttribute("tempOrder");
+        response.sendRedirect("order?action=listTables");
     }
-
-    // Cập nhật orderDescription vào đơn hàng
-    if (orderDescription != null && !orderDescription.trim().isEmpty()) {
-        order.setOrderDescription(orderDescription);
-    }
-
-    order.setTotal(order.getOrderDetails().stream().mapToDouble(OrderDetail::getSubtotal).sum());
-
-    // Kiểm tra nguyên liệu trước khi hoàn tất
-    try {
-        orderDAO.checkInventoryForOrder(order);
-    } catch (SQLException e) {
-        request.setAttribute("error", e.getMessage()); // Hiển thị lỗi không đủ nguyên liệu
-        showTableOverview(request, response);
-        return;
-    }
-
-    // Nếu đủ nguyên liệu, trừ nguyên liệu và lưu đơn hàng
-    if (orderId == null) {
-        orderDAO.createOrder(order); // Tạo đơn hàng mới
-        orderDAO.deductInventoryForOrder(order); // Trừ nguyên liệu
-        tableDAO.updateTableStatus(tableId, "Occupied");
-    } else {
-        orderDAO.updateOrder(order); // Cập nhật đơn hàng
-        orderDAO.deductInventoryForOrder(order); // Trừ nguyên liệu
-        updateOrderDetail(order);
-    }
-
-    session.removeAttribute("tempOrder");
-    response.sendRedirect("order?action=listTables");
-}
 
     private void payOrder(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException, SQLException, ClassNotFoundException {
@@ -560,7 +559,6 @@ public class OrderController extends HttpServlet {
     }
 
     private static class OrderResponse {
-
         String orderId;
 
         OrderResponse(String orderId) {
