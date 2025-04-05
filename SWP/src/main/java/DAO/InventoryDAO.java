@@ -245,16 +245,15 @@ public class InventoryDAO extends DB.DBContext {
 //        }
 //        return "None";
 //    }
-    
-    
-    public boolean isInventoryItemExist(String itemName) {
+
+    public boolean isInventoryItemExistForAdd(String itemName) {
         String sql = "SELECT 1 FROM Inventory WHERE LOWER(ItemName) = LOWER(?) AND isDeleted=0"; // Chỉ cần SELECT 1 để kiểm tra sự tồn tại
         try (PreparedStatement st = getConnection().prepareStatement(sql)) {
             st.setString(1, itemName);
             try (ResultSet rs = st.executeQuery()) {
                 if (rs.next()) {
                     // Nếu tìm thấy item, trả về true
-                    // System.out.println("NGUYEN THANH PHAT"); // Có thể bỏ dòng này vì không cần thiết cho logic true/false
+                    System.out.println("NGUYEN THANH PHAT"); // Có thể bỏ dòng này vì không cần thiết cho logic true/false
                     return true;
                 } else {
                     return false;
@@ -270,13 +269,11 @@ public class InventoryDAO extends DB.DBContext {
         }
     }
 
-  
     public boolean isInventoryItemExists(String itemId, String excludeItemId) throws SQLException, ClassNotFoundException {
         String sql = excludeItemId == null || excludeItemId.isEmpty()
                 ? "SELECT COUNT(*) FROM Inventory WHERE ItemId = ? AND isDeleted = 0"
                 : "SELECT COUNT(*) FROM Inventory WHERE ItemId = ? AND ItemId != ? AND isDeleted = 0";
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, itemId);
             if (excludeItemId != null && !excludeItemId.isEmpty()) {
                 stmt.setString(2, excludeItemId);
@@ -291,6 +288,29 @@ public class InventoryDAO extends DB.DBContext {
             throw e;
         }
         return false;
+    }
+
+    public boolean isInventoryItemExistForUpdate(String itemName, String itemId) {
+        String sql = "SELECT 1 FROM Inventory WHERE LOWER(ItemName) = LOWER(?) AND isDeleted=0";
+        if (itemId != null && !itemId.isEmpty()) {
+            sql += " AND ItemId != ?"; // Loại trừ bản ghi đang cập nhật
+        }
+        try (PreparedStatement st = getConnection().prepareStatement(sql)) {
+            st.setString(1, itemName);
+            if (itemId != null && !itemId.isEmpty()) {
+                st.setString(2, itemId); // Set tham số itemId
+            }
+            try (ResultSet rs = st.executeQuery()) {
+                return rs.next(); // Trả về true nếu tìm thấy item khác có tên trùng
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi kiểm tra Inventory Item (UPDATE) theo tên: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(InventoryDAO.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
+        }
     }
 
 }
