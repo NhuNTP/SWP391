@@ -53,6 +53,7 @@
             margin-left: 16.67%;
             padding: 20px;
         }
+     
         .error {
             color: red;
         }

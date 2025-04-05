@@ -19,6 +19,273 @@ public class OrderDAO {
 
     private static final Logger logger = Logger.getLogger(OrderDAO.class.getName());
 
+    
+    // sửa khi thêm cột
+    // Lấy OrderId theo TableId (chỉ lấy đơn hàng chưa hoàn tất)
+    public String getOrderIdByTableId(String tableId) throws SQLException, ClassNotFoundException {
+        String sql = "SELECT OrderId FROM [Order] WHERE TableId = ? AND OrderStatus = 'Pending'";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, tableId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("OrderId");
+                }
+            }
+        }
+        return null;
+    }
+
+    // Lấy đơn hàng theo TableId (bao gồm chi tiết)
+    public Order getOrderByTableId(String tableId) throws SQLException, ClassNotFoundException {
+        String sql = "SELECT * FROM [Order] WHERE TableId = ? AND OrderStatus IN ('Pending', 'Processing')";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, tableId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Order order = new Order();
+                    order.setOrderId(rs.getString("OrderId"));
+                    order.setUserId(rs.getString("UserId"));
+                    order.setTableId(rs.getString("TableId"));
+                    order.setCustomerId(rs.getString("CustomerId"));
+                    order.setOrderStatus(rs.getString("OrderStatus"));
+                    order.setOrderType(rs.getString("OrderType"));
+                    order.setOrderDate(rs.getTimestamp("OrderDate"));
+                    order.setTotal(rs.getDouble("Total"));
+                    order.setFinalPrice(rs.getDouble("FinalPrice")); // Thêm FinalPrice
+                    order.setCustomerPhone(rs.getString("CustomerPhone"));
+                    order.setOrderDetails(getOrderDetailsByOrderId(order.getOrderId()));
+                    return order;
+                }
+            }
+        }
+        return null;
+    }
+
+    // Lấy chi tiết đơn hàng theo OrderId (không thay đổi)
+    public List<OrderDetail> getOrderDetailsByOrderId(String orderId) throws SQLException, ClassNotFoundException {
+        List<OrderDetail> details = new ArrayList<>();
+        String sql = "SELECT OrderDetailId, DishList FROM OrderDetail WHERE OrderId = ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, orderId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    String orderDetailId = rs.getString("OrderDetailId");
+                    String dishListJson = rs.getString("DishList");
+                    ObjectMapper mapper = new ObjectMapper();
+                    List<OrderDetail> dishList = mapper.readValue(dishListJson, new TypeReference<List<OrderDetail>>() {});
+                    for (OrderDetail detail : dishList) {
+                        detail.setOrderDetailId(orderDetailId);
+                        detail.setOrderId(orderId);
+                        details.add(detail);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error parsing DishList: " + e.getMessage(), e);
+            throw new SQLException("Error parsing DishList", e);
+        }
+        return details;
+    }
+
+    // Lấy đơn hàng theo OrderId
+    public Order getOrderById(String orderId) throws SQLException, ClassNotFoundException {
+        String sql = "SELECT * FROM [Order] WHERE OrderId = ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, orderId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Order order = new Order();
+                    order.setOrderId(rs.getString("OrderId"));
+                    order.setUserId(rs.getString("UserId"));
+                    order.setTableId(rs.getString("TableId"));
+                    order.setCustomerId(rs.getString("CustomerId"));
+                    order.setOrderStatus(rs.getString("OrderStatus"));
+                    order.setOrderType(rs.getString("OrderType"));
+                    order.setOrderDate(rs.getTimestamp("OrderDate"));
+                    order.setTotal(rs.getDouble("Total"));
+                    order.setFinalPrice(rs.getDouble("FinalPrice")); // Thêm FinalPrice
+                    order.setCustomerPhone(rs.getString("CustomerPhone"));
+                    order.setOrderDescription(rs.getString("OrderDescription"));
+                    order.setCouponId(rs.getString("CouponId")); // Thêm CouponId
+                    order.setOrderDetails(getOrderDetailsByOrderId(orderId));
+                    return order;
+                }
+            }
+        }
+        return null;
+    }
+
+    // Lấy danh sách đơn hàng Pending và Processing cho Kitchen
+    public List<Order> getPendingOrders() throws SQLException, ClassNotFoundException {
+        List<Order> orders = new ArrayList<>();
+        String sql = "SELECT * FROM [Order] WHERE OrderStatus IN ('Pending', 'Processing') ORDER BY OrderDate ASC";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Order order = new Order();
+                    order.setOrderId(rs.getString("OrderId"));
+                    order.setOrderDate(rs.getTimestamp("OrderDate"));
+                    order.setOrderStatus(rs.getString("OrderStatus"));
+                    order.setTableId(rs.getString("TableId"));
+                    order.setOrderDescription(rs.getString("OrderDescription"));
+                    order.setTotal(rs.getDouble("Total"));
+                    order.setFinalPrice(rs.getDouble("FinalPrice")); // Thêm FinalPrice
+                    order.setOrderDetails(getOrderDetailsByOrderId(rs.getString("OrderId")));
+                    orders.add(order);
+                }
+            }
+        }
+        return orders;
+    }
+
+    // Tạo mã OrderDetailId duy nhất (không thay đổi)
+    public String generateUniqueOrderDetailId(Connection conn) throws SQLException {
+        String nextId = "OD001";
+        String sql = "SELECT MAX(OrderDetailId) as MaxId FROM OrderDetail WITH (UPDLOCK, ROWLOCK)";
+        try (PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
+            if (rs.next() && rs.getString("MaxId") != null) {
+                String maxId = rs.getString("MaxId");
+                int numericPart = Integer.parseInt(maxId.substring(2)) + 1;
+                nextId = "OD" + String.format("%03d", numericPart);
+            }
+        }
+        return nextId;
+    }
+
+    // Tạo đơn hàng mới
+    public void createOrder(Order order) throws SQLException, ClassNotFoundException {
+        Connection conn = null;
+        try {
+            conn = DBContext.getConnection();
+            conn.setAutoCommit(false);
+
+            String sqlOrder = "INSERT INTO [Order] (OrderId, UserId, CustomerId, OrderDate, OrderStatus, OrderType, TableId, Total, FinalPrice, CustomerPhone, OrderDescription) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            try (PreparedStatement pstmtOrder = conn.prepareStatement(sqlOrder)) {
+                pstmtOrder.setString(1, order.getOrderId());
+                pstmtOrder.setString(2, order.getUserId());
+                pstmtOrder.setString(3, order.getCustomerId());
+                pstmtOrder.setTimestamp(4, new Timestamp(order.getOrderDate().getTime()));
+                pstmtOrder.setString(5, order.getOrderStatus());
+                pstmtOrder.setString(6, order.getOrderType());
+                pstmtOrder.setString(7, order.getTableId());
+                pstmtOrder.setDouble(8, order.getTotal());
+                pstmtOrder.setDouble(9, order.getFinalPrice()); // Thêm FinalPrice
+                pstmtOrder.setString(10, order.getCustomerPhone());
+                pstmtOrder.setString(11, order.getOrderDescription());
+                pstmtOrder.executeUpdate();
+            }
+
+            if (order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) {
+                String orderDetailId = generateUniqueOrderDetailId(conn);
+                ObjectMapper mapper = new ObjectMapper();
+                String dishListJson = mapper.writeValueAsString(order.getOrderDetails());
+                double total = order.getOrderDetails().stream().mapToDouble(OrderDetail::getSubtotal).sum();
+
+                String sqlOrderDetail = "INSERT INTO OrderDetail (OrderDetailId, OrderId, DishList, Total) "
+                        + "VALUES (?, ?, ?, ?)";
+                try (PreparedStatement pstmtOrderDetail = conn.prepareStatement(sqlOrderDetail)) {
+                    pstmtOrderDetail.setString(1, orderDetailId);
+                    pstmtOrderDetail.setString(2, order.getOrderId());
+                    pstmtOrderDetail.setString(3, dishListJson);
+                    pstmtOrderDetail.setDouble(4, total);
+                    pstmtOrderDetail.executeUpdate();
+                }
+                logger.info("Added OrderDetail: " + orderDetailId + " with DishList: " + dishListJson);
+            }
+
+            conn.commit();
+            logger.log(Level.INFO, "Successfully created Order: {0}", order.getOrderId());
+        } catch (Exception e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException rollbackEx) {
+                    logger.log(Level.SEVERE, "Rollback failed: " + rollbackEx.getMessage(), rollbackEx);
+                }
+            }
+            logger.log(Level.SEVERE, "Error creating Order: " + e.getMessage(), e);
+            throw new SQLException("Error creating Order", e);
+        } finally {
+            if (conn != null) {
+                conn.close();
+            }
+        }
+    }
+
+    // Cập nhật đơn hàng
+    public void updateOrder(Order order) throws SQLException, ClassNotFoundException {
+        String sql = "UPDATE [Order] SET UserId = ?, TableId = ?, CustomerId = ?, OrderStatus = ?, OrderType = ?, OrderDate = ?, Total = ?, FinalPrice = ?, CustomerPhone = ?, OrderDescription = ?, CouponId = ? WHERE OrderId = ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, order.getUserId());
+            stmt.setString(2, order.getTableId());
+            stmt.setString(3, order.getCustomerId());
+            stmt.setString(4, order.getOrderStatus());
+            stmt.setString(5, order.getOrderType());
+            stmt.setTimestamp(6, new java.sql.Timestamp(order.getOrderDate().getTime()));
+            stmt.setDouble(7, order.getTotal());
+            stmt.setDouble(8, order.getFinalPrice()); // Thêm FinalPrice
+            stmt.setString(9, order.getCustomerPhone());
+            stmt.setString(10, order.getOrderDescription());
+            stmt.setString(11, order.getCouponId()); // Thêm CouponId
+            stmt.setString(12, order.getOrderId());
+            stmt.executeUpdate();
+            logger.log(Level.INFO, "Updated order with OrderId: {0}", order.getOrderId());
+        }
+    }
+
+    // Các phương thức khác (cập nhật để lấy FinalPrice)
+    public List<Order> getOrdersByStatus(String status) throws SQLException, ClassNotFoundException {
+        List<Order> orders = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement("SELECT * FROM [Order] WHERE OrderStatus = ?")) {
+            stmt.setString(1, status);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Order order = new Order();
+                    order.setOrderId(rs.getString("OrderId"));
+                    order.setUserId(rs.getString("UserId"));
+                    order.setCustomerId(rs.getString("CustomerId"));
+                    order.setOrderDate(rs.getTimestamp("OrderDate"));
+                    order.setOrderStatus(rs.getString("OrderStatus"));
+                    order.setOrderType(rs.getString("OrderType"));
+                    order.setTableId(rs.getString("TableId"));
+                    order.setCustomerPhone(rs.getString("CustomerPhone"));
+                    order.setTotal(rs.getDouble("Total"));
+                    order.setFinalPrice(rs.getDouble("FinalPrice")); // Thêm FinalPrice
+                    order.setOrderDescription(rs.getString("OrderDescription"));
+                    order.setOrderDetails(getOrderDetailsByOrderId(rs.getString("OrderId")));
+                    orders.add(order);
+                }
+            }
+        }
+        return orders;
+    }
+
+    public List<Order> getAllOrders() throws SQLException, ClassNotFoundException {
+        List<Order> orderList = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection(); PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM [Order]")) {
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    Order order = new Order();
+                    order.setOrderId(rs.getString("OrderId"));
+                    order.setUserId(rs.getString("UserId"));
+                    order.setCustomerId(rs.getString("CustomerId"));
+                    order.setOrderDate(rs.getTimestamp("OrderDate"));
+                    order.setOrderStatus(rs.getString("OrderStatus"));
+                    order.setOrderType(rs.getString("OrderType"));
+                    order.setTableId(rs.getString("TableId"));
+                    order.setCustomerPhone(rs.getString("CustomerPhone"));
+                    order.setTotal(rs.getDouble("Total"));
+                    order.setFinalPrice(rs.getDouble("FinalPrice")); // Thêm FinalPrice
+                    order.setOrderDescription(rs.getString("OrderDescription"));
+                    orderList.add(order);
+                }
+            }
+        }
+        return orderList;
+    }
+    // sửa khi thêm cột
+    /*
     // Lấy OrderId theo TableId (chỉ lấy đơn hàng chưa hoàn tất)
     public String getOrderIdByTableId(String tableId) throws SQLException, ClassNotFoundException {
         String sql = "SELECT OrderId FROM [Order] WHERE TableId = ? AND OrderStatus = 'Pending'";
@@ -205,7 +472,7 @@ public class OrderDAO {
             }
         }
     }
-
+*/
     // Thêm OrderDetail
     public void addOrderDetail(OrderDetail detail) throws SQLException, ClassNotFoundException {
         try (Connection conn = DBContext.getConnection()) {
@@ -258,7 +525,7 @@ public class OrderDAO {
             stmt.executeUpdate();
         }
     }
-
+/*
     // Cập nhật đơn hàng
     public void updateOrder(Order order) throws SQLException, ClassNotFoundException {
         String sql = "UPDATE [Order] SET UserId = ?, TableId = ?, CustomerId = ?, OrderStatus = ?, OrderType = ?, OrderDate = ?, Total = ?, CustomerPhone = ?, OrderDescription = ? WHERE OrderId = ?";
@@ -277,7 +544,7 @@ public class OrderDAO {
             logger.log(Level.INFO, "Updated order with OrderId: {0}", order.getOrderId());
         }
     }
-
+*/
     // Cập nhật trạng thái đơn hàng
     public void updateOrderStatus(String orderId, String newStatus) throws SQLException, ClassNotFoundException {
         String sql = "UPDATE [Order] SET OrderStatus = ? WHERE OrderId = ?";
@@ -449,7 +716,7 @@ public class OrderDAO {
             }
         }
     }
-
+/*
     public List<Order> getOrdersByStatus(String status) throws SQLException, ClassNotFoundException {
         List<Order> orders = new ArrayList<>();
         try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement("SELECT * FROM [Order] WHERE OrderStatus = ?")) {
@@ -473,8 +740,7 @@ public class OrderDAO {
             }
         }
         return orders;
-    }
-
+    
     public List<Order> getAllOrders() throws SQLException, ClassNotFoundException {
         List<Order> orderList = new ArrayList<>();
         try (Connection conn = DBContext.getConnection(); PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM [Order]")) {
@@ -497,4 +763,5 @@ public class OrderDAO {
         }
         return orderList;
     }
+*/
 }
