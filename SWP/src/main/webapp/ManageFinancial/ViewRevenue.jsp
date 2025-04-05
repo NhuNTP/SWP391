@@ -31,20 +31,140 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Roboto', sans-serif; background-color: #f8f9fa; }
-        .sidebar { background: linear-gradient(to bottom, #2C3E50, #34495E); color: white; height: 100vh; }
-        .sidebar a { color: white; text-decoration: none; }
-        .sidebar a:hover { background-color: #1A252F; }
-        .card-stats { background: linear-gradient(to right, #4CAF50, #81C784); color: white; }
-        .card-stats i { font-size: 3rem; }
-        .chart-container { position: relative; height: 400px; }
-        .sidebar .nav-link { font-size: 0.9rem; }
-        .sidebar h4 { font-size: 1.5rem; }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden; /* Ngăn cuộn toàn trang */
+        }
+        .container-fluid {
+            display: flex;
+            height: 100vh;
+        }
+        /* Giữ nguyên style của sidebar từ code gốc, chỉ thêm fixed */
+        .sidebar {
+            background: linear-gradient(to bottom, #2C3E50, #34495E);
+            color: white;
+            width: 250px; /* Điều chỉnh từ col-md-2 thành width cố định */
+            position: fixed; /* Cố định sidebar */
+            top: 0;
+            left: 0;
+            height: 100%;
+            padding: 20px;
+            overflow-y: auto; /* Cho phép cuộn trong sidebar nếu dài */
+        }
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+        }
+        .sidebar a:hover {
+            background-color: #1A252F;
+        }
+        .sidebar .nav-link {
+            font-size: 0.9rem;
+            padding: 10px;
+        }
+        .sidebar h4 {
+            font-size: 1.5rem;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        /* Nội dung chính */
+        .main-content {
+            margin-left: 250px; /* Đẩy nội dung sang phải để không bị che */
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #ffffff;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+        }
+        .header {
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+            margin-bottom: 20px;
+        }
+        .header h3 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: #2C3E50;
+            margin: 0;
+        }
+        .filter-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background-color: #f1f3f5;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .filter-section label {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #34495E;
+            margin-right: 10px;
+        }
+        .filter-section select {
+            width: 150px;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #ced4da;
+            font-size: 1rem;
+        }
+        .stats-section {
+            padding: 15px;
+            background-color: #f1f3f5;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .card-stats {
+            background: linear-gradient(to right, #4CAF50, #81C784);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .card-stats i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        .card-stats h5 {
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin: 5px 0;
+        }
+        .card-stats p {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+        }
+        .chart-section {
+            flex-grow: 1;
+            padding: 15px;
+            background-color: #f1f3f5;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+        }
+        .chart-section h5 {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: #34495E;
+            margin-bottom: 15px;
+        }
+        .chart-container {
+            flex-grow: 1;
+            max-height: 450px; /* Giới hạn chiều cao biểu đồ */
+        }
     </style>
 </head>
 <body>
-    <div class="d-flex">
-        <div class="sidebar col-md-2 p-3">
+    <div class="container-fluid">
+        <div class="sidebar">
             <h4 class="text-center mb-4">Admin</h4>
             <ul class="nav flex-column">
                 <li class="nav-item"><a href="${pageContext.request.contextPath}/dashboard" class="nav-link"><i class="fas fa-home me-2"></i>Dashboard</a></li>
@@ -62,40 +182,45 @@
             </ul>
         </div>
 
-        <div class="col-md-10 p-4">
-            <h3>View Revenue</h3>
+        <div class="main-content">
+            <div class="header">
+                <h3>View Revenue</h3>
+            </div>
 
             <!-- Bộ lọc thời gian -->
-            <div class="mb-4">
-                <form action="${pageContext.request.contextPath}/view-revenue" method="get" class="d-flex align-items-center">
-                    <label for="period" class="me-2">Select Period:</label>
-                    <select name="period" id="period" class="form-select w-auto me-2" onchange="this.form.submit()">
-                        <option value="day" <%= "day".equals(request.getAttribute("period")) ? "selected" : "" %>>Day</option>
-                        <option value="week" <%= "week".equals(request.getAttribute("period")) ? "selected" : "" %>>Week</option>
-                        <option value="month" <%= "month".equals(request.getAttribute("period")) ? "selected" : "" %>>Month</option>
-                        <option value="year" <%= "year".equals(request.getAttribute("period")) ? "selected" : "" %>>Year</option>
-                    </select>
-                </form>
+            <div class="filter-section">
+                <div class="d-flex align-items-center">
+                    <label for="period">Select Period:</label>
+                    <form action="${pageContext.request.contextPath}/view-revenue" method="get">
+                        <select name="period" id="period" class="form-select" onchange="this.form.submit()">
+                            <option value="hour" <%= "hour".equals(request.getAttribute("period")) ? "selected" : "" %>>Hour</option>
+                            <option value="day" <%= "day".equals(request.getAttribute("period")) ? "selected" : "" %>>Day</option>
+                            <option value="week" <%= "week".equals(request.getAttribute("period")) ? "selected" : "" %>>Week</option>
+                            <option value="month" <%= "month".equals(request.getAttribute("period")) ? "selected" : "" %>>Month</option>
+                            <option value="year" <%= "year".equals(request.getAttribute("period")) ? "selected" : "" %>>Year</option>
+                        </select>
+                    </form>
+                </div>
             </div>
 
             <!-- Tổng doanh thu -->
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <div class="card card-stats p-4 text-center">
-                        <i class="fas fa-dollar-sign"></i>
-                        <h5 class="mt-2">Total Revenue (<%= request.getAttribute("period") %>)</h5>
-                        <p class="mb-0 fs-3"><%= currencyFormat.format(request.getAttribute("totalRevenue")) %></p>
+            <div class="stats-section">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card-stats">
+                            <i class="fas fa-dollar-sign"></i>
+                            <h5>Total Revenue (<%= request.getAttribute("period") %>)</h5>
+                            <p><%= currencyFormat.format(request.getAttribute("totalRevenue")) %></p>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Biểu đồ doanh thu -->
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="card p-4">
-                        <h5>Revenue by <%= request.getAttribute("period") %></h5>
-                        <canvas id="revenueChart" class="chart-container"></canvas>
-                    </div>
+            <div class="chart-section">
+                <h5>Revenue by <%= request.getAttribute("period") %></h5>
+                <div class="chart-container">
+                    <canvas id="revenueChart"></canvas>
                 </div>
             </div>
         </div>
@@ -108,7 +233,7 @@
             labels: [<% List<Revenue> revenueByPeriod = (List<Revenue>) request.getAttribute("revenueByPeriod");
                         if (revenueByPeriod != null && !revenueByPeriod.isEmpty()) {
                             for (Revenue revenue : revenueByPeriod) { %>
-                                '<%= revenue.getRevenueId() %>', // Hiển thị RevenueId làm nhãn
+                                '<%= revenue.getRevenueId() %>',
                         <% } } %>],
             datasets: [{
                 label: 'Revenue (VNĐ)',
@@ -127,6 +252,7 @@
             data: revenueData,
             options: {
                 responsive: true,
+                maintainAspectRatio: false, /* Cho phép biểu đồ co giãn theo container */
                 plugins: {
                     legend: { display: true }
                 },

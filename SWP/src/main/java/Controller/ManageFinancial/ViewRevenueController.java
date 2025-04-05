@@ -41,6 +41,10 @@ public class ViewRevenueController extends HttpServlet {
         List<Revenue> revenueByPeriod = null;
 
         switch (period) {
+            case "hour": // Thêm case cho tùy chọn "hour"
+                totalRevenue = revenueDAO.getTodayRevenue(); // Tổng doanh thu ngày hiện tại
+                revenueByPeriod = revenueDAO.getRevenueByHourToday(); // Doanh thu theo giờ trong ngày
+                break;
             case "day":
                 totalRevenue = revenueDAO.getTodayRevenue();
                 revenueByPeriod = revenueDAO.getRevenueByHourToday();

@@ -18,6 +18,7 @@
         <title>Add New Dish</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <!-- Thêm SweetAlert2 -->
         <style>
             body {
                 font-family: 'Roboto', sans-serif;
@@ -635,243 +636,120 @@
                                                        showPopupAndRedirect("<%= request.getAttribute("message")%>");
             <% }%>
                                                    };
-                                             $(document).ready(function () {
-                bindEventHandlers();
-                reloadViewInventory();
-                setupSearchFilter();
+                                                   $(document).ready(function () {
+                                                       bindEventHandlers();
+                                                       reloadViewInventory();
+                                                       setupSearchFilter();
 
 
-                // **Xử lý Thêm Inventory Item**
-                $('#btnAddInventory').click(function () {
-                    // Xóa các thông báo lỗi cũ (nếu có)
-                    $('.error-message').remove();
-                    $('.is-invalid').removeClass('is-invalid');
+                                                       // **Xử lý Thêm Inventory Item**
+                                                       $('#btnAddInventory').click(function () {
+                                                           // Xóa các thông báo lỗi cũ (nếu có)
+                                                           $('.error-message').remove();
+                                                           $('.is-invalid').removeClass('is-invalid');
 
-                    var itemNameInput = $('#itemName');
-                    var itemTypeInput = $('#itemType');
-                    var itemPriceInput = $('#itemPrice');
-                    var itemQuantityInput = $('#itemQuantity');
-                    var itemUnitInput = $('#itemUnit');
-                    var itemDescriptionInput = $('#itemDescription');
-
-
-                    var itemName = itemNameInput.val().trim(); // trim() để loại bỏ khoảng trắng đầu cuối
-                    var itemType = itemTypeInput.val();
-                    var itemPrice = itemPriceInput.val();
-                    var itemQuantity = itemQuantityInput.val();
-                    var itemUnit = itemUnitInput.val();
-                    var itemDescription = itemDescriptionInput.val();
-
-                    var isValid = true; // Biến cờ để theo dõi trạng thái hợp lệ của form
-
-                    // Kiểm tra trường Name
-                    if (itemName === '') {
-                        isValid = false;
-                        displayError('itemName', 'Please input this field.');
-                    }
-
-                    // Kiểm tra trường Type
-                    if (itemType === '') {
-                        isValid = false;
-                        displayError('itemType', 'Please select item type.');
-                    }
-
-                    // Kiểm tra trường Price
-                    if (itemPrice === '' || isNaN(itemPrice) || parseFloat(itemPrice) <= 0) {
-                        isValid = false;
-                        displayError('itemPrice', 'Price must be a valid non-negative number and greater than 0.');
-                    }
-
-                    // Kiểm tra trường Quantity
-                    if (itemQuantity === '' || isNaN(itemQuantity) || parseFloat(itemQuantity) <= 0) {
-                        isValid = false;
-                        displayError('itemQuantity', 'Quantity must be a non-negative number.');
-                    }
-                    // Kiểm tra trường Unit
-                    if (itemUnit === '') {
-                        isValid = false;
-                        displayError('itemUnit', 'Please select item unit.');
-                    }
-
-                    if (isValid) {
-                        // Nếu tất cả các trường hợp lệ, gửi AJAX request
-        $.ajax({
-                            url: 'UpdateInventoryItemController', // URL controller của bạn
-                            type: 'POST',
-                            data: {
-                                itemId: itemId,
-                                itemName: itemNameUpdate,
-                                itemType: itemTypeUpdate,
-                                itemPrice: itemPriceUpdate,
-                                itemQuantity: itemQuantityUpdate,
-                                itemUnit: itemUnitUpdate,
-                                itemDescription: itemDescriptionUpdate
-                            },
-                            success: function (response) { // Callback khi thành công - Xử lý thành công thực tế
-                                var updateInventoryModal = bootstrap.Modal.getInstance(document.getElementById('updateInventoryModal'));
-                                updateInventoryModal.hide();
-                                reloadViewInventory();
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Success!',
-                                    text: 'Inventory item updated successfully.',
-                                    timer: 2000,
-                                    showConfirmButton: false
-                                });
-                            },
-                            error: function (xhr, status, error) { // Callback khi lỗi - Xử lý tất cả các trường hợp lỗi
-                                if (xhr.status === 400) { // Kiểm tra lỗi 400 Bad Request (Ví dụ: Tên item bị trùng)
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Sorry!',
-                                        text: 'Item name already exists or invalid input. Please check your information.', // Thông báo lỗi cụ thể hơn
-                                        confirmButtonText: 'OK',
-                                        confirmButtonColor: '#dc3545'
-                                    });
-                                } else if (xhr.status === 500) { // Kiểm tra lỗi 500 Internal Server Error (Lỗi server, database)
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Sorry!',
-                                        text: 'Server error.  Update failed. Please try again later.', // Thông báo lỗi server
-                                        confirmButtonText: 'OK',
-                                        confirmButtonColor: '#dc3545'
-                                    });
-                                }
-                                else { // Xử lý các lỗi khác (lỗi mạng, lỗi không xác định...)
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Sorry!',
-                                        text: 'Update error. Your transaction has failed. Please go back and try again.', // Thông báo lỗi chung
-                                        confirmButtonText: 'OK',
-                                        confirmButtonColor: '#dc3545'
-                                    });
-                                }
-                            }
-                        });
-                    }
-                });
-
-                // Hàm hiển thị thông báo lỗi bên dưới trường nhập liệu
-                function displayError(fieldId, message) {
-                    $('#' + fieldId).addClass('is-invalid'); // Thêm class 'is-invalid' để hiển thị lỗi CSS nếu cần
-                    $('#' + fieldId).after('<div class="error-message" style="color: red;">' + message + '</div>'); // Thêm thông báo lỗi
-                }
-
-                // **Xử lý Cập nhật Inventory Item**
-                $('#btnUpdateInventory').click(function () {
-                    // **Clear old error messages (if any)**
-                    $('.error-message').remove();
-                    $('.is-invalid').removeClass('is-invalid');
-
-                    var itemNameUpdateInput = $('#itemNameUpdate');
-                    var itemTypeUpdateInput = $('#itemTypeUpdate');
-                    var itemPriceUpdateInput = $('#itemPriceUpdate');
-                    var itemQuantityUpdateInput = $('#itemQuantityUpdate');
-                    var itemUnitUpdateInput = $('#itemUnitUpdate');
-                    var itemDescriptionUpdateInput = $('#itemDescriptionUpdate');
-
-                    var itemNameUpdate = itemNameUpdateInput.val();
-                    var itemTypeUpdate = itemTypeUpdateInput.val();
-                    var itemPriceUpdate = itemPriceUpdateInput.val();
-                    var itemQuantityUpdate = itemQuantityUpdateInput.val();
-                    var itemUnitUpdate = itemUnitUpdateInput.val();
-                    var itemDescriptionUpdate = itemDescriptionUpdateInput.val();
+                                                           var itemNameInput = $('#itemName');
+                                                           var itemTypeInput = $('#itemType');
+                                                           var itemPriceInput = $('#itemPrice');
+                                                           var itemQuantityInput = $('#itemQuantity');
+                                                           var itemUnitInput = $('#itemUnit');
+                                                           var itemDescriptionInput = $('#itemDescription');
 
 
-                    var isValid = true;
+                                                           var itemName = itemNameInput.val().trim(); // trim() để loại bỏ khoảng trắng đầu cuối
+                                                           var itemType = itemTypeInput.val();
+                                                           var itemPrice = itemPriceInput.val();
+                                                           var itemQuantity = itemQuantityInput.val();
+                                                           var itemUnit = itemUnitInput.val();
+                                                           var itemDescription = itemDescriptionInput.val();
 
-                    if (itemNameUpdate === '') {
-                        isValid = false;
-                        displayError('itemNameUpdate', 'Please input this field.');
-                    }
-                    if (itemTypeUpdate === '') {
-                        isValid = false;
-                        displayError('itemTypeUpdate', 'Please select item type.');
-                    }
-                    if (itemPriceUpdate === '' || isNaN(itemPriceUpdate) || parseFloat(itemPriceUpdate) <= 0) {
-                        isValid = false;
-                        displayError('itemPriceUpdate', 'Price must be a valid non-negative number and greater than 0.');
-                    }
-                    if (itemQuantityUpdate === '' || isNaN(itemQuantityUpdate) || parseFloat(itemQuantityUpdate) <= 0) {
-                        isValid = false;
-                        displayError('itemQuantityUpdate', 'Quantity must be a non-negative integer.');
-                    }
-                    if (itemUnitUpdate === '') {
-                        isValid = false;
-                        displayError('itemUnitUpdate', 'Please select item unit.');
-                    }
+                                                           var isValid = true; // Biến cờ để theo dõi trạng thái hợp lệ của form
 
-                    if (isValid) {
-                        var itemId = $('#itemIdUpdate').val();
-                        $.ajax({
-                            url: 'UpdateInventoryItemController',
-                            type: 'POST',
-                            data: {
-                                itemId: itemId,
-                                itemName: itemNameUpdate,
-                                itemType: itemTypeUpdate,
-                                itemPrice: itemPriceUpdate,
-                                itemQuantity: itemQuantityUpdate,
-                                itemUnit: itemUnitUpdate,
-                                itemDescription: itemDescriptionUpdate
-                            },
-                            success: function () {
-                                var updateInventoryModal = bootstrap.Modal.getInstance(document.getElementById('updateInventoryModal'));
-                                updateInventoryModal.hide();
-                                reloadViewInventory();
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Success!',
-                                    text: 'Inventory item updated successfully.',
-                                    timer: 2000,
-                                    showConfirmButton: false
-                                });
-                            },
-                            error: function (error) {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error!',
-                                    text: 'Error updating inventory item: ' + error
-                                });
-                            }
-                        });
-                    }
-                });
+                                                           // Kiểm tra trường Name
+                                                           if (itemName === '') {
+                                                               isValid = false;
+                                                               displayError('itemName', 'Please input this field.');
+                                                           }
 
-                // **Xử lý Xóa Inventory Item**
-                $('#btnDeleteInventoryConfirm').click(function () {
-                    var itemId = $('#inventoryItemIdDelete').val();
-                    $.ajax({
-                        url: 'DeleteInventoryItemController',
-                        type: 'POST',
-                        data: {
-                            itemID: itemId
-                        },
-                        success: function (response) {
-                            var deleteInventoryModal = bootstrap.Modal.getInstance(document.getElementById('deleteInventoryModal'));
-                            deleteInventoryModal.hide();
-                            $('#inventoryRow' + itemId).remove();
-                            if ($('#inventoryTableBody tr').length === 0) {
-                                $('#inventoryTableBody').html('<tr><td colspan="9"><div class="no-data">No inventory items found.</div></td></tr>');
-                            }
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success!',
-                                text: 'Inventory item deleted successfully.',
-                                timer: 2000,
-                                showConfirmButton: false
-                            });
-                        },
-                        error: function (xhr, status, error) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error!',
-                                text: 'Error deleting inventory item: ' + error
-                            });
-                        }
-                    });
-                });
-            });
+                                                           // Kiểm tra trường Type
+                                                           if (itemType === '') {
+                                                               isValid = false;
+                                                               displayError('itemType', 'Please select item type.');
+                                                           }
+
+                                                           // Kiểm tra trường Price
+                                                           if (itemPrice === '' || isNaN(itemPrice) || parseFloat(itemPrice) <= 0) {
+                                                               isValid = false;
+                                                               displayError('itemPrice', 'Price must be a valid non-negative number and greater than 0.');
+                                                           }
+
+                                                           // Kiểm tra trường Quantity
+                                                           if (itemQuantity === '' || isNaN(itemQuantity) || parseFloat(itemQuantity) <= 0) {
+                                                               isValid = false;
+                                                               displayError('itemQuantity', 'Quantity must be a non-negative number.');
+                                                           }
+                                                           // Kiểm tra trường Unit
+                                                           if (itemUnit === '') {
+                                                               isValid = false;
+                                                               displayError('itemUnit', 'Please select item unit.');
+                                                           }
+
+                                                           if (isValid) {
+                                                               // Nếu tất cả các trường hợp lệ, gửi AJAX request
+                                                               $.ajax({
+                                                                   url: 'AddInventoryItemController', // URL của controller xử lý thêm InventoryItem
+                                                                   type: 'POST',
+                                                                   data: {
+                                                                       itemName: itemName,
+                                                                       itemType: itemType,
+                                                                       itemPrice: itemPrice,
+                                                                       itemQuantity: itemQuantity,
+                                                                       itemUnit: itemUnit,
+                                                                       itemDescription: itemDescription
+                                                                   },
+                                                                   success: function (response) { // Callback khi thành công
+                                                                       var addInventoryModal = bootstrap.Modal.getInstance(document.getElementById('addInventoryModal'));
+                                                                       addInventoryModal.hide();
+                                                                       reloadViewInventory(); // Hàm reload lại bảng dữ liệu InventoryItems
+                                                                       Swal.fire({
+                                                                           icon: 'success',
+                                                                           title: 'Success!',
+                                                                           text: 'Inventory item added successfully.',
+                                                                           timer: 2000,
+                                                                           showConfirmButton: false
+                                                                       });
+                                                                       $('#addInventoryForm')[0].reset(); // Reset form sau khi thành công
+                                                                   },
+                                                                   error: function (xhr, status, error) { // Callback khi lỗi
+                                                                       if (xhr.status === 400) { // Kiểm tra mã lỗi 400 Bad Request (có thể do validation lỗi ở server)
+                                                                           Swal.fire({
+                                                                               icon: 'error',
+                                                                               title: 'Sorry!',
+                                                                               text: 'Invalid input. Please check your data and try again.', // Thông báo lỗi chung cho dữ liệu không hợp lệ
+                                                                               confirmButtonText: 'OK',
+                                                                               confirmButtonColor: '#dc3545'
+                                                                           });
+                                                                       } else { // Xử lý các lỗi khác (lỗi server, lỗi database,...)
+                                                                           Swal.fire({
+                                                                               icon: 'error',
+                                                                               title: 'Sorry!',
+                                                                               text: 'Your transaction has failed. Please go back and try again.', // Thông báo lỗi chung khi giao dịch thất bại
+                                                                               confirmButtonText: 'OK',
+                                                                               confirmButtonColor: '#dc3545'
+                                                                           });
+                                                                       }
+                                                                   }
+                                                               });
+
+                                                           }
+                                                       });
+
+                                                       // Hàm hiển thị thông báo lỗi bên dưới trường nhập liệu
+                                                       function displayError(fieldId, message) {
+                                                           $('#' + fieldId).addClass('is-invalid'); // Thêm class 'is-invalid' để hiển thị lỗi CSS nếu cần
+                                                           $('#' + fieldId).after('<div class="error-message" style="color: red;">' + message + '</div>'); // Thêm thông báo lỗi
+                                                       }
+                                                   });
 
 
 
