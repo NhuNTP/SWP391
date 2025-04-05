@@ -19,14 +19,14 @@
         .order-list th { background-color: #4CAF50; color: white; }
         .pending { background-color: #ffeb3b; }
         .processing { background-color: #ff9800; }
-        .button { padding: 8px 15px; border: none; border-radius: 5px; color: white; cursor: pointer; }
+        .button { padding: 8px 15px; border: none; border-radius: 5px; color: white; cursor: pointer; text-decoration: none; }
         .btn-primary { background-color: #2196F3; }
         .btn-primary:hover { opacity: 0.9; }
     </style>
 </head>
 <body>
     <div class="container">
-        <a href ="LoginPage.jsp">Log out</a>
+        <a href="${pageContext.request.contextPath}/LoginPage.jsp">Log out</a>
         <h1>Kitchen Dashboard</h1>
         <h3>Danh sách đơn hàng chờ xử lý</h3>
         <table class="order-list">
@@ -45,7 +45,7 @@
                     <tr class="<%= "Pending".equals(order.getOrderStatus()) ? "pending" : "processing" %>">
                         <td><%= order.getOrderId() %></td>
                         <% if ("Kitchen staff".equals(account.getUserRole())) { %>
-                            <td><%= order.getOrderDate() %></td>
+                            <td><%= new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(order.getOrderDate()) %></td>
                             <td>
                                 <% if (order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) { %>
                                     <% for (OrderDetail detail : order.getOrderDetails()) { %>
