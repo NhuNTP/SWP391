@@ -8,11 +8,14 @@
     }
 
     Account account = (Account) session.getAttribute("account");
-    String UserRole = account.getUserRole();
-    if (!"Waiter".equals(UserRole)) {
-        response.sendRedirect(request.getContextPath() + "/dashboard");
+    String userRole = account.getUserRole();
+    String userName = account.getUserName();
+
+    if (!"Waiter".equals(userRole)) {
+        response.sendRedirect(request.getContextPath() + "/LoginPage.jsp");
         return;
     }
+
 %>
 <html>
     <head>
@@ -68,6 +71,11 @@
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     </head>
     <body>
+         <a href="${pageContext.request.contextPath}/viewAccountDetail" class="btn btn-sm btn-primary">View Profile</a>
+        
+        <button class="btn btn-primary" onclick="window.location.href = '${pageContext.request.contextPath}/view-notifications'">
+            <i class="fas fa-bell me-2"></i>View Notifications
+        </button>
         <div class="nav-item"><a href="${pageContext.request.contextPath}/logout" class="nav-link">Logout</a></div>
         <div class="container">
             <h1>Danh sách bàn</h1>
