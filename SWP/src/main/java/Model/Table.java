@@ -8,6 +8,7 @@ public class Table {
     private int FloorNumber;
     private boolean IsDeleted;
     private boolean hasOrder;
+    private Order order;
 
     // Constructor không tham số (default constructor)
     public Table() {
@@ -89,4 +90,13 @@ public class Table {
     public void setHasOrder(boolean hasOrder) {
         this.hasOrder = hasOrder;
     }
+
+    public Order getOrder() {
+        return order;
+    }
+
+    public void setOrder(Order order) {
+        this.order = order;
+    }
+    
 }

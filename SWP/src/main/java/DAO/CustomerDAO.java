@@ -19,10 +19,8 @@ public class CustomerDAO {
         String sqlInsert = "INSERT INTO Customer (CustomerId, CustomerName, CustomerPhone, NumberOfPayment) VALUES (?, ?, ?, ?)";
 
         try (Connection conn = DBContext.getConnection()) {
-            // Bắt đầu transaction để đảm bảo tính duy nhất của CustomerId
             conn.setAutoCommit(false);
 
-            // Sinh CustomerId mới
             try (PreparedStatement stmtMaxId = conn.prepareStatement(sqlMaxId);
                  ResultSet rs = stmtMaxId.executeQuery()) {
                 if (rs.next() && rs.getString("MaxId") != null) {
@@ -32,7 +30,6 @@ public class CustomerDAO {
                 }
             }
 
-            // Thêm khách hàng với CustomerId vừa sinh
             try (PreparedStatement stmtInsert = conn.prepareStatement(sqlInsert)) {
                 stmtInsert.setString(1, customerId);
                 stmtInsert.setString(2, customer.getCustomerName());
@@ -41,10 +38,9 @@ public class CustomerDAO {
                 stmtInsert.executeUpdate();
             }
 
-            // Commit transaction
             conn.commit();
             LOGGER.log(Level.INFO, "Created customer with ID: {0}", customerId);
-            return customerId; // Trả về CustomerId
+            return customerId;
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error adding customer: {0}", e.getMessage());
             throw e;
@@ -128,18 +124,33 @@ public class CustomerDAO {
         }
     }
 
+    // Cập nhật deleteCustomer để đặt CustomerId trong Order thành NULL trước khi xóa
     public boolean deleteCustomer(String customerId) throws SQLException, ClassNotFoundException {
-        String query = "DELETE FROM Customer WHERE CustomerId = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
-            ps.setString(1, customerId);
-            return ps.executeUpdate() > 0;
+        try (Connection conn = DBContext.getConnection()) {
+            conn.setAutoCommit(false); // Bắt đầu transaction
+
+            // Đặt CustomerId thành NULL trong bảng Order
+            String updateOrderSql = "UPDATE [Order] SET CustomerId = NULL WHERE CustomerId = ?";
+            try (PreparedStatement updateStmt = conn.prepareStatement(updateOrderSql)) {
+                updateStmt.setString(1, customerId);
+                updateStmt.executeUpdate();
+            }
+
+            // Xóa khách hàng
+            String deleteCustomerSql = "DELETE FROM Customer WHERE CustomerId = ?";
+            try (PreparedStatement deleteStmt = conn.prepareStatement(deleteCustomerSql)) {
+                deleteStmt.setString(1, customerId);
+                int rowsAffected = deleteStmt.executeUpdate();
+                conn.commit();
+                return rowsAffected > 0;
+            }
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error deleting customer: {0}", e.getMessage());
             throw e;
         }
     }
 
+    // Cũ: incrementNumberOfPayment không kiểm tra trạng thái đơn hàng
     public void incrementNumberOfPayment(String customerId) throws SQLException, ClassNotFoundException {
         if (customerId == null || customerId.isEmpty()) {
             return;
@@ -151,6 +162,41 @@ public class CustomerDAO {
             stmt.executeUpdate();
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error incrementing number of payment: {0}", e.getMessage());
+            throw e;
+        }
+    }
+
+    // Mới: Tăng NumberOfPayment khi đơn hàng hoàn tất thanh toán
+    public void incrementNumberOfPaymentOnOrderCompletion(String orderId) throws SQLException, ClassNotFoundException {
+        String checkOrderSql = "SELECT CustomerId FROM [Order] WHERE OrderId = ? AND OrderStatus = 'Completed'";
+        String updateCustomerSql = "UPDATE Customer SET NumberOfPayment = NumberOfPayment + 1 WHERE CustomerId = ?";
+
+        try (Connection conn = DBContext.getConnection()) {
+            conn.setAutoCommit(false); // Bắt đầu transaction
+
+            String customerId = null;
+            try (PreparedStatement checkStmt = conn.prepareStatement(checkOrderSql)) {
+                checkStmt.setString(1, orderId);
+                try (ResultSet rs = checkStmt.executeQuery()) {
+                    if (rs.next()) {
+                        customerId = rs.getString("CustomerId");
+                    }
+                }
+            }
+
+            if (customerId != null && !customerId.isEmpty()) {
+                try (PreparedStatement updateStmt = conn.prepareStatement(updateCustomerSql)) {
+                    updateStmt.setString(1, customerId);
+                    int rowsAffected = updateStmt.executeUpdate();
+                    if (rowsAffected > 0) {
+                        LOGGER.log(Level.INFO, "Incremented NumberOfPayment for CustomerId: {0}", customerId);
+                    }
+                }
+            }
+
+            conn.commit();
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error incrementing NumberOfPayment: {0}", e.getMessage());
             throw e;
         }
     }
@@ -173,6 +219,21 @@ public class CustomerDAO {
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error checking phone existence: {0}", e.getMessage());
             throw e;
+        }
+        return false;
+    }
+
+    // Kiểm tra xem khách hàng có đơn hàng nào không (giữ lại nhưng không dùng trong deleteCustomer)
+    public boolean hasOrders(String customerId) throws SQLException, ClassNotFoundException {
+        String sql = "SELECT COUNT(*) FROM [Order] WHERE CustomerId = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, customerId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
         }
         return false;
     }
