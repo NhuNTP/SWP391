@@ -19,7 +19,6 @@ public class OrderDAO {
 
     private static final Logger logger = Logger.getLogger(OrderDAO.class.getName());
 
-    
     // sửa khi thêm cột
     // Lấy OrderId theo TableId (chỉ lấy đơn hàng chưa hoàn tất)
     public String getOrderIdByTableId(String tableId) throws SQLException, ClassNotFoundException {
@@ -72,7 +71,8 @@ public class OrderDAO {
                     String orderDetailId = rs.getString("OrderDetailId");
                     String dishListJson = rs.getString("DishList");
                     ObjectMapper mapper = new ObjectMapper();
-                    List<OrderDetail> dishList = mapper.readValue(dishListJson, new TypeReference<List<OrderDetail>>() {});
+                    List<OrderDetail> dishList = mapper.readValue(dishListJson, new TypeReference<List<OrderDetail>>() {
+                    });
                     for (OrderDetail detail : dishList) {
                         detail.setOrderDetailId(orderDetailId);
                         detail.setOrderId(orderId);
@@ -284,6 +284,7 @@ public class OrderDAO {
         }
         return orderList;
     }
+
     // sửa khi thêm cột
     /*
     // Lấy OrderId theo TableId (chỉ lấy đơn hàng chưa hoàn tất)
@@ -472,7 +473,7 @@ public class OrderDAO {
             }
         }
     }
-*/
+     */
     // Thêm OrderDetail
     public void addOrderDetail(OrderDetail detail) throws SQLException, ClassNotFoundException {
         try (Connection conn = DBContext.getConnection()) {
@@ -525,7 +526,8 @@ public class OrderDAO {
             stmt.executeUpdate();
         }
     }
-/*
+
+    /*
     // Cập nhật đơn hàng
     public void updateOrder(Order order) throws SQLException, ClassNotFoundException {
         String sql = "UPDATE [Order] SET UserId = ?, TableId = ?, CustomerId = ?, OrderStatus = ?, OrderType = ?, OrderDate = ?, Total = ?, CustomerPhone = ?, OrderDescription = ? WHERE OrderId = ?";
@@ -544,17 +546,53 @@ public class OrderDAO {
             logger.log(Level.INFO, "Updated order with OrderId: {0}", order.getOrderId());
         }
     }
-*/
+     */
     // Cập nhật trạng thái đơn hàng
     public void updateOrderStatus(String orderId, String newStatus) throws SQLException, ClassNotFoundException {
+    Connection conn = null;
+    try {
+        conn = DBContext.getConnection();
+        conn.setAutoCommit(false);
+
+        Order order = getOrderById(orderId);
+        if (order == null) {
+            throw new SQLException("Order not found: " + orderId);
+        }
+        if ("Pending".equals(order.getOrderStatus()) && !"Processing".equals(newStatus) ||
+            "Processing".equals(order.getOrderStatus()) && !"Completed".equals(newStatus)) {
+            throw new SQLException("Invalid status transition from " + order.getOrderStatus() + " to " + newStatus);
+        }
+
         String sql = "UPDATE [Order] SET OrderStatus = ? WHERE OrderId = ?";
-        try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, newStatus);
             stmt.setString(2, orderId);
             stmt.executeUpdate();
-            logger.log(Level.INFO, "Updated OrderStatus for OrderId: {0} to {1}", new Object[]{orderId, newStatus});
+        }
+
+        // Trừ nguyên liệu khi chuyển sang "Processing"
+        if ("Processing".equals(newStatus)) {
+            processInventoryForOrder(orderId, conn);
+        }
+
+        conn.commit();
+        logger.log(Level.INFO, "Updated OrderStatus for OrderId: {0} to {1}", new Object[]{orderId, newStatus});
+    } catch (SQLException e) {
+        if (conn != null) {
+            try {
+                conn.rollback();
+            } catch (SQLException rollbackEx) {
+                logger.log(Level.SEVERE, "Rollback failed: " + rollbackEx.getMessage(), rollbackEx);
+            }
+        }
+        logger.log(Level.SEVERE, "Error updating order status: " + e.getMessage(), e);
+        throw e;
+    } finally {
+        if (conn != null) {
+            conn.close();
         }
     }
+}
 
     // Hủy đơn hàng (chỉ khi ở trạng thái Pending)
     public void cancelOrder(String orderId) throws SQLException, ClassNotFoundException {
@@ -716,7 +754,8 @@ public class OrderDAO {
             }
         }
     }
-/*
+
+    /*
     public List<Order> getOrdersByStatus(String status) throws SQLException, ClassNotFoundException {
         List<Order> orders = new ArrayList<>();
         try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement("SELECT * FROM [Order] WHERE OrderStatus = ?")) {
@@ -763,5 +802,135 @@ public class OrderDAO {
         }
         return orderList;
     }
-*/
+     */
+    // Kiểm tra và trừ nguyên liệu khi xử lý đơn hàng
+    private void processInventoryForOrder(String orderId, Connection conn) throws SQLException, ClassNotFoundException {
+    List<OrderDetail> details = getOrderDetailsByOrderId(orderId);
+    for (OrderDetail detail : details) {
+        String dishId = detail.getDishId();
+        int quantityOrdered = detail.getQuantity();
+
+        String sqlIngredients = "SELECT di.ItemId, di.QuantityUsed, i.ItemQuantity " +
+                               "FROM Dish_Inventory di " +
+                               "JOIN Inventory i ON di.ItemId = i.ItemId " +
+                               "WHERE di.DishId = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sqlIngredients)) {
+            stmt.setString(1, dishId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    String itemId = rs.getString("ItemId");
+                    double quantityUsedPerDish = rs.getDouble("QuantityUsed");
+                    int currentQuantity = rs.getInt("ItemQuantity");
+
+                    double totalQuantityNeeded = quantityUsedPerDish * quantityOrdered;
+                    if (currentQuantity < totalQuantityNeeded) {
+                        throw new SQLException("Không đủ nguyên liệu " + itemId + " cho món " + dishId + ". Cần: " + totalQuantityNeeded + ", Còn: " + currentQuantity);
+                    }
+
+                    String sqlUpdateInventory = "UPDATE Inventory SET ItemQuantity = ItemQuantity - ? WHERE ItemId = ?";
+                    try (PreparedStatement updateStmt = conn.prepareStatement(sqlUpdateInventory)) {
+                        updateStmt.setDouble(1, totalQuantityNeeded);
+                        updateStmt.setString(2, itemId);
+                        updateStmt.executeUpdate();
+                    }
+                }
+            }
+        }
+    }
+}
+public void checkInventoryForOrder(Order order) throws SQLException, ClassNotFoundException {
+    Connection conn = null;
+    try {
+        conn = DBContext.getConnection();
+        
+        List<OrderDetail> details = order.getOrderDetails();
+        if (details == null || details.isEmpty()) {
+            throw new SQLException("Không có món nào trong đơn hàng.");
+        }
+
+        for (OrderDetail detail : details) {
+            String dishId = detail.getDishId();
+            int quantityOrdered = detail.getQuantity();
+
+            String sqlIngredients = "SELECT di.ItemId, di.QuantityUsed, i.ItemQuantity " +
+                                   "FROM Dish_Inventory di " +
+                                   "JOIN Inventory i ON di.ItemId = i.ItemId " +
+                                   "WHERE di.DishId = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(sqlIngredients)) {
+                stmt.setString(1, dishId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        String itemId = rs.getString("ItemId");
+                        double quantityUsedPerDish = rs.getDouble("QuantityUsed");
+                        int currentQuantity = rs.getInt("ItemQuantity");
+
+                        double totalQuantityNeeded = quantityUsedPerDish * quantityOrdered;
+                        if (currentQuantity < totalQuantityNeeded) {
+                            throw new SQLException("Không đủ nguyên liệu " + itemId + " cho món " + dishId + ". Cần: " + totalQuantityNeeded + ", Còn: " + currentQuantity);
+                        }
+                    }
+                }
+            }
+        }
+    } catch (SQLException e) {
+        logger.log(Level.SEVERE, "Error checking inventory: " + e.getMessage(), e);
+        throw e;
+    } finally {
+        if (conn != null) {
+            conn.close();
+        }
+    }
+}
+
+public void deductInventoryForOrder(Order order) throws SQLException, ClassNotFoundException {
+    Connection conn = null;
+    try {
+        conn = DBContext.getConnection();
+        conn.setAutoCommit(false);
+
+        List<OrderDetail> details = order.getOrderDetails();
+        for (OrderDetail detail : details) {
+            String dishId = detail.getDishId();
+            int quantityOrdered = detail.getQuantity();
+
+            String sqlIngredients = "SELECT di.ItemId, di.QuantityUsed, i.ItemQuantity " +
+                                   "FROM Dish_Inventory di " +
+                                   "JOIN Inventory i ON di.ItemId = i.ItemId " +
+                                   "WHERE di.DishId = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(sqlIngredients)) {
+                stmt.setString(1, dishId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        String itemId = rs.getString("ItemId");
+                        double quantityUsedPerDish = rs.getDouble("QuantityUsed");
+
+                        double totalQuantityNeeded = quantityUsedPerDish * quantityOrdered;
+                        String sqlUpdateInventory = "UPDATE Inventory SET ItemQuantity = ItemQuantity - ? WHERE ItemId = ?";
+                        try (PreparedStatement updateStmt = conn.prepareStatement(sqlUpdateInventory)) {
+                            updateStmt.setDouble(1, totalQuantityNeeded);
+                            updateStmt.setString(2, itemId);
+                            updateStmt.executeUpdate();
+                        }
+                    }
+                }
+            }
+        }
+
+        conn.commit();
+    } catch (SQLException e) {
+        if (conn != null) {
+            try {
+                conn.rollback();
+            } catch (SQLException rollbackEx) {
+                logger.log(Level.SEVERE, "Rollback failed: " + rollbackEx.getMessage(), rollbackEx);
+            }
+        }
+        logger.log(Level.SEVERE, "Error deducting inventory: " + e.getMessage(), e);
+        throw e;
+    } finally {
+        if (conn != null) {
+            conn.close();
+        }
+    }
+}
 }
