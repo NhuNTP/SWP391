@@ -25,15 +25,25 @@
         .btn-success { background-color: #4CAF50; }
         .btn-primary { background-color: #2196F3; }
         .btn:hover { opacity: 0.9; }
+        .error { color: red; font-weight: bold; text-align: center; margin: 10px 0; }
+        .success { color: green; font-weight: bold; text-align: center; margin: 10px 0; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Chi tiết đơn hàng: <%= order.getOrderId() %></h1>
         <p><strong>Bàn:</strong> <%= order.getTableId() %></p>
-        <p><strong>Ngày đặt:</strong> <%= order.getOrderDate() %></p>
+        <p><strong>Ngày đặt:</strong> <%= new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(order.getOrderDate()) %></p>
         <p><strong>Mô tả:</strong> <%= order.getOrderDescription() != null ? order.getOrderDescription() : "Không có mô tả" %></p>
         <p><strong>Trạng thái:</strong> <%= order.getOrderStatus() %></p>
+        
+        <% if (request.getAttribute("errorMessage") != null) { %>
+            <p class="error"><%= request.getAttribute("errorMessage") %></p>
+        <% } %>
+        <% if (request.getAttribute("successMessage") != null) { %>
+            <p class="success"><%= request.getAttribute("successMessage") %></p>
+        <% } %>
+        
         <table class="order-details">
             <tr>
                 <th>Tên món</th>
@@ -46,8 +56,8 @@
                     <tr>
                         <td><%= detail.getDishName() %></td>
                         <td><%= detail.getQuantity() %></td>
-                        <td><%= detail.getSubtotal() / detail.getQuantity() %></td>
-                        <td><%= detail.getSubtotal() %></td>
+                        <td><%= String.format("%,.0f ₫", detail.getSubtotal() / detail.getQuantity()) %></td>
+                        <td><%= String.format("%,.0f ₫", detail.getSubtotal()) %></td>
                     </tr>
                 <% } %>
             <% } else { %>

@@ -13,6 +13,8 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @WebServlet(name = "KitchenOrderStatusController", urlPatterns = {"/kitchen"})
 public class KitchenOrderStatusController extends HttpServlet {
@@ -39,22 +41,14 @@ public class KitchenOrderStatusController extends HttpServlet {
         String action = request.getParameter("action");
         try {
             if (action == null || "list".equals(action)) {
-                // Hiển thị danh sách đơn hàng Pending và Processing
                 List<Order> pendingOrders = orderDAO.getPendingOrders();
                 request.setAttribute("pendingOrders", pendingOrders);
-                if (request.getRequestDispatcher("/ManageOrder/kitchendb.jsp") == null) {
-                    throw new ServletException("JSP file /ManageOrder/kitchendb.jsp not found");
-                }
                 request.getRequestDispatcher("/ManageOrder/kitchendb.jsp").forward(request, response);
             } else if ("viewOrder".equals(action)) {
-                // Xem chi tiết đơn hàng
                 String orderId = request.getParameter("orderId");
                 Order order = orderDAO.getOrderById(orderId);
                 if (order != null) {
                     request.setAttribute("order", order);
-                    if (request.getRequestDispatcher("/ManageOrder/kitchenod.jsp") == null) {
-                        throw new ServletException("JSP file /ManageOrder/kitchenod.jsp not found");
-                    }
                     request.getRequestDispatcher("/ManageOrder/kitchenod.jsp").forward(request, response);
                 } else {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND, "Order not found");
@@ -88,14 +82,30 @@ public class KitchenOrderStatusController extends HttpServlet {
             }
 
             if ("Pending".equals(order.getOrderStatus()) && "Processing".equals(newStatus)) {
-                orderDAO.updateOrderStatus(orderId, "Processing");
-            }  else {
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid status transition");
-                return;
+                orderDAO.updateOrderStatus(orderId, "Processing"); // Trừ nguyên liệu ở đây
+                request.setAttribute("successMessage", "Đơn hàng " + orderId + " đã chuyển sang Processing và nguyên liệu đã được trừ.");
+            } else if ("Processing".equals(order.getOrderStatus()) && "Completed".equals(newStatus)) {
+                orderDAO.updateOrderStatus(orderId, "Completed");
+                request.setAttribute("successMessage", "Đơn hàng " + orderId + " đã hoàn tất.");
+            } else {
+                request.setAttribute("errorMessage", "Không thể chuyển trạng thái từ " + order.getOrderStatus() + " sang " + newStatus);
             }
 
-            response.sendRedirect(request.getContextPath() + "/kitchen");
-        } catch (SQLException | ClassNotFoundException e) {
+            order = orderDAO.getOrderById(orderId);
+            request.setAttribute("order", order);
+            request.getRequestDispatcher("/ManageOrder/kitchenod.jsp").forward(request, response);
+
+        } catch (SQLException e) {
+            request.setAttribute("errorMessage", "Lỗi khi cập nhật trạng thái: " + e.getMessage());
+            try {
+                request.setAttribute("order", orderDAO.getOrderById(orderId));
+            } catch (SQLException ex) {
+                Logger.getLogger(KitchenOrderStatusController.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(KitchenOrderStatusController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            request.getRequestDispatcher("/ManageOrder/kitchenod.jsp").forward(request, response);
+        } catch (ClassNotFoundException e) {
             throw new ServletException("Error updating order status: " + e.getMessage(), e);
         }
     }
