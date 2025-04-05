@@ -81,6 +81,39 @@
         .status-pending {
             color: #ff9800;
         }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fff;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 300px;
+            text-align: center;
+            border-radius: 5px;
+        }
+        .modal-button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+        }
+        .modal-button.cash {
+            background-color: #4CAF50;
+        }
+        .modal-button.online {
+            background-color: #2196F3;
+        }
     </style>
 </head>
 <body>
@@ -150,8 +183,7 @@
         <!-- Phần chọn coupon và nút thanh toán -->
         <div class="coupon-section">
             <h2>Áp dụng mã coupon</h2>
-            <form action="payment" method="post">
-                <input type="hidden" name="action" value="payOrder">
+            <form id="couponForm" action="/payment" method="post">
                 <input type="hidden" name="orderId" value="<%=order.getOrderId()%>">
                 <input type="hidden" name="tableId" value="<%=order.getTableId() != null ? order.getTableId() : ""%>">
                 <select name="couponId" <%=isCompleted ? "disabled" : ""%>>
@@ -181,9 +213,9 @@
                     %>
                 </select>
                 <% if (isProcessing) { %>
-                    <button type="submit" class="button pay">Thanh toán</button>
+                    <button type="button" class="button pay" onclick="showPaymentOptions()">Thanh toán</button>
                 <% } %>
-                <button type="button" class="button back" onclick="window.location.href='payment?action=listOrders'">Trở về</button>
+                <button type="button" class="button back" onclick="window.location.href='/payment?action=listOrders'">Trở về</button>
             </form>
             <%
                 if (coupons == null) {
@@ -195,6 +227,28 @@
                 }
             %>
         </div>
+
+        <!-- Modal chọn phương thức thanh toán -->
+        <div id="paymentModal" class="modal">
+            <div class="modal-content">
+                <h3>Chọn phương thức thanh toán</h3>
+                <form action="/payment" method="post">
+                    <input type="hidden" name="action" value="payCash">
+                    <input type="hidden" name="orderId" value="<%=order.getOrderId()%>">
+                    <input type="hidden" name="tableId" value="<%=order.getTableId() != null ? order.getTableId() : ""%>">
+                    <input type="hidden" name="couponId" value="<%=request.getParameter("couponId") != null ? request.getParameter("couponId") : (order.getCouponId() != null ? order.getCouponId() : "")%>">
+                    <button type="submit" class="modal-button cash">Thanh toán tiền mặt</button>
+                </form>
+                <form action="/payment" method="post">
+                    <input type="hidden" name="action" value="payOnline">
+                    <input type="hidden" name="orderId" value="<%=order.getOrderId()%>">
+                    <input type="hidden" name="tableId" value="<%=order.getTableId() != null ? order.getTableId() : ""%>">
+                    <input type="hidden" name="couponId" value="<%=request.getParameter("couponId") != null ? request.getParameter("couponId") : (order.getCouponId() != null ? order.getCouponId() : "")%>">
+                    <button type="submit" class="modal-button online">Thanh toán online</button>
+                </form>
+            </div>
+        </div>
+
         <%
             } else {
         %>
@@ -203,5 +257,18 @@
             }
         %>
     </div>
+
+    <script>
+        function showPaymentOptions() {
+            document.getElementById("paymentModal").style.display = "block";
+        }
+
+        window.onclick = function(event) {
+            var modal = document.getElementById("paymentModal");
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
 </body>
 </html>

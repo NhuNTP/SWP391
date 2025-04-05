@@ -95,7 +95,7 @@
         %>
 
         <button class="hidden-print" onclick="window.print()">In hóa đơn</button>
-        <a href="/restaurant" class="hidden-print">Quay lại</a>
+        <a href="/payment?action=listOrders" class="hidden-print">Quay lại</a>
     </div>
 </body>
 </html>
