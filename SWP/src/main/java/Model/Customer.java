@@ -14,12 +14,6 @@ public class Customer {
     public Customer() {
     }
 
-    public Customer(String customerName, String customerPhone, int numberOfPayment) {
-        this.customerName = customerName;
-        this.customerPhone = customerPhone;
-        this.numberOfPayment = numberOfPayment;
-    }
-
     public Customer(String customerId, String customerName, String customerPhone, int numberOfPayment) { // Changed to String
         this.customerId = customerId;
         this.customerName = customerName;

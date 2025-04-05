@@ -88,7 +88,6 @@
                 <li class="nav-item"><a href="${pageContext.request.contextPath}/create-notification" class="nav-link"><i class="fas fa-plus me-2"></i>Create Notification</a></li>
                 <% } %>
                 <li class="nav-item"><a href="${pageContext.request.contextPath}/logout" class="nav-link"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
-            <li class="nav-item"><a href="${pageContext.request.contextPath}/payment" class="nav-link"><i class="bi bi-cart-check me-2"></i>mua</a></li>
             </ul>
         </div>
 

@@ -74,6 +74,13 @@
             font-size: 14px; 
             margin-bottom: 10px; 
         }
+        .status-message {
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .status-pending {
+            color: #ff9800;
+        }
     </style>
 </head>
 <body>
@@ -81,14 +88,20 @@
         <%
             Order order = (Order) request.getAttribute("order");
             String message = (String) request.getAttribute("message");
-            boolean isCompleted = order != null && "Completed".equals(order.getOrderStatus());
             if (order != null) {
+                boolean isProcessing = "Processing".equals(order.getOrderStatus());
+                boolean isCompleted = "Completed".equals(order.getOrderStatus());
         %>
         <h1>Thanh toán đơn hàng - <%=order.getOrderId()%> (Bàn <%=order.getTableId() != null ? order.getTableId() : "Takeaway"%>)</h1>
         <%
             if (message != null) {
         %>
         <p class="message"><%=message%></p>
+        <%
+            }
+            if ("Pending".equals(order.getOrderStatus())) {
+        %>
+        <p class="status-message status-pending">Đơn hàng đang ở trạng thái 'Pending'. Không thể thanh toán ngay bây giờ.</p>
         <%
             }
             List<OrderDetail> details = order.getOrderDetails();
@@ -134,7 +147,7 @@
             }
         %>
 
-        <!-- Phần chọn coupon -->
+        <!-- Phần chọn coupon và nút thanh toán -->
         <div class="coupon-section">
             <h2>Áp dụng mã coupon</h2>
             <form action="payment" method="post">
@@ -167,7 +180,9 @@
                         }
                     %>
                 </select>
-                <button type="submit" class="button pay" <%=isCompleted ? "disabled" : ""%>>Thanh toán</button>
+                <% if (isProcessing) { %>
+                    <button type="submit" class="button pay">Thanh toán</button>
+                <% } %>
                 <button type="button" class="button back" onclick="window.location.href='payment?action=listOrders'">Trở về</button>
             </form>
             <%

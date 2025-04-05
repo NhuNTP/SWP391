@@ -1,18 +1,19 @@
 package Controller.ManageCustomer;
 
 import DAO.CustomerDAO;
-import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @WebServlet("/DeleteCustomer")
 public class DeleteCustomerController extends HttpServlet {
+
     private CustomerDAO customerDAO;
 
     @Override
@@ -21,23 +22,29 @@ public class DeleteCustomerController extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         String customerId = request.getParameter("customerId");
-        boolean success = false;
-        System.out.println("Customer deleted successfullyyyyyyyyyyyyyy!");
-        try {
-            success = customerDAO.deleteCustomer(customerId);
-            System.out.println("Customer deleted successfullyyyyyyyyyyyyyy!");
-        } catch (SQLException | ClassNotFoundException ex) {
-            Logger.getLogger(DeleteCustomerController.class.getName()).log(Level.SEVERE, null, ex);
-            request.getSession().setAttribute("errorMessage", "Database error: " + ex.getMessage());
+
+        if (customerId == null || customerId.trim().isEmpty()) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing customerId");
+            return;
         }
 
-        if (success) {
-          System.out.println("Customer deleted successfully!");
-        } else {
-            System.out.println("Failed to delete customer.");
+        try {
+            // Xóa khách hàng
+            boolean deleted = customerDAO.deleteCustomer(customerId);
+            if (deleted) {
+                response.setStatus(HttpServletResponse.SC_OK);
+                response.getWriter().write("Customer deleted successfully");
+            } else {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                response.getWriter().write("Customer not found.");
+            }
+        } catch (SQLException | ClassNotFoundException ex) {
+            Logger.getLogger(DeleteCustomerController.class.getName()).log(Level.SEVERE, null, ex);
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write("Error deleting customer: " + ex.getMessage());
         }
-        response.sendRedirect(request.getContextPath() + "/ViewCustomerList");
     }
 }
