@@ -12,16 +12,10 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.Part;
-import java.io.File;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.UUID;
-
+import java.sql.SQLException;
 /**
  *
  * @author DELL-Laptop
@@ -83,12 +77,12 @@ public class AddInventoryItemController extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
+         HttpSession session = request.getSession();
         try {
             // 1. Lấy dữ liệu từ form (giữ nguyên)
             String itemName = request.getParameter("itemName");
             String itemType = request.getParameter("itemType");
             double itemPrice = Double.parseDouble(request.getParameter("itemPrice"));
-
             String itemUnit = request.getParameter("itemUnit");
             String itemDescription = request.getParameter("itemDescription");
 
@@ -101,24 +95,53 @@ public class AddInventoryItemController extends HttpServlet {
             double itemQuantity = Double.parseDouble(quantityStr);
             // 5. Thêm vào database
             InventoryDAO inventoryDAO = new InventoryDAO();
-            String isItemExist = inventoryDAO.isInventoryItemExist(itemName);
-
-            if (!"None".equals(isItemExist)) {
-                InventoryItem upItem = new InventoryItem(isItemExist, itemName, itemType, itemPrice, itemQuantity, itemUnit, itemDescription);
-              
-                inventoryDAO.updateInventoryItem(upItem);
-            } else {
-                String itemID = inventoryDAO.generateNextInventoryId();
-                System.out.println(itemID);
-                InventoryItem newItem = new InventoryItem(itemID, itemName, itemType, itemPrice, itemQuantity, itemUnit, itemDescription, 0);
+           //String isItemExist = inventoryDAO.isInventoryItemExist(itemName);
+            try {
+            // Check for duplicate phone number
+            System.out.println(inventoryDAO.isInventoryItemExistForAdd(itemName));
+            if (inventoryDAO.isInventoryItemExistForAdd(itemName)){
+                System.out.println("ooooooooooooooooooooooooooo");
+             //   System.out.println(customerDAO.isPhoneExists(customerPhone, null));
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                response.getWriter().write("Inventory already exists. Please check agains.");
                
-                System.out.println("OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
-                System.out.println(newItem);
-                inventoryDAO.addNewInventoryItem(newItem);
+                return;
             }
+            // If all validations pass, add the customer
+            String itemId = inventoryDAO.generateNextInventoryId();
+             System.out.println("ppppppppppppppppppppppp");
+             //System.out.println(customerDAO.isPhoneExists(customerPhone, null));
+            InventoryItem newItem = new InventoryItem(itemId, itemName, itemType, itemPrice, itemQuantity, itemUnit, itemDescription, 0);
+            inventoryDAO.addNewInventoryItem(newItem);
+            session.setAttribute("message", "Inventory added successfully!");
+            
+        } catch (SQLException | ClassNotFoundException ex) {
+            session.setAttribute("errorMessage", "Database error: " + ex.getMessage());
+        }
 
-            // 6. Chuyển hướng
-            response.sendRedirect("ViewInventoryController");
+        response.sendRedirect(request.getContextPath() + "/ViewInventoryController");
+            
+            
+            
+            
+            
+            
+//            if (!"None".equals(isItemExist)) {
+//                InventoryItem upItem = new InventoryItem(isItemExist, itemName, itemType, itemPrice, itemQuantity, itemUnit, itemDescription);
+//              
+//                inventoryDAO.updateInventoryItem(upItem);
+//            } else {
+//                String itemID = inventoryDAO.generateNextInventoryId();
+//                System.out.println(itemID);
+//                InventoryItem newItem = new InventoryItem(itemID, itemName, itemType, itemPrice, itemQuantity, itemUnit, itemDescription, 0);
+//               
+//                System.out.println("OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
+//                System.out.println(newItem);
+//                inventoryDAO.addNewInventoryItem(newItem);
+//            }
+//
+//            // 6. Chuyển hướng
+//            response.sendRedirect("ViewInventoryController");
 
         } catch (Exception e) {
             e.printStackTrace();

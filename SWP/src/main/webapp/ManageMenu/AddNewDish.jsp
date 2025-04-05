@@ -18,6 +18,8 @@
     <title>Add New Dish</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+            <!-- SweetAlert2 for enhanced alerts -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body {
             font-family: 'Roboto', sans-serif;
@@ -683,8 +685,8 @@
 
                     if (isValid) {
                         // Nếu tất cả các trường hợp lệ, gửi AJAX request
-                        $.ajax({
-                            url: 'AddInventoryItemController',
+                     $.ajax({
+                            url: 'AddInventoryItemController', // URL của controller xử lý thêm InventoryItem
                             type: 'POST',
                             data: {
                                 itemName: itemName,
@@ -694,10 +696,10 @@
                                 itemUnit: itemUnit,
                                 itemDescription: itemDescription
                             },
-                            success: function () {
+                            success: function (response) { // Callback khi thành công
                                 var addInventoryModal = bootstrap.Modal.getInstance(document.getElementById('addInventoryModal'));
                                 addInventoryModal.hide();
-                                reloadViewInventory(); // Giả sử hàm này reload lại bảng dữ liệu
+                               // reloadViewInventory(); // Hàm reload lại bảng dữ liệu InventoryItems
                                 Swal.fire({
                                     icon: 'success',
                                     title: 'Success!',
@@ -705,14 +707,26 @@
                                     timer: 2000,
                                     showConfirmButton: false
                                 });
-                                $('#addInventoryForm')[0].reset();
+                                $('#addInventoryForm')[0].reset(); // Reset form sau khi thành công
                             },
-                            error: function (xhr, status, error) {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error!',
-                                    text: 'Error adding inventory item: ' + error
-                                });
+                            error: function (xhr, status, error) { // Callback khi lỗi
+                                if (xhr.status === 400) { // Kiểm tra mã lỗi 400 Bad Request (có thể do validation lỗi ở server)
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Sorry!',
+                                        text: 'Invalid input. Please check your data and try again.', // Thông báo lỗi chung cho dữ liệu không hợp lệ
+                                        confirmButtonText: 'OK',
+                                        confirmButtonColor: '#dc3545'
+                                    });
+                                } else { // Xử lý các lỗi khác (lỗi server, lỗi database,...)
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Sorry!',
+                                        text: 'Your transaction has failed. Please go back and try again.', // Thông báo lỗi chung khi giao dịch thất bại
+                                        confirmButtonText: 'OK',
+                                        confirmButtonColor: '#dc3545'
+                                    });
+                                }
                             }
                         });
                     }
